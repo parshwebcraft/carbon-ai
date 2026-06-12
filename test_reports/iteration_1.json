@@ -1,0 +1,36 @@
+{
+  "summary": "First end-to-end test run for Facets Jewellery CRM MVP. Backend: 26/26 pytest cases pass against the public ingress URL covering auth, role enforcement, leads CRUD with pagination/filters, activities, tasks, calls, WhatsApp threads/send, products with role checks, appointments, quotations (auto QT- number), AI logs, notifications, users, dashboard stats. Frontend (Playwright): admin login -> dashboard with 6 stat tiles + pie + bar charts rendered (₹14,52,34,519 pipeline, 100 leads, etc.), all 8 sidebar nav items route correctly, leads pagination + lead detail page + add-note flow works, tasks/calls/whatsapp/products/users pages render, WhatsApp shows 20 seeded conversations and Send works, Products catalogue renders INR ₹ pricing and Add Product dialog opens, mobile (390x844) topbar menu toggle opens sidebar, logout redirects to /login, clearing localStorage and hitting protected route redirects to /login. PWA assets (/manifest.json, /service-worker.js, /offline.html) all return 200.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Dashboard charts", "issues": ["Recharts ResponsiveContainer logs repeated width(-1)/height(-1) warnings on initial render before container measures - cosmetic console noise only, charts ultimately render correctly. Consider giving the chart wrapper a fixed minHeight/aspect to suppress warnings."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_facets_crm.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Optional: silence Recharts ResponsiveContainer width/height warnings by giving dashboard chart wrappers an explicit minHeight or aspect prop."
+  ],
+  "critical_code_review_comments": [
+    "Backend schemas use slightly inconsistent field naming across resources (Products require `product_name`, Appointments require `customer_name`+`appointment_date`, WhatsApp uses `message`, Leads use `name`). Not a bug but consider a doc/README block clarifying create payloads so API consumers don't hit 422.",
+    "JWT secret + admin password are committed to /app/backend/.env. Acceptable for MVP but flag for production rotation.",
+    "/api/health performs a DB ping inside the request - fine for SQLite, but if migrated to a real DB this can become a per-request load source."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_facets_crm.py (newly added)"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "Admin admin@facetscrm.com / password123, Sales aditi.kapoor@facetscrm.com / password123 (from /app/memory/test_credentials.md, verified working).",
+  "seed_data_creation": "No new seed data. Existing seed (100 leads, 50 tasks, 100 calls, 20 WhatsApp convos, 40 products/appointments/quotations/ai logs, 6 users) was used and confirmed by both backend assertions and UI screenshots.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend regression suite lives at /app/backend/tests/test_facets_crm.py (pytest). Run: `cd /app/backend && python -m pytest tests/test_facets_crm.py -v --junitxml=/app/test_reports/pytest/pytest_results.xml`. To reset DB use `cd /app/backend && python seed.py`. Frontend localStorage keys are `facets_token`, `facets_refresh`, `facets_user` (axios attaches Bearer from `facets_token`). All sidebar nav data-testids work as documented in the request. Dashboard renders 6 stat tiles with `data-testid=stat-*`.",
+  "rca of the issue": "No bugs found - all features in the request behave as specified."
+}

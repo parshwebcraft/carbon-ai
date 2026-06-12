@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    margin: 0;
+    font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #FBF8F3;
+}
+
+.font-serif {
+    font-family: 'Fraunces', 'Cormorant Garamond', Georgia, serif;
+    font-feature-settings: "ss01", "ss02";
+    letter-spacing: -0.01em;
+}
+
+code {
+    font-family: 'JetBrains Mono', source-code-pro, Menlo, Monaco, Consolas, monospace;
+}
+
+@layer base {
+    :root {
+        --background: 36 33% 97%;
+        --foreground: 24 10% 12%;
+        --card: 0 0% 100%;
+        --card-foreground: 24 10% 12%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 24 10% 12%;
+        --primary: 31 71% 30%;
+        --primary-foreground: 36 33% 97%;
+        --secondary: 38 50% 92%;
+        --secondary-foreground: 24 10% 12%;
+        --muted: 38 30% 94%;
+        --muted-foreground: 24 6% 40%;
+        --accent: 36 60% 92%;
+        --accent-foreground: 24 10% 12%;
+        --destructive: 0 75% 50%;
+        --destructive-foreground: 0 0% 100%;
+        --border: 36 30% 88%;
+        --input: 36 30% 88%;
+        --ring: 31 71% 40%;
+        --radius: 0.6rem;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
+}
+
+/* Scrollbar polish for jewellery feel */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: #E7D6B8; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #C9A86E; }
+::-webkit-scrollbar-track { background: transparent; }

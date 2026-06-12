@@ -1,0 +1,41 @@
+{
+  "summary": "Iteration 3 — AI Calling Campaigns + Settings end-to-end testing. Backend: 30/30 new campaign tests + 76 total combined regression pass (1 pre-existing flaky test_iteration2 vapi-webhook test that depends on a vapi_call_id getting consumed across reruns — not related to this iteration). New tests cover: auth/me, dashboard, full regression list endpoints, GET/PUT /api/settings/calling, GET /api/settings/calling/provider (provider='mock', 8 outcomes), POST /api/campaigns/preview (101 leads matched for status=New|Contacted), full CRUD on /api/campaigns, CSV upload with header variations + dedupe (verified upload adds at least 1 unique target and de-dupes within campaign), lifecycle launch/pause/resume/cancel + 400 when zero pending, manual /tick converging all pending to final states (completed/failed/busy/no_answer), targets pagination/filter, analytics headline+sentiment+outcome distributions, automations (lead.status moves to Interested/Visit Scheduled/Quotation Sent/Lost based on outcome, follow-up Task created with correct title prefix for non-Not-Interested outcomes, legacy Call row inserted, AIAgentLog inserted), and role guards (Sales 403 on create/update/settings/tick). Frontend (Playwright, admin): /campaigns renders with MOCK provider badge, campaigns-table + 1 seeded row 'Diwali Bridal Push'. Settings dialog opens, loads defaults (daily=500, cpm=60, start=00:00, end=23:59), saving persists. New-campaign dialog opens; preview returns '101 leads matched'. Campaign detail (id=1) shows all 7 tiles (total/connected/interested/appts/quotes/conv/score) and the action buttons render conditionally by status (campaign completed → only csv-btn + delete-btn shown, which is correct UX). Dashboard, Leads, Tasks, Calls, WhatsApp, Products, Appointments, Quotations, AI Logs, Team all load with PAGE_ERRORS=0.",
+  "backend_issues": {"critical": [], "minor": [
+    {"endpoint": "/api/voice/webhook", "issue": "Pre-existing iteration_2 test test_voice_webhook_full_flow_via_sqlite is now flaky because the sqlite-stamped vapi_call_id row from previous runs gets resolved-then-cleared by subsequent runs, causing 'ignored: unknown call' on re-runs. Not a product bug — fixture/state issue. Recommend re-stamping vapi_call_id at start of that test."}
+  ]},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/campaigns/{id} detail page", "issues": ["Recharts emits width(-1)/height(-1) warning when chart container measures before layout; cosmetic only — set explicit minHeight on ResponsiveContainer to silence."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_campaigns.py",
+    "/app/backend/tests/test_facets_crm.py",
+    "/app/backend/tests/test_iteration2.py",
+    "/app/test_reports/pytest/iteration3.xml",
+    "/app/test_reports/pytest/iteration3_full.xml"
+  ],
+  "action_items": [
+    "(Optional) Stabilise test_iteration2.test_voice_webhook_full_flow_via_sqlite by re-stamping vapi_call_id at test start so it remains idempotent across reruns.",
+    "(Optional) Add explicit minHeight to Recharts ResponsiveContainer on CampaignDetail to remove width(-1)/height(-1) warning."
+  ],
+  "critical_code_review_comments": [
+    "routers/campaigns.py _dialed_today() uses last_attempt_at >= start_of_today_UTC, while the calling window is evaluated in IST. For accurate daily-cap behaviour around midnight IST, consider computing the day boundary in IST too.",
+    "services/campaign_engine.py _apply_outcome() — when outcome maps to a new lead status, it overwrites the existing status unconditionally (except 'Won'). Consider adding 'Visit Scheduled' / 'Quotation Sent' / 'Interested' precedence rules to avoid downgrading a lead from 'Visit Scheduled' to 'Interested' on a subsequent call.",
+    "services/campaign_engine.py — engine background loop runs every 10s; for the test environment it can interact with manual /tick calls and finish targets between assertions. Acceptable, but document for next agent.",
+    "routers/campaigns.py CSV upload sets c.source_type='mixed' only when added>0 — fine. But it does not validate file size or row count, so extremely large CSVs could OOM. Add a max-rows guard before production.",
+    "schemas.CampaignTargetOut should explicitly exclude any internal fields; currently relies on Pydantic from_attributes — verify no sensitive lead PII leaks beyond what /api/leads exposes."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_campaigns.py (new)"
+  ],
+  "success_rate": {"backend": "98.7% (76/77 across iterations 1+2+3; the 1 failure is a pre-existing iteration-2 fixture issue, NOT this iteration)", "frontend": "100%"},
+  "test_credentials": "Admin admin@facetscrm.com / password123, Manager priya.sharma@facetscrm.com / password123, Sales aditi.kapoor@facetscrm.com / password123",
+  "seed_data_creation": "Tests create a TEST_AI_Camp_Iter3 campaign (auto-deleted in fixture teardown), a TEST_EMPTY campaign (auto-deleted), and inject TEST_CSV_* phones via CSV upload. The seeded 'Diwali Bridal Push' campaign (id=1) was ticked to completion during testing — calling Settings cpm is now set to 60.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Run: cd /app/backend && python -m pytest tests/test_campaigns.py -v. The seeded campaign id=1 may now be in 'completed' state after this iteration's ticks — if you need a 'running' campaign for UI testing, either create a new one via POST /api/campaigns or re-seed. Calling settings have been changed to calls_per_minute=60 and 00:00-23:59 — adjust if testing pacing/window enforcement. The iteration_2 vapi webhook test is known-flaky on reruns; ignore that single failure unless you re-stamp vapi_call_id first.",
+  "rca of the issue": "No product bugs found. Pre-existing test flakiness in test_iteration2.py is caused by the test consuming the sqlite-stamped vapi_call_id on its first run; subsequent runs hit the 'unknown call' branch. Mitigation: re-stamp vapi_call_id at start of that specific test or use a fresh Call row per run."
+}

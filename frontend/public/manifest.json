@@ -1,0 +1,19 @@
+{
+  "name": "Facets Lifestyle CRM",
+  "short_name": "Facets CRM",
+  "description": "Jewellery CRM for Facets Lifestyle Pvt Ltd.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FBF8F3",
+  "theme_color": "#B45309",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/facets-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

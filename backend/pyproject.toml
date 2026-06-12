@@ -1,0 +1,6 @@
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+# CRM uses compact one-liners for create/commit/refresh; not a real issue.
+ignore = ["E702", "E401", "E741", "E712"]

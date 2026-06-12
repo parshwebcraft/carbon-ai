@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Facets CRM — Offline</title>
+    <style>
+      body { margin:0; min-height:100vh; display:grid; place-items:center;
+        background:#FBF8F3; color:#1f2937;
+        font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif; }
+      .wrap { text-align:center; padding:32px; }
+      .icon { width:64px; height:64px; border-radius:16px; background:#FEF3C7;
+        border:1px solid #FDE68A; display:inline-grid; place-items:center; color:#B45309;
+        font-size: 28px; }
+      h1 { font-family:'Fraunces',Georgia,serif; font-size:28px; margin:16px 0 8px;}
+      p  { color:#475569; max-width:380px; margin:0 auto; }
+      button { margin-top:20px; background:#B45309; color:white; border:0;
+        padding:10px 16px; border-radius:8px; font-weight:600; cursor:pointer; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="icon">⬡</div>
+      <h1>You're offline</h1>
+      <p>Facets CRM needs an internet connection to sync your pipeline. Reconnect and try again.</p>
+      <button onclick="location.reload()">Try again</button>
+    </div>
+  </body>
+</html>
