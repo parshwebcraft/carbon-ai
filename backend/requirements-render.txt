@@ -1,0 +1,49 @@
+# ── Core API Framework ─────────────────────────────────────────────────────
+fastapi==0.110.1
+uvicorn[standard]
+starlette
+
+# ── Database ───────────────────────────────────────────────────────────────
+SQLAlchemy>=2.0.0
+alembic
+
+# ── Auth / Security ────────────────────────────────────────────────────────
+python-jose[cryptography]
+passlib[bcrypt]
+bcrypt
+PyJWT
+
+# ── Data Validation ────────────────────────────────────────────────────────
+pydantic[email]>=2.0.0
+pydantic-settings
+
+# ── HTTP / Async ───────────────────────────────────────────────────────────
+httpx
+aiohttp
+python-multipart
+
+# ── Environment ────────────────────────────────────────────────────────────
+python-dotenv
+
+# ── AI / LLM Integrations ─────────────────────────────────────────────────
+openai
+google-generativeai
+google-genai
+litellm
+
+# ── Data / Utils ───────────────────────────────────────────────────────────
+pandas
+Faker
+python-dateutil
+tenacity
+stripe
+
+# ── AWS ────────────────────────────────────────────────────────────────────
+boto3
+
+# ── MongoDB (legacy import) ────────────────────────────────────────────────
+motor
+pymongo
+
+# ── WhatsApp / Comms ───────────────────────────────────────────────────────
+requests
