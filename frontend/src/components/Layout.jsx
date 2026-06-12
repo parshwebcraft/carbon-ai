@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Users, ListTodo, Phone, MessageCircle,
-  Gem, CalendarCheck2, FileText, Bot, UserCog, LogOut, Menu, X, Bell, PhoneCall,
+  Gem, CalendarCheck2, FileText, Bot, UserCog, LogOut, Menu, X, Bell, PhoneCall, Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import InstallPrompt from "@/components/InstallPrompt";
@@ -15,7 +15,8 @@ const NAV = [
   { to: "/tasks", label: "Tasks", icon: ListTodo },
   { to: "/calls", label: "Calls", icon: Phone },
   { to: "/campaigns", label: "AI Calling", icon: PhoneCall },
-  { to: "/whatsapp", label: "WhatsApp", icon: MessageCircle },
+  { to: "/copilot",   label: "AI Copilot", icon: Sparkles },
+  { to: "/whatsapp",  label: "WhatsApp",   icon: MessageCircle },
   { to: "/products", label: "Products", icon: Gem },
   { to: "/appointments", label: "Appointments", icon: CalendarCheck2 },
   { to: "/quotations", label: "Quotations", icon: FileText },

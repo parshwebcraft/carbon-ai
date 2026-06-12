@@ -19,6 +19,7 @@ import Users from "@/pages/Users";
 import Offline from "@/pages/Offline";
 import Campaigns from "@/pages/Campaigns";
 import CampaignDetail from "@/pages/CampaignDetail";
+import Copilot from "@/pages/Copilot";
 
 import "@/App.css";
 
@@ -49,6 +50,7 @@ function App() {
           <Route path="/ai-logs" element={<Authed><AILogs /></Authed>} />
           <Route path="/campaigns" element={<Authed><Campaigns /></Authed>} />
           <Route path="/campaigns/:id" element={<Authed><CampaignDetail /></Authed>} />
+          <Route path="/copilot" element={<Authed><Copilot /></Authed>} />
           <Route path="/users" element={<Authed><Users /></Authed>} />
         </Routes>
         <Toaster richColors position="top-right" />

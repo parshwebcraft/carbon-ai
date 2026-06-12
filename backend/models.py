@@ -239,3 +239,64 @@ class CampaignTarget(Base):
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
 
     campaign = relationship("Campaign", back_populates="targets")
+
+
+# ============================================================
+# AI Copilot Module
+# ============================================================
+
+class ConversationSession(Base):
+    """Live sales conversation session linked to a lead."""
+    __tablename__ = "conversation_sessions"
+    id = Column(Integer, primary_key=True, index=True)
+    lead_id = Column(Integer, ForeignKey("leads.id"), nullable=True, index=True)
+    started_at = Column(DateTime, default=utcnow, nullable=False)
+    ended_at = Column(DateTime, nullable=True)
+    # active | ended
+    status = Column(String(20), default="active", nullable=False)
+
+    messages = relationship("ConversationMessage", back_populates="session",
+                            cascade="all, delete-orphan", order_by="ConversationMessage.created_at")
+    suggestions = relationship("CopilotSuggestion", back_populates="session",
+                               cascade="all, delete-orphan", order_by="CopilotSuggestion.created_at")
+
+
+class ConversationMessage(Base):
+    """One turn inside a ConversationSession."""
+    __tablename__ = "conversation_messages"
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("conversation_sessions.id"), nullable=False, index=True)
+    # Customer | Salesperson
+    speaker = Column(String(40), nullable=False)
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+    session = relationship("ConversationSession", back_populates="messages")
+
+
+class CopilotSuggestion(Base):
+    """AI-generated suggestion for a conversation turn."""
+    __tablename__ = "copilot_suggestions"
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("conversation_sessions.id"), nullable=False, index=True)
+    # next_question | product_suggestion | offer_suggestion | objection_handling | closing_suggestion
+    suggestion_type = Column(String(40), nullable=False)
+    content = Column(Text, nullable=False)
+    confidence = Column(Float, default=0.8)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+    session = relationship("ConversationSession", back_populates="suggestions")
+
+
+class LeadInsight(Base):
+    """Persisted AI qualification insight for a lead."""
+    __tablename__ = "lead_insights"
+    id = Column(Integer, primary_key=True, index=True)
+    lead_id = Column(Integer, ForeignKey("leads.id"), nullable=False, unique=True, index=True)
+    lead_score = Column(Integer, default=0)        # 0–100
+    intent = Column(String(200))
+    budget = Column(String(100))
+    timeline = Column(String(100))
+    decision_maker = Column(String(100))
+    summary = Column(Text)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
