@@ -13,7 +13,7 @@ import {
   Target, Wallet, Clock, User, TrendingUp, Play, Square,
   Send, RefreshCw, Loader2, Gem, ChevronRight, Sparkles,
   MessageSquare, History, Star, Flame, BarChart2, ListChecks,
-  AlertTriangle, CheckCircle2, Phone, MessageCircle, Zap,
+  CheckCircle2, Zap,
 } from "lucide-react";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -37,10 +37,10 @@ function scoreBarColor(score) {
 }
 
 const SUGGESTION_CONFIG = {
-  next_question:      { icon: MessageSquare, label: "Next Question",          accent: "border-sky-200 bg-sky-50",     iconClass: "text-sky-600" },
-  product_suggestion: { icon: Package,       label: "Product Recommendation", accent: "border-amber-200 bg-amber-50", iconClass: "text-amber-700" },
+  next_question:      { icon: MessageSquare, label: "Next Question",          accent: "border-sky-200 bg-sky-50",      iconClass: "text-sky-600" },
+  product_suggestion: { icon: Package,       label: "Product Recommendation", accent: "border-amber-200 bg-amber-50",  iconClass: "text-amber-700" },
   offer_suggestion:   { icon: Tag,           label: "Offer Suggestion",       accent: "border-violet-200 bg-violet-50", iconClass: "text-violet-600" },
-  objection_handling: { icon: ShieldAlert,   label: "Objection Handling",     accent: "border-rose-200 bg-rose-50",   iconClass: "text-rose-600" },
+  objection_handling: { icon: ShieldAlert,   label: "Objection Handling",     accent: "border-rose-200 bg-rose-50",    iconClass: "text-rose-600" },
   closing_suggestion: { icon: Handshake,     label: "Deal Closing",           accent: "border-emerald-200 bg-emerald-50", iconClass: "text-emerald-600" },
 };
 
@@ -128,6 +128,7 @@ function ProductCard({ product }) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function Copilot() {
+  // Session state
   const [leads, setLeads] = useState([]);
   const [selectedLead, setSelectedLead] = useState(null);
   const [session, setSession] = useState(null);
@@ -141,29 +142,39 @@ export default function Copilot() {
   const [aiLoading, setAiLoading] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [sessionLoading, setSessionLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("suggestions"); // suggestions | products | history
+  const [activeTab, setActiveTab] = useState("suggestions");
 
-  // Pipeline Intelligence state
-  const [pageTab, setPageTab] = useState("session"); // session | pipeline
+  // Page-level tabs
+  const [pageTab, setPageTab] = useState("session"); // "session" | "pipeline"
+
+  // Pipeline state
   const [pipeline, setPipeline] = useState([]);
   const [pipelineLoading, setPipelineLoading] = useState(false);
   const [batchScoring, setBatchScoring] = useState(false);
   const [followUps, setFollowUps] = useState([]);
   const [followUpsLoading, setFollowUpsLoading] = useState(false);
-  const [creatingTask, setCreatingTask] = useState(null); // lead_id being converted
+  const [creatingTask, setCreatingTask] = useState(null);
 
   const wsRef = useRef(null);
   const transcriptEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  // ── Load leads on mount ──────────────────────────────────────────────────
+  // ── Load leads ───────────────────────────────────────────────────────────
   useEffect(() => {
     api.get("/leads", { params: { page: 1, page_size: 100 } })
       .then((r) => setLeads(r.data.items || []))
       .catch(() => {});
   }, []);
 
-  // ── Pipeline data loaders ────────────────────────────────────────────────
+  // ── Scroll transcript ────────────────────────────────────────────────────
+  useEffect(() => {
+    transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // ── Cleanup WS ───────────────────────────────────────────────────────────
+  useEffect(() => { return () => wsRef.current?.close(); }, []);
+
+  // ── Pipeline loaders ─────────────────────────────────────────────────────
   function loadPipeline() {
     setPipelineLoading(true);
     api.get("/copilot/pipeline")
@@ -201,7 +212,7 @@ export default function Copilot() {
         title: `Follow up: ${fu.lead_name}`,
         description: fu.message,
       });
-      toast.success("Task created in Tasks!");
+      toast.success("Task created!");
       setFollowUps((prev) => prev.filter((f) => f.lead_id !== fu.lead_id));
     } catch (e) {
       toast.error(errMsg(e));
@@ -210,45 +221,27 @@ export default function Copilot() {
     }
   }
 
-  // ── Scroll transcript to bottom ──────────────────────────────────────────
-  useEffect(() => {
-    transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  // ── Cleanup WS on unmount ────────────────────────────────────────────────
-  useEffect(() => {
-    return () => wsRef.current?.close();
-  }, []);
-
-  // ── WebSocket connection ─────────────────────────────────────────────────
+  // ── WebSocket ────────────────────────────────────────────────────────────
   const connectWs = useCallback((sessionId) => {
     if (wsRef.current) wsRef.current.close();
-
     const wsBase = API_BASE.replace(/^http/, "ws");
     const token = localStorage.getItem("facets_token");
-    const url = `${wsBase}/copilot/ws/${sessionId}?token=${token}`;
-    const ws = new WebSocket(url);
-
+    const ws = new WebSocket(`${wsBase}/copilot/ws/${sessionId}?token=${token}`);
     ws.onopen = () => {
-      // Send ping every 25s to keep alive
       ws._pingInterval = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: "ping" }));
       }, 25000);
     };
-
     ws.onmessage = (e) => {
       try {
         const msg = JSON.parse(e.data);
         if (msg.type === "suggestions" && msg.data) {
           const ai = msg.data;
-          // Build suggestion map from flat AI response
           const newSuggestions = {};
-          ["next_question", "product_suggestion", "offer_suggestion",
-           "objection_handling", "closing_suggestion"].forEach((k) => {
+          ["next_question","product_suggestion","offer_suggestion","objection_handling","closing_suggestion"].forEach((k) => {
             if (ai[k]) newSuggestions[k] = { content: ai[k], confidence: 0.85 };
           });
           setSuggestions(newSuggestions);
-          // Update insight fields
           setInsight((prev) => ({
             ...(prev || {}),
             lead_score: ai.lead_score ?? prev?.lead_score ?? 0,
@@ -261,47 +254,28 @@ export default function Copilot() {
         }
       } catch (_) {}
     };
-
     ws.onerror = () => setAiLoading(false);
     ws.onclose = () => clearInterval(ws._pingInterval);
-
     wsRef.current = ws;
   }, []);
 
-  // ── Start session ────────────────────────────────────────────────────────
+  // ── Session controls ─────────────────────────────────────────────────────
   async function startSession() {
-    if (!selectedLead) {
-      toast.error("Please select a lead first");
-      return;
-    }
+    if (!selectedLead) { toast.error("Please select a lead first"); return; }
     setSessionLoading(true);
     try {
       const res = await api.post("/copilot/sessions", { lead_id: selectedLead.id });
       const sess = res.data;
       setSession(sess);
-      setMessages([]);
-      setSuggestions({});
-      setInsight(null);
+      setMessages([]); setSuggestions({}); setInsight(null);
       connectWs(sess.id);
-
-      // Load existing insight if any
-      try {
-        const insRes = await api.get(`/copilot/leads/${selectedLead.id}/insight`);
-        setInsight(insRes.data);
-      } catch (_) {}
-
-      // Load product recommendations
+      try { const r = await api.get(`/copilot/leads/${selectedLead.id}/insight`); setInsight(r.data); } catch (_) {}
       loadProducts();
-
       toast.success("AI Copilot session started");
-    } catch (e) {
-      toast.error(errMsg(e));
-    } finally {
-      setSessionLoading(false);
-    }
+    } catch (e) { toast.error(errMsg(e)); }
+    finally { setSessionLoading(false); }
   }
 
-  // ── End session ──────────────────────────────────────────────────────────
   async function endSession() {
     if (!session) return;
     try {
@@ -309,53 +283,37 @@ export default function Copilot() {
       setSession((s) => ({ ...s, status: "ended" }));
       wsRef.current?.close();
       toast.success("Session ended");
-    } catch (e) {
-      toast.error(errMsg(e));
-    }
+    } catch (e) { toast.error(errMsg(e)); }
   }
 
-  // ── Send message ─────────────────────────────────────────────────────────
   async function sendMessage() {
     const content = msgInput.trim();
     if (!content || !session) return;
-    if (session.status === "ended") {
-      toast.error("Session has ended");
-      return;
-    }
-
+    if (session.status === "ended") { toast.error("Session has ended"); return; }
     const optimistic = { id: Date.now(), session_id: session.id, speaker, content, created_at: new Date().toISOString() };
     setMessages((prev) => [...prev, optimistic]);
     setMsgInput("");
     setAiLoading(true);
     inputRef.current?.focus();
-
     try {
       await api.post(`/copilot/sessions/${session.id}/messages`, { speaker, content });
-      // WS will deliver the AI suggestions; fallback to polling if WS not connected
       if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
         setTimeout(() => pollSuggestions(), 3000);
       }
-    } catch (e) {
-      toast.error(errMsg(e));
-      setAiLoading(false);
-    }
+    } catch (e) { toast.error(errMsg(e)); setAiLoading(false); }
   }
 
-  // ── Poll suggestions (WS fallback) ───────────────────────────────────────
   async function pollSuggestions() {
     if (!session) return;
     try {
       const res = await api.get(`/copilot/sessions/${session.id}/suggestions`);
       const map = {};
-      (res.data || []).forEach((s) => {
-        map[s.suggestion_type] = { content: s.content, confidence: s.confidence };
-      });
+      (res.data || []).forEach((s) => { map[s.suggestion_type] = { content: s.content, confidence: s.confidence }; });
       setSuggestions(map);
     } catch (_) {}
     setAiLoading(false);
   }
 
-  // ── Trigger manual AI refresh ────────────────────────────────────────────
   async function triggerAnalysis() {
     if (!session) return;
     setAiLoading(true);
@@ -363,8 +321,7 @@ export default function Copilot() {
       const res = await api.post(`/copilot/sessions/${session.id}/analyse`);
       const ai = res.data;
       const newSuggestions = {};
-      ["next_question", "product_suggestion", "offer_suggestion",
-       "objection_handling", "closing_suggestion"].forEach((k) => {
+      ["next_question","product_suggestion","offer_suggestion","objection_handling","closing_suggestion"].forEach((k) => {
         if (ai[k]) newSuggestions[k] = { content: ai[k], confidence: 0.85 };
       });
       setSuggestions(newSuggestions);
@@ -376,14 +333,10 @@ export default function Copilot() {
         timeline: ai.timeline ?? "Unknown",
         decision_maker: ai.decision_maker ?? "Unknown",
       }));
-    } catch (e) {
-      toast.error(errMsg(e));
-    } finally {
-      setAiLoading(false);
-    }
+    } catch (e) { toast.error(errMsg(e)); }
+    finally { setAiLoading(false); }
   }
 
-  // ── Load product recommendations ──────────────────────────────────────────
   async function loadProducts() {
     if (!selectedLead) return;
     try {
@@ -392,30 +345,23 @@ export default function Copilot() {
     } catch (_) {}
   }
 
-  // ── Load history summary ──────────────────────────────────────────────────
   async function loadHistorySummary() {
     if (!selectedLead) return;
     setHistoryLoading(true);
     try {
       const res = await api.get(`/copilot/leads/${selectedLead.id}/history-summary`);
       setHistorySummary(res.data.summary || "");
-    } catch (e) {
-      toast.error(errMsg(e));
-    } finally {
-      setHistoryLoading(false);
-    }
+    } catch (e) { toast.error(errMsg(e)); }
+    finally { setHistoryLoading(false); }
   }
 
-  // ── Key press handler ─────────────────────────────────────────────────────
   function handleKeyDown(e) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   }
 
   const hasSuggestions = Object.keys(suggestions).length > 0;
 
+  // ─── render ───────────────────────────────────────────────────────────────
   return (
     <div className="space-y-4" data-testid="copilot-page">
 
@@ -430,7 +376,6 @@ export default function Copilot() {
             Real-time AI assistance · Pipeline Intelligence · Follow-up Engine
           </p>
         </div>
-        {/* Tab switcher */}
         <div className="flex gap-1 bg-amber-50 border border-amber-100 rounded-xl p-1">
           {[
             { id: "session",  Icon: MessageSquare, label: "Live Session" },
@@ -438,14 +383,9 @@ export default function Copilot() {
           ].map(({ id, Icon, label }) => (
             <button
               key={id}
-              onClick={() => {
-                setPageTab(id);
-                if (id === "pipeline" && pipeline.length === 0) loadPipeline();
-              }}
+              onClick={() => { setPageTab(id); if (id === "pipeline" && pipeline.length === 0) loadPipeline(); }}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                pageTab === id
-                  ? "bg-amber-700 text-white shadow-sm"
-                  : "text-slate-600 hover:text-amber-700"
+                pageTab === id ? "bg-amber-700 text-white shadow-sm" : "text-slate-600 hover:text-amber-700"
               }`}
             >
               <Icon className="h-4 w-4" />
@@ -455,7 +395,7 @@ export default function Copilot() {
         </div>
       </div>
 
-      {/* ══ LIVE SESSION TAB ══════════════════════════════════════════ */}
+      {/* ══ LIVE SESSION TAB ══════════════════════════════════════════════ */}
       {pageTab === "session" && (
         <>
           {/* Lead selector + session controls */}
@@ -475,9 +415,7 @@ export default function Copilot() {
               </SelectTrigger>
               <SelectContent>
                 {leads.map((l) => (
-                  <SelectItem key={l.id} value={l.id.toString()}>
-                    {l.name} — {l.status}
-                  </SelectItem>
+                  <SelectItem key={l.id} value={l.id.toString()}>{l.name} — {l.status}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -497,9 +435,7 @@ export default function Copilot() {
 
             {session && (
               <div className={`flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-full ${
-                session.status === "active"
-                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                  : "bg-slate-100 text-slate-500 border border-slate-200"
+                session.status === "active" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-slate-100 text-slate-500 border border-slate-200"
               }`}>
                 <span className={`h-2 w-2 rounded-full ${session.status === "active" ? "bg-emerald-500 animate-pulse" : "bg-slate-400"}`} />
                 Session #{session.id} — {session.status === "active" ? "Live" : "Ended"}
@@ -520,6 +456,7 @@ export default function Copilot() {
 
           {session && (
             <div className="grid grid-cols-1 xl:grid-cols-[1fr_1.1fr_340px] gap-4 items-start">
+
               {/* LEFT: Transcript */}
               <Card className="border-amber-100 bg-white flex flex-col" style={{ height: "calc(100vh - 240px)", minHeight: 500 }}>
                 <div className="flex items-center justify-between px-5 py-3 border-b border-amber-100">
@@ -712,10 +649,10 @@ export default function Copilot() {
                     </p>
                   </div>
                   <div className="space-y-0 divide-y divide-amber-50">
-                    <QualificationRow icon={Lightbulb} label="Intent"           value={insight?.intent}          highlight="bg-sky-50" />
-                    <QualificationRow icon={Wallet}    label="Budget"           value={insight?.budget}          highlight="bg-emerald-50" />
-                    <QualificationRow icon={Clock}     label="Purchase Timeline" value={insight?.timeline}      highlight="bg-violet-50" />
-                    <QualificationRow icon={User}      label="Decision Maker"   value={insight?.decision_maker}  highlight="bg-amber-50" />
+                    <QualificationRow icon={Lightbulb} label="Intent"           value={insight?.intent}         highlight="bg-sky-50" />
+                    <QualificationRow icon={Wallet}    label="Budget"           value={insight?.budget}         highlight="bg-emerald-50" />
+                    <QualificationRow icon={Clock}     label="Purchase Timeline" value={insight?.timeline}     highlight="bg-violet-50" />
+                    <QualificationRow icon={User}      label="Decision Maker"   value={insight?.decision_maker} highlight="bg-amber-50" />
                   </div>
                   <div className="mt-5">
                     <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">BANT Qualification</div>
@@ -749,15 +686,17 @@ export default function Copilot() {
                   )}
                 </div>
               </Card>
+
             </div>
           )}
         </>
       )}
 
-      {/* ══ PIPELINE TAB ══════════════════════════════════════════════ */}
+      {/* ══ PIPELINE TAB ══════════════════════════════════════════════════ */}
       {pageTab === "pipeline" && (
         <div className="space-y-5">
-          {/* Stats + actions */}
+
+          {/* Stats bar + actions */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-4 text-sm text-slate-500">
               <span>{pipeline.length} leads</span>
@@ -858,7 +797,7 @@ export default function Copilot() {
             </div>
           </Card>
 
-          {/* Follow-Up Engine */}
+          {/* AI Follow-Up Engine */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-semibold text-slate-800 flex items-center gap-2">
@@ -927,6 +866,7 @@ export default function Copilot() {
               </div>
             )}
           </div>
+
         </div>
       )}
 
