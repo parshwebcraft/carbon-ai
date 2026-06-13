@@ -115,3 +115,31 @@ def call_script(lead_id: int, db: Session = Depends(get_db),
     except Exception as e:  # noqa: BLE001
         raise HTTPException(502, f"AI error: {e}")
     return ScriptOut(script=text)
+
+
+@router.post("/whatsapp-analyse/{lead_id}")
+def whatsapp_analyse(lead_id: int, db: Session = Depends(get_db),
+                     _: User = Depends(get_current_user)):
+    """Full AI analysis of a WhatsApp conversation thread.
+
+    Returns: intent, sentiment, objections, conversion_probability, next_action, summary
+    """
+    from services import copilot as copilot_svc
+
+    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+    if not lead:
+        raise HTTPException(404, "Lead not found")
+    history = (db.query(WhatsappMessage)
+                 .filter(WhatsappMessage.lead_id == lead_id)
+                 .order_by(WhatsappMessage.created_at.asc()).all())
+    messages = [{"direction": m.direction, "message": m.message} for m in history]
+    lead_dict = {
+        "name": lead.name, "city": lead.city,
+        "customer_type": lead.customer_type,
+        "budget": lead.budget, "status": lead.status,
+    }
+    try:
+        result = copilot_svc.analyse_whatsapp_thread(messages, lead_dict)
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(502, f"AI error: {e}")
+    return result

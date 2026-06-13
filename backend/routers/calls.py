@@ -3,20 +3,40 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import Call, User
+from models import Call, Lead, LeadInsight, User
 from schemas import CallCreate, CallUpdate, CallOut
 from deps import get_current_user
 
 router = APIRouter(prefix="/calls", tags=["calls"])
 
 
-@router.get("", response_model=List[CallOut])
+@router.get("")
 def list_calls(lead_id: Optional[int] = None, db: Session = Depends(get_db),
                _: User = Depends(get_current_user)):
+    """Return calls enriched with lead name + AI score from LeadInsight."""
     q = db.query(Call)
     if lead_id is not None:
         q = q.filter(Call.lead_id == lead_id)
-    return [CallOut.model_validate(i) for i in q.order_by(Call.created_at.desc()).all()]
+    calls = q.order_by(Call.created_at.desc()).all()
+
+    result = []
+    for c in calls:
+        lead = db.query(Lead).filter(Lead.id == c.lead_id).first()
+        insight = db.query(LeadInsight).filter(LeadInsight.lead_id == c.lead_id).first() if c.lead_id else None
+        result.append({
+            "id": c.id,
+            "lead_id": c.lead_id,
+            "lead_name": lead.name if lead else f"Lead #{c.lead_id}",
+            "lead_score": insight.lead_score if insight else None,
+            "call_duration": c.call_duration,
+            "call_status": c.call_status,
+            "call_summary": c.call_summary,
+            "transcript": c.transcript,
+            "sentiment": c.sentiment,
+            "vapi_call_id": c.vapi_call_id,
+            "created_at": c.created_at.isoformat() if c.created_at else None,
+        })
+    return result
 
 
 @router.get("/{call_id}", response_model=CallOut)

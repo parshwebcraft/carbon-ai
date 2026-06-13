@@ -252,3 +252,191 @@ def generate_history_summary(
         ).strip()
     except Exception:  # noqa: BLE001
         return "AI summary unavailable — configure DEEPSEEK_API_KEY."
+
+
+# ── WhatsApp thread intelligence ─────────────────────────────────────────────
+
+WHATSAPP_SYSTEM = (
+    "You are a CRM analyst for Facets Lifestyle premium jewellery. "
+    "Analyse WhatsApp conversations between the sales agent and customers. "
+    "Be concise, data-driven, and focused on actionable sales intelligence."
+)
+
+
+def analyse_whatsapp_thread(messages: list[dict], lead: dict) -> dict:
+    """
+    Deep analysis of a WhatsApp thread.
+    Returns: {intent, sentiment, objections, conversion_probability, next_action, summary}
+    """
+    lines = "\n".join(
+        f"{'Customer' if m.get('direction') == 'in' else 'Agent'}: {m.get('message', '')}"
+        for m in messages[-20:]
+    )
+    prompt = (
+        f"Lead: {lead.get('name')}, {lead.get('customer_type')}, "
+        f"Budget ₹{int(lead.get('budget') or 0):,}, Status: {lead.get('status')}\n\n"
+        f"WhatsApp conversation:\n{lines}\n\n"
+        "Respond ONLY with JSON having these exact keys:\n"
+        "- intent: customer's purchase intent (e.g. 'Bridal Necklace', 'Unknown')\n"
+        "- sentiment: Positive | Neutral | Negative\n"
+        "- objections: list of up to 3 objections as a comma-separated string\n"
+        "- conversion_probability: integer 0-100\n"
+        "- next_action: single best next step for the sales agent (max 20 words)\n"
+        "- summary: 1-sentence conversation summary"
+    )
+    try:
+        result = deepseek.chat_json(
+            [
+                {"role": "system", "content": WHATSAPP_SYSTEM},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.2,
+            max_tokens=350,
+        )
+    except Exception:  # noqa: BLE001
+        result = {}
+
+    # Normalise
+    defaults = {
+        "intent": "Unknown", "sentiment": "Neutral", "objections": "",
+        "conversion_probability": 0, "next_action": "Follow up with customer",
+        "summary": "No summary available",
+    }
+    for k, v in defaults.items():
+        if k not in result or result[k] is None:
+            result[k] = v
+    try:
+        result["conversion_probability"] = max(0, min(100, int(result["conversion_probability"])))
+    except (TypeError, ValueError):
+        result["conversion_probability"] = 0
+    return result
+
+
+# ── Batch lead scoring ────────────────────────────────────────────────────────
+
+def score_lead_quick(lead: dict, activities: list[dict]) -> dict:
+    """
+    Quick AI scoring for a single lead using profile + activity history.
+    Returns normalised suggestion dict (subset of generate_copilot_suggestions output).
+    """
+    act_lines = "\n".join(
+        f"- [{a.get('activity_type')}] {(a.get('description') or '')[:80]}"
+        for a in activities[:8]
+    )
+    prompt = (
+        f"Score this jewellery lead for sales priority:\n"
+        f"Name: {lead.get('name')}, City: {lead.get('city')}, "
+        f"Interest: {lead.get('customer_type')}, Status: {lead.get('status')}, "
+        f"Budget: ₹{int(lead.get('budget') or 0):,}\n"
+        f"Recent activity:\n{act_lines or '(none)'}\n\n"
+        "Respond ONLY with JSON:\n"
+        "- lead_score: integer 0-100\n"
+        "- intent: purchase intent string\n"
+        "- budget: budget range string\n"
+        "- timeline: purchase timeline string\n"
+        "- decision_maker: who decides\n"
+        "- conversion_probability: integer 0-100"
+    )
+    try:
+        result = deepseek.chat_json(
+            [
+                {"role": "system", "content": COPILOT_SYSTEM},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.2,
+            max_tokens=250,
+        )
+    except Exception:  # noqa: BLE001
+        result = {}
+
+    defaults = {
+        "lead_score": 30, "intent": "Unknown", "budget": "Unknown",
+        "timeline": "Unknown", "decision_maker": "Unknown", "conversion_probability": 30,
+    }
+    for k, v in defaults.items():
+        if k not in result or result[k] is None:
+            result[k] = v
+    for int_key in ("lead_score", "conversion_probability"):
+        try:
+            result[int_key] = max(0, min(100, int(result[int_key])))
+        except (TypeError, ValueError):
+            result[int_key] = defaults[int_key]
+    return result
+
+
+# ── Follow-up suggestion engine ───────────────────────────────────────────────
+
+FOLLOWUP_SYSTEM = (
+    "You are a senior jewellery sales coach at Facets Lifestyle. "
+    "Your job is to create specific, personalised follow-up action plans for sales reps. "
+    "Be direct, actionable, and specific to each customer's jewellery interests."
+)
+
+
+def generate_follow_up_suggestions(stale_leads: list[dict]) -> list[dict]:
+    """
+    Given a list of stale leads (no activity in N days), generate
+    a personalised follow-up suggestion for each.
+    Each lead dict: {id, name, city, customer_type, budget, status, last_activity_days, notes}
+    Returns list of {lead_id, lead_name, days_stale, priority, message, action_type}
+    """
+    if not stale_leads:
+        return []
+
+    lead_summaries = "\n".join(
+        f"{i+1}. ID={l['id']}, Name={l['name']}, "
+        f"Interest={l.get('customer_type','Unknown')}, "
+        f"Budget=₹{int(l.get('budget') or 0):,}, "
+        f"Status={l.get('status')}, "
+        f"Silent for {l.get('last_activity_days', '?')} days"
+        for i, l in enumerate(stale_leads[:15])
+    )
+
+    prompt = (
+        f"Generate follow-up suggestions for these {len(stale_leads[:15])} stale jewellery leads.\n\n"
+        f"{lead_summaries}\n\n"
+        "For each lead, respond with a JSON array of objects with:\n"
+        "- lead_id: (from the ID= field)\n"
+        "- priority: High | Medium | Low\n"
+        "- message: personalised WhatsApp/call message to send (max 40 words, Indian English)\n"
+        "- action_type: WhatsApp | Call | Email\n"
+        "\nRespond ONLY with the JSON array."
+    )
+    try:
+        raw = deepseek.chat(
+            [
+                {"role": "system", "content": FOLLOWUP_SYSTEM},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.4,
+            max_tokens=1200,
+        )
+        import json as _json
+        # Extract JSON array
+        start = raw.find("[")
+        end = raw.rfind("]")
+        if start >= 0 and end > start:
+            suggestions = _json.loads(raw[start:end + 1])
+        else:
+            suggestions = []
+    except Exception:  # noqa: BLE001
+        suggestions = []
+
+    # Enrich with lead info
+    lead_map = {l["id"]: l for l in stale_leads}
+    result = []
+    for s in suggestions:
+        lid = s.get("lead_id")
+        lead_info = lead_map.get(lid, {})
+        result.append({
+            "lead_id": lid,
+            "lead_name": lead_info.get("name", "Unknown"),
+            "days_stale": lead_info.get("last_activity_days", 0),
+            "status": lead_info.get("status", ""),
+            "customer_type": lead_info.get("customer_type", ""),
+            "budget": lead_info.get("budget", 0),
+            "priority": s.get("priority", "Medium"),
+            "message": s.get("message", ""),
+            "action_type": s.get("action_type", "WhatsApp"),
+        })
+    return result

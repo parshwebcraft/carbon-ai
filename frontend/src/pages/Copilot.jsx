@@ -12,7 +12,8 @@ import {
   Bot, Lightbulb, Package, Tag, ShieldAlert, Handshake,
   Target, Wallet, Clock, User, TrendingUp, Play, Square,
   Send, RefreshCw, Loader2, Gem, ChevronRight, Sparkles,
-  MessageSquare, History, Star,
+  MessageSquare, History, Star, Flame, BarChart2, ListChecks,
+  AlertTriangle, CheckCircle2, Phone, MessageCircle, Zap,
 } from "lucide-react";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -142,6 +143,15 @@ export default function Copilot() {
   const [sessionLoading, setSessionLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("suggestions"); // suggestions | products | history
 
+  // Pipeline Intelligence state
+  const [pageTab, setPageTab] = useState("session"); // session | pipeline
+  const [pipeline, setPipeline] = useState([]);
+  const [pipelineLoading, setPipelineLoading] = useState(false);
+  const [batchScoring, setBatchScoring] = useState(false);
+  const [followUps, setFollowUps] = useState([]);
+  const [followUpsLoading, setFollowUpsLoading] = useState(false);
+  const [creatingTask, setCreatingTask] = useState(null); // lead_id being converted
+
   const wsRef = useRef(null);
   const transcriptEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -152,6 +162,53 @@ export default function Copilot() {
       .then((r) => setLeads(r.data.items || []))
       .catch(() => {});
   }, []);
+
+  // ── Pipeline data loaders ────────────────────────────────────────────────
+  function loadPipeline() {
+    setPipelineLoading(true);
+    api.get("/copilot/pipeline")
+      .then((r) => setPipeline(r.data || []))
+      .catch((e) => toast.error(errMsg(e)))
+      .finally(() => setPipelineLoading(false));
+  }
+
+  async function runBatchScore() {
+    setBatchScoring(true);
+    try {
+      const res = await api.post("/copilot/batch-score");
+      toast.success(res.data.message || "Scoring started");
+      setTimeout(loadPipeline, 4000);
+    } catch (e) {
+      toast.error(errMsg(e));
+    } finally {
+      setBatchScoring(false);
+    }
+  }
+
+  function loadFollowUps() {
+    setFollowUpsLoading(true);
+    api.get("/copilot/follow-ups", { params: { stale_days: 7 } })
+      .then((r) => setFollowUps(r.data || []))
+      .catch((e) => toast.error(errMsg(e)))
+      .finally(() => setFollowUpsLoading(false));
+  }
+
+  async function createTaskFromFollowUp(fu) {
+    setCreatingTask(fu.lead_id);
+    try {
+      await api.post("/copilot/follow-ups/create-task", {
+        lead_id: fu.lead_id,
+        title: `Follow up: ${fu.lead_name}`,
+        description: fu.message,
+      });
+      toast.success("Task created in Tasks!");
+      setFollowUps((prev) => prev.filter((f) => f.lead_id !== fu.lead_id));
+    } catch (e) {
+      toast.error(errMsg(e));
+    } finally {
+      setCreatingTask(null);
+    }
+  }
 
   // ── Scroll transcript to bottom ──────────────────────────────────────────
   useEffect(() => {
@@ -361,7 +418,7 @@ export default function Copilot() {
 
   return (
     <div className="space-y-4" data-testid="copilot-page">
-      {/* Header */}
+      {/* ── Page header + tab switcher ────────────────────────────────── */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-serif text-3xl text-slate-900 flex items-center gap-2">
