@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import {
   Play, Pause, Square, Upload, FileSpreadsheet, ChevronLeft, BarChart3,
-  Trash2, PlayCircle,
+  Trash2, PlayCircle, Sparkles, Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { errMsg, dateShort } from "@/lib/format";
@@ -184,7 +184,9 @@ export default function CampaignDetail() {
         <Tile label="Avg Score" value={(headline.avg_lead_score ?? s.avg_lead_score ?? 0).toFixed?.(1) || "0.0"} testid="tile-score" />
       </div>
 
-      {/* Charts */}
+      {/* ── AI Campaign Message Drafter ───────────────────────────────── */}
+      <AIDraftCard campaignName={campaign.name} segment={campaign.description} />
+
       <div className="grid lg:grid-cols-2 gap-4">
         <Card className="p-4 border-amber-100">
           <div className="font-serif text-lg mb-1">Outcome Distribution</div>
@@ -438,5 +440,96 @@ function Info({ label, value }) {
       <div className="text-xs uppercase tracking-wider text-slate-500">{label}</div>
       <div className="font-medium">{value}</div>
     </div>
+  );
+}
+
+function AIDraftCard({ campaignName, segment }) {
+  const [tone, setTone] = useState("Professional");
+  const [productHint, setProductHint] = useState("");
+  const [draft, setDraft] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function generateDraft() {
+    setLoading(true);
+    setDraft("");
+    try {
+      const res = await api.post("/ai/campaign-draft", {
+        campaign_name: campaignName,
+        segment: segment || "General audience",
+        tone,
+        product_hint: productHint,
+      });
+      setDraft(res.data.draft);
+    } catch (e) {
+      toast.error(errMsg(e));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Card className="border-amber-200 bg-amber-50/30 p-5">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="h-8 w-8 rounded-lg bg-amber-700 flex items-center justify-center">
+          <Sparkles className="h-4 w-4 text-white" />
+        </div>
+        <div>
+          <h2 className="font-semibold text-slate-800 text-sm">AI Message Drafter</h2>
+          <p className="text-xs text-slate-500">Generate a WhatsApp/SMS script for this campaign</p>
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-3 mb-4">
+        <div>
+          <div className="text-xs text-slate-500 mb-1">Tone</div>
+          <Select value={tone} onValueChange={setTone}>
+            <SelectTrigger className="h-8 w-36 text-xs border-amber-200" data-testid="ai-draft-tone">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {["Professional", "Festive", "Urgent", "Friendly"].map(t => (
+                <SelectItem key={t} value={t}>{t}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex-1 min-w-40">
+          <div className="text-xs text-slate-500 mb-1">Product focus (optional)</div>
+          <input
+            className="w-full h-8 text-xs px-3 rounded-md border border-amber-200 bg-white focus:outline-none focus:border-amber-400"
+            placeholder="e.g. Bridal necklace, Diamond rings…"
+            value={productHint}
+            onChange={e => setProductHint(e.target.value)}
+            data-testid="ai-draft-product-hint"
+          />
+        </div>
+        <div className="flex items-end">
+          <Button
+            size="sm"
+            className="bg-amber-700 hover:bg-amber-800 h-8 gap-1.5"
+            onClick={generateDraft}
+            disabled={loading}
+            data-testid="ai-draft-btn"
+          >
+            {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+            {loading ? "Drafting…" : "Generate Draft"}
+          </Button>
+        </div>
+      </div>
+      {draft && (
+        <div className="rounded-xl border border-amber-200 bg-white p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-amber-700 uppercase tracking-wide">AI Draft</span>
+            <button
+              onClick={() => { navigator.clipboard.writeText(draft); toast.success("Copied!"); }}
+              className="text-xs text-slate-400 hover:text-amber-700 transition-colors"
+              data-testid="ai-draft-copy"
+            >
+              Copy
+            </button>
+          </div>
+          <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">{draft}</p>
+        </div>
+      )}
+    </Card>
   );
 }

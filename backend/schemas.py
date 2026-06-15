@@ -83,6 +83,8 @@ class LeadOut(LeadBase):
     id: int
     created_at: datetime
     updated_at: datetime
+    lead_score: Optional[int] = None
+    intent: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -312,6 +314,10 @@ class DashboardStats(BaseModel):
     lead_status_distribution: dict
     lead_source_distribution: dict
     task_completion_rate: float
+    # Phase 3 AI fields
+    hot_leads: List[dict] = []
+    revenue_at_risk: float = 0.0
+    conversion_forecast: float = 0.0
 
 
 # ---------------- Settings ----------------

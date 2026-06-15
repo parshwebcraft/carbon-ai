@@ -13,7 +13,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import StatusBadge from "@/components/StatusBadge";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 
 const STATUSES = ["New", "Contacted", "Follow Up", "Interested", "Visit Scheduled",
@@ -107,6 +107,9 @@ export default function Leads() {
                 <th className="text-left px-4 py-3 font-semibold">Type</th>
                 <th className="text-right px-4 py-3 font-semibold">Budget</th>
                 <th className="text-left px-4 py-3 font-semibold">Status</th>
+                <th className="text-left px-4 py-3 font-semibold flex items-center gap-1">
+                  <TrendingUp className="h-3.5 w-3.5 text-amber-600" /> AI Score
+                </th>
                 <th className="text-left px-4 py-3 font-semibold">Created</th>
               </tr>
             </thead>
@@ -128,6 +131,20 @@ export default function Leads() {
                   <td className="px-4 py-3 text-slate-700">{l.customer_type || "—"}</td>
                   <td className="px-4 py-3 text-right font-medium">{inr(l.budget)}</td>
                   <td className="px-4 py-3"><StatusBadge value={l.status} /></td>
+                  <td className="px-4 py-3">
+                    {l.lead_score != null ? (
+                      <div className="flex flex-col gap-0.5">
+                        <span className={`inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-full border w-fit ${
+                          l.lead_score >= 75 ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                          l.lead_score >= 50 ? "bg-amber-50 text-amber-700 border-amber-200" :
+                          "bg-rose-50 text-rose-600 border-rose-200"
+                        }`}>{l.lead_score}%</span>
+                        {l.intent && <span className="text-[10px] text-slate-400 truncate max-w-[100px]">{l.intent}</span>}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-slate-300">—</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{dateShort(l.created_at)}</td>
                 </tr>
               ))}

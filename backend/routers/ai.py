@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import Lead, Call, WhatsappMessage, Activity, AIAgentLog, User
+from models import Lead, Call, WhatsappMessage, Activity, AIAgentLog, User, Product
 from deps import get_current_user
 from services import deepseek
 
@@ -140,6 +140,70 @@ def whatsapp_analyse(lead_id: int, db: Session = Depends(get_db),
     }
     try:
         result = copilot_svc.analyse_whatsapp_thread(messages, lead_dict)
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(502, f"AI error: {e}")
+    return result
+
+
+class CampaignDraftIn(BaseModel):
+    campaign_name: str
+    segment: str = "General audience"
+    tone: str = "Professional"
+    product_hint: str = ""
+
+
+class CampaignDraftOut(BaseModel):
+    draft: str
+
+
+@router.post("/campaign-draft", response_model=CampaignDraftOut)
+def campaign_draft(payload: CampaignDraftIn, _: User = Depends(get_current_user)):
+    """Generate an AI-drafted WhatsApp/SMS campaign message."""
+    try:
+        text = deepseek.campaign_draft(
+            campaign_name=payload.campaign_name,
+            segment=payload.segment,
+            tone=payload.tone,
+            product_hint=payload.product_hint,
+        )
+    except deepseek.DeepSeekNotConfigured as e:
+        raise HTTPException(503, str(e))
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(502, f"AI error: {e}")
+    return CampaignDraftOut(draft=text)
+
+
+@router.post("/quotation-suggest/{lead_id}")
+def quotation_suggest(lead_id: int, db: Session = Depends(get_db),
+                      _: User = Depends(get_current_user)):
+    """AI-powered product + price suggestions for a lead's quotation."""
+    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+    if not lead:
+        raise HTTPException(404, "Lead not found")
+
+    products = db.query(Product).filter(Product.is_active == True).limit(50).all()  # noqa: E712
+    products_list = [
+        {
+            "id": p.id,
+            "product_name": p.product_name,
+            "metal_type": getattr(p, "metal_type", ""),
+            "category": getattr(p, "category", ""),
+            "price": getattr(p, "price", 0),
+            "description": getattr(p, "description", ""),
+        }
+        for p in products
+    ]
+    lead_dict = {
+        "name": lead.name,
+        "customer_type": lead.customer_type,
+        "budget": lead.budget,
+        "city": lead.city,
+        "status": lead.status,
+    }
+    try:
+        result = deepseek.quotation_suggest(lead_dict, products_list)
+    except deepseek.DeepSeekNotConfigured as e:
+        raise HTTPException(503, str(e))
     except Exception as e:  # noqa: BLE001
         raise HTTPException(502, f"AI error: {e}")
     return result

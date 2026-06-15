@@ -146,3 +146,83 @@ def followup_message(lead: dict, history: list[dict]) -> str:
         {"role": "system", "content": JEWELLERY_SYSTEM},
         {"role": "user", "content": prompt},
     ], temperature=0.6, max_tokens=120).strip()
+
+
+def dashboard_briefing(stats: dict) -> str:
+    """Generate a concise AI morning briefing for the sales manager dashboard."""
+    prompt = (
+        "You are an AI sales coach for Facets Lifestyle jewellery. "
+        "Write a crisp 3-sentence morning briefing for the sales team based on these CRM stats. "
+        "Be motivating, specific, and action-oriented. Mention key numbers.\n\n"
+        f"Pipeline stats:\n"
+        f"- Total Leads: {stats.get('total_leads', 0)}\n"
+        f"- New Leads Today: {stats.get('new_leads', 0)}\n"
+        f"- Open Tasks: {stats.get('open_tasks', 0)}\n"
+        f"- Pipeline Value: ₹{int(stats.get('pipeline_value', 0)):,}\n"
+        f"- Won Revenue: ₹{int(stats.get('won_value', 0)):,}\n"
+        f"- Task Completion Rate: {stats.get('task_completion_rate', 0)}%\n"
+        f"- Hot Leads (score ≥75): {stats.get('hot_lead_count', 0)}\n"
+        f"- Stale Leads (7+ days silent): {stats.get('stale_lead_count', 0)}\n"
+        "\nWrite ONLY the 3-sentence briefing, no headings or bullet points."
+    )
+    return chat([
+        {"role": "system", "content": JEWELLERY_SYSTEM},
+        {"role": "user", "content": prompt},
+    ], temperature=0.7, max_tokens=200).strip()
+
+
+def campaign_draft(campaign_name: str, segment: str, tone: str, product_hint: str = "") -> str:
+    """Draft a WhatsApp/SMS campaign message for the given segment and tone."""
+    tone_guide = {
+        "Professional": "formal, respectful, business-like",
+        "Festive":      "warm, celebratory, festive (mention occasion if given)",
+        "Urgent":       "time-sensitive, FOMO-inducing, clear deadline",
+        "Friendly":     "casual, personal, conversational",
+    }.get(tone, "warm and professional")
+
+    prompt = (
+        f"Draft a WhatsApp outreach message for a jewellery sales campaign.\n\n"
+        f"Campaign: {campaign_name}\n"
+        f"Target Segment: {segment}\n"
+        f"Tone: {tone} ({tone_guide})\n"
+        f"Product Focus: {product_hint or 'General jewellery collection'}\n\n"
+        "Rules:\n"
+        "- Keep under 60 words\n"
+        "- Start with the customer's name placeholder: {{name}}\n"
+        "- End with a clear CTA (book appointment / reply / visit store)\n"
+        "- Use ₹ for prices, never make up specific prices\n"
+        "- Brand name: Facets Lifestyle\n\n"
+        "Write ONLY the message text, no explanation."
+    )
+    return chat([
+        {"role": "system", "content": JEWELLERY_SYSTEM},
+        {"role": "user", "content": prompt},
+    ], temperature=0.7, max_tokens=250).strip()
+
+
+def quotation_suggest(lead: dict, products: list[dict]) -> dict:
+    """Suggest the best products for a lead and return JSON with recommendations."""
+    products_text = "\n".join(
+        f"- [{p.get('id')}] {p.get('product_name')} ({p.get('metal_type')}, "
+        f"{p.get('category')}) — ₹{int(p.get('price', 0)):,} | {p.get('description', '')[:80]}"
+        for p in products[:30]
+    )
+    prompt = (
+        "You are a jewellery sales expert at Facets Lifestyle. "
+        "Suggest the 3-5 most suitable products for this lead from the catalogue below.\n\n"
+        f"Lead Profile:\n"
+        f"- Name: {lead.get('name')}\n"
+        f"- Interest: {lead.get('customer_type') or 'General'}\n"
+        f"- Budget: ₹{int(lead.get('budget') or 0):,}\n"
+        f"- City: {lead.get('city') or 'Unknown'}\n"
+        f"- Status: {lead.get('status')}\n\n"
+        f"Available Products:\n{products_text}\n\n"
+        "Respond ONLY with JSON: "
+        '{"recommendations": [{"product_id": <int>, "product_name": "<str>", '
+        '"price": <float>, "reason": "<1 sentence why this suits the lead>"}], '
+        '"summary": "<1 sentence overall recommendation>"}'
+    )
+    return chat_json([
+        {"role": "system", "content": JEWELLERY_SYSTEM},
+        {"role": "user", "content": prompt},
+    ], temperature=0.3, max_tokens=600)

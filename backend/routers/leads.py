@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
 from database import get_db
-from models import Lead, User
+from models import Lead, User, LeadInsight
 from schemas import LeadCreate, LeadUpdate, LeadOut, LeadListOut
 from deps import get_current_user, require_roles
 
@@ -35,12 +35,26 @@ def list_leads(
         q = q.filter(Lead.assigned_to == assigned_to)
 
     total = q.count()
-    items = (q.order_by(Lead.created_at.desc())
+    leads = (q.order_by(Lead.created_at.desc())
               .offset((page - 1) * page_size).limit(page_size).all())
-    return LeadListOut(
-        items=[LeadOut.model_validate(i) for i in items],
-        total=total, page=page, page_size=page_size,
-    )
+
+    # Enrich with AI scores from LeadInsight
+    lead_ids = [l.id for l in leads]
+    insights = (db.query(LeadInsight)
+                  .filter(LeadInsight.lead_id.in_(lead_ids))
+                  .all()) if lead_ids else []
+    insight_map = {ins.lead_id: ins for ins in insights}
+
+    items = []
+    for lead in leads:
+        out = LeadOut.model_validate(lead)
+        if lead.id in insight_map:
+            ins = insight_map[lead.id]
+            out.lead_score = ins.lead_score
+            out.intent = ins.intent
+        items.append(out)
+
+    return LeadListOut(items=items, total=total, page=page, page_size=page_size)
 
 
 @router.get("/{lead_id}", response_model=LeadOut)
@@ -48,7 +62,12 @@ def get_lead(lead_id: int, db: Session = Depends(get_db), _: User = Depends(get_
     lead = db.query(Lead).filter(Lead.id == lead_id).first()
     if not lead:
         raise HTTPException(404, "Lead not found")
-    return LeadOut.model_validate(lead)
+    out = LeadOut.model_validate(lead)
+    ins = db.query(LeadInsight).filter(LeadInsight.lead_id == lead_id).first()
+    if ins:
+        out.lead_score = ins.lead_score
+        out.intent = ins.intent
+    return out
 
 
 @router.post("", response_model=LeadOut, status_code=201)
