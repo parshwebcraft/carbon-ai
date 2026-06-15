@@ -13,8 +13,9 @@ import {
   Target, Wallet, Clock, User, TrendingUp, Play, Square,
   Send, RefreshCw, Loader2, Gem, ChevronRight, Sparkles,
   MessageSquare, History, Star, Flame, BarChart2, ListChecks,
-  CheckCircle2, Zap,
+  CheckCircle2, Zap, Mic,
 } from "lucide-react";
+import VoiceRecorder from "@/components/VoiceRecorder";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -158,6 +159,57 @@ export default function Copilot() {
   const wsRef = useRef(null);
   const transcriptEndRef = useRef(null);
   const inputRef = useRef(null);
+
+  // ── Voice recording state ─────────────────────────────────────────────────
+  const [voiceTranscript, setVoiceTranscript] = useState([]); // [{text, isFinal, speaker}]
+  const [voiceActive, setVoiceActive] = useState(false);
+
+  function handleVoiceTranscript(text, isFinal, speaker) {
+    setVoiceTranscript((prev) => {
+      // Replace last interim line or append
+      const lines = [...prev];
+      if (lines.length > 0 && !lines[lines.length - 1].isFinal) {
+        lines[lines.length - 1] = { text, isFinal, speaker };
+      } else {
+        lines.push({ text, isFinal, speaker });
+      }
+      return lines.slice(-30); // keep last 30 lines
+    });
+    // If final, also append to the typed transcript for AI continuity
+    if (isFinal && text.trim() && session) {
+      const spk = speaker === 0 ? "Customer" : "Salesperson";
+      api.post(`/copilot/sessions/${session.id}/messages`, {
+        speaker: spk, content: text
+      }).catch(() => {});
+      setMessages((prev) => [...prev, {
+        id: Date.now(), session_id: session.id,
+        speaker: spk, content: text, created_at: new Date().toISOString(),
+      }]);
+    }
+  }
+
+  function handleVoiceSuggestion(suggestions) {
+    const newSuggestions = {};
+    ["next_question","product_suggestion","offer_suggestion","objection_handling","closing_suggestion"]
+      .forEach((k) => { if (suggestions[k]) newSuggestions[k] = { content: suggestions[k], confidence: 0.9 }; });
+    setSuggestions(newSuggestions);
+    setInsight((prev) => ({
+      ...(prev || {}),
+      lead_score: suggestions.lead_score ?? prev?.lead_score ?? 0,
+      intent: suggestions.intent ?? prev?.intent ?? "Unknown",
+      budget: suggestions.budget ?? prev?.budget ?? "Unknown",
+      timeline: suggestions.timeline ?? prev?.timeline ?? "Unknown",
+      decision_maker: suggestions.decision_maker ?? prev?.decision_maker ?? "Unknown",
+    }));
+    if (suggestions.live_alert) {
+      toast(suggestions.live_alert, { icon: "⚡" });
+    }
+  }
+
+  function handleVoiceSaved(callId) {
+    setVoiceActive(false);
+    if (callId) toast.success(`Voice session saved as Call #${callId}`);
+  }
 
   // ── Load leads ───────────────────────────────────────────────────────────
   useEffect(() => {
@@ -427,10 +479,18 @@ export default function Copilot() {
                 Start Session
               </Button>
             ) : (
-              <Button onClick={endSession} variant="outline"
-                className="border-rose-200 text-rose-600 hover:bg-rose-50 gap-1.5" data-testid="end-session-btn">
-                <Square className="h-4 w-4" /> End Session
-              </Button>
+              <div className="flex items-center gap-2">
+                <VoiceRecorder
+                  leadId={selectedLead?.id}
+                  onTranscript={handleVoiceTranscript}
+                  onSuggestion={handleVoiceSuggestion}
+                  onSaved={handleVoiceSaved}
+                />
+                <Button onClick={endSession} variant="outline"
+                  className="border-rose-200 text-rose-600 hover:bg-rose-50 gap-1.5" data-testid="end-session-btn">
+                  <Square className="h-4 w-4" /> End Session
+                </Button>
+              </div>
             )}
 
             {session && (
@@ -466,11 +526,25 @@ export default function Copilot() {
                   <span className="text-xs text-slate-400">{messages.length} messages</span>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 space-y-1">
-                  {messages.length === 0 && (
+                  {messages.length === 0 && voiceTranscript.length === 0 && (
                     <div className="h-full flex flex-col items-center justify-center text-center text-slate-400 py-10">
                       <MessageSquare className="h-8 w-8 mb-3 text-slate-200" />
-                      <p className="text-sm">Type the conversation below.</p>
+                      <p className="text-sm">Type the conversation below or click 🎙️ Record.</p>
                       <p className="text-xs mt-1">AI suggestions appear instantly after each message.</p>
+                    </div>
+                  )}
+                  {/* Voice transcript overlay */}
+                  {voiceTranscript.length > 0 && (
+                    <div className="mb-2 rounded-xl border border-rose-100 bg-rose-50/40 p-3">
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <Mic className="h-3 w-3 text-rose-500" />
+                        <span className="text-[10px] font-semibold text-rose-500 uppercase tracking-wide">Live Voice Transcript</span>
+                      </div>
+                      {voiceTranscript.slice(-8).map((line, i) => (
+                        <div key={i} className={`text-xs py-0.5 leading-snug ${line.isFinal ? "text-slate-700" : "text-slate-400 italic"}`}>
+                          {line.text}
+                        </div>
+                      ))}
                     </div>
                   )}
                   {messages.map((m) => (

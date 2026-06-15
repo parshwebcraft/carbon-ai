@@ -36,6 +36,7 @@ from routers import (
     settings as settings_router,
     campaigns as campaigns_router,
     copilot as copilot_router,
+    voice_ai as voice_ai_router,
 )
 from services import scheduler as scheduler_service
 from services import campaign_engine
@@ -84,6 +85,7 @@ api.include_router(voice_router.router)
 api.include_router(settings_router.router)
 api.include_router(campaigns_router.router)
 api.include_router(copilot_router.router)
+api.include_router(voice_ai_router.router)
 
 app.include_router(api)
 
