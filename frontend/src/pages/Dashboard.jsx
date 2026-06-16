@@ -247,8 +247,8 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-2">
             <h2 className="font-serif text-lg">Lead Status Distribution</h2>
           </div>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-64" style={{ minHeight: 240 }}>
+            <ResponsiveContainer width="100%" height="100%" minHeight={240}>
               <PieChart>
                 <Pie data={statusData} dataKey="value" nameKey="name" outerRadius={92} innerRadius={50}>
                   {statusData.map((_, i) => (
@@ -264,8 +264,8 @@ export default function Dashboard() {
 
         <Card className="p-5 border-amber-100 bg-white">
           <h2 className="font-serif text-lg mb-2">Leads by Source</h2>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-64" style={{ minHeight: 240 }}>
+            <ResponsiveContainer width="100%" height="100%" minHeight={240}>
               <BarChart data={sourceData}>
                 <CartesianGrid stroke="#F3E9D7" vertical={false} />
                 <XAxis dataKey="name" stroke="#78716C" fontSize={11} angle={-15} dy={10} height={50} />

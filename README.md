@@ -175,7 +175,7 @@ Every time you open the project, you need **2 terminals**:
 ```powershell
 cd backend
 venv\Scripts\activate
-uvicorn server:app --host 0.0.0.0 --port 8001 --reload
+uvicorn server:app --reload
 ```
 
 ### Terminal 2 — Frontend
