@@ -163,9 +163,10 @@ def _format_context_prompt(context: dict, transcript_lines: list[str]) -> str:
             f"\nAI PROFILE (from previous analysis):\n"
             f"  Score: {insight.get('lead_score', 'N/A')}/100\n"
             f"  Intent: {insight.get('intent', 'Unknown')}\n"
-            f"  Budget Qualified: {insight.get('budget_qualification', 'Unknown')}\n"
-            f"  Need: {insight.get('need', 'Unknown')}\n"
-            f"  Timeline: {insight.get('timeline', 'Unknown')}"
+            f"  Budget: {insight.get('budget', 'Unknown')}\n"
+            f"  Decision Maker: {insight.get('decision_maker', 'Unknown')}\n"
+            f"  Timeline: {insight.get('timeline', 'Unknown')}\n"
+            f"  Summary: {insight.get('summary', 'None')}"
         )
 
     # Past interactions section
