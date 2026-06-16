@@ -161,23 +161,33 @@ export default function Copilot() {
   const inputRef = useRef(null);
 
   // ── Voice recording state ─────────────────────────────────────────────────
-  const [voiceTranscript, setVoiceTranscript] = useState([]); // [{text, isFinal, speaker}]
+  const [voiceTranscript, setVoiceTranscript] = useState([]);
+  // speakerFlip: when true, Speaker-0 = Salesperson, Speaker-1 = Customer
+  // (Deepgram labels by voice order — whoever speaks first gets 0)
+  const [speakerFlip, setSpeakerFlip] = useState(false);
   const [voiceActive, setVoiceActive] = useState(false);
 
+  function resolveLabel(speaker, flip) {
+    if (speaker === null || speaker === undefined) return null;
+    const isZero = speaker === 0;
+    return (isZero !== flip) ? "Customer" : "Salesperson";
+  }
+
   function handleVoiceTranscript(text, isFinal, speaker) {
+    const label = resolveLabel(speaker, speakerFlip);
     setVoiceTranscript((prev) => {
-      // Replace last interim line or append
       const lines = [...prev];
+      // Replace last interim (not-final) chunk for same speaker
       if (lines.length > 0 && !lines[lines.length - 1].isFinal) {
-        lines[lines.length - 1] = { text, isFinal, speaker };
+        lines[lines.length - 1] = { text, isFinal, speaker, label };
       } else {
-        lines.push({ text, isFinal, speaker });
+        lines.push({ text, isFinal, speaker, label });
       }
-      return lines.slice(-30); // keep last 30 lines
+      return lines.slice(-60); // keep last 60 utterances
     });
-    // If final, also append to the typed transcript for AI continuity
+    // Final utterances also feed into the typed session transcript
     if (isFinal && text.trim() && session) {
-      const spk = speaker === 0 ? "Customer" : "Salesperson";
+      const spk = label || "Customer";
       api.post(`/copilot/sessions/${session.id}/messages`, {
         speaker: spk, content: text
       }).catch(() => {});
@@ -526,27 +536,94 @@ export default function Copilot() {
                   <span className="text-xs text-slate-400">{messages.length} messages</span>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 space-y-1">
+                  {/* Empty state */}
                   {messages.length === 0 && voiceTranscript.length === 0 && (
                     <div className="h-full flex flex-col items-center justify-center text-center text-slate-400 py-10">
                       <MessageSquare className="h-8 w-8 mb-3 text-slate-200" />
                       <p className="text-sm">Type the conversation below or click 🎙️ Record.</p>
-                      <p className="text-xs mt-1">AI suggestions appear instantly after each message.</p>
+                      <p className="text-xs mt-1">AI identifies Customer &amp; Salesperson voices automatically.</p>
                     </div>
                   )}
-                  {/* Voice transcript overlay */}
+
+                  {/* ── LIVE VOICE TRANSCRIPT ── WhatsApp-style diarized bubbles */}
                   {voiceTranscript.length > 0 && (
-                    <div className="mb-2 rounded-xl border border-rose-100 bg-rose-50/40 p-3">
-                      <div className="flex items-center gap-1.5 mb-2">
-                        <Mic className="h-3 w-3 text-rose-500" />
-                        <span className="text-[10px] font-semibold text-rose-500 uppercase tracking-wide">Live Voice Transcript</span>
-                      </div>
-                      {voiceTranscript.slice(-8).map((line, i) => (
-                        <div key={i} className={`text-xs py-0.5 leading-snug ${line.isFinal ? "text-slate-700" : "text-slate-400 italic"}`}>
-                          {line.text}
+                    <div className="mb-3">
+                      {/* Header with speaker flip toggle */}
+                      <div className="flex items-center justify-between mb-3 px-1">
+                        <div className="flex items-center gap-1.5">
+                          <div className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+                          <Mic className="h-3 w-3 text-rose-500" />
+                          <span className="text-[10px] font-bold text-rose-500 uppercase tracking-wide">Live Recording</span>
                         </div>
-                      ))}
+                        <button
+                          onClick={() => setSpeakerFlip(f => !f)}
+                          className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-amber-700 border border-slate-200 hover:border-amber-300 rounded-full px-2 py-0.5 transition-colors"
+                          title="Swap Customer / Salesperson if AI got them backwards"
+                        >
+                          🔄 Swap speakers
+                        </button>
+                      </div>
+
+                      {/* Speaker legend */}
+                      <div className="flex gap-3 mb-3 px-1">
+                        <div className="flex items-center gap-1.5">
+                          <div className="h-2 w-2 rounded-full bg-amber-200" />
+                          <span className="text-[10px] text-slate-500">Customer</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <div className="h-2 w-2 rounded-full bg-amber-700" />
+                          <span className="text-[10px] text-slate-500">Salesperson</span>
+                        </div>
+                        <span className="text-[10px] text-slate-400 ml-auto italic">Deepgram auto-detect</span>
+                      </div>
+
+                      {/* Chat bubbles */}
+                      <div className="space-y-1">
+                        {voiceTranscript.map((line, i) => {
+                          const label = resolveLabel(line.speaker, speakerFlip);
+                          const isCustomer = label === "Customer" || label === null;
+                          return (
+                            <div key={i} className={`flex gap-2 ${isCustomer ? "justify-start" : "justify-end"}`}>
+                              {isCustomer && (
+                                <div className="h-6 w-6 rounded-full bg-amber-100 flex items-center justify-center shrink-0 mt-1">
+                                  <User className="h-3 w-3 text-amber-700" />
+                                </div>
+                              )}
+                              <div className="max-w-[78%]">
+                                {/* Show speaker name only on first or after speaker change */}
+                                {(i === 0 || resolveLabel(voiceTranscript[i-1]?.speaker, speakerFlip) !== label) && (
+                                  <div className={`text-[10px] font-semibold mb-0.5 ${
+                                    isCustomer ? "text-amber-700 ml-1" : "text-slate-500 mr-1 text-right"
+                                  }`}>
+                                    {label || "Unknown"}
+                                  </div>
+                                )}
+                                <div className={`rounded-2xl px-3 py-2 text-xs leading-relaxed shadow-sm transition-opacity ${
+                                  !line.isFinal ? "opacity-50" : "opacity-100"
+                                } ${
+                                  isCustomer
+                                    ? "bg-white border border-amber-100 text-slate-800 rounded-tl-sm"
+                                    : "bg-amber-700 text-white rounded-tr-sm"
+                                }`}>
+                                  {line.text}
+                                  {!line.isFinal && (
+                                    <span className="ml-1 animate-pulse">…</span>
+                                  )}
+                                </div>
+                              </div>
+                              {!isCustomer && (
+                                <div className="h-6 w-6 rounded-full bg-amber-700 flex items-center justify-center shrink-0 mt-1">
+                                  <Gem className="h-3 w-3 text-white" />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
+
+                  {/* Manual typed messages */}
                   {messages.map((m) => (
                     <TranscriptBubble key={m.id} speaker={m.speaker} content={m.content} createdAt={m.created_at} />
                   ))}
