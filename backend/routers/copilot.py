@@ -311,7 +311,7 @@ def trigger_analysis(
 
 # ── Lead Insight endpoints ───────────────────────────────────────────────────
 
-@router.get("/leads/{lead_id}/insight", response_model=InsightOut)
+@router.get("/leads/{lead_id}/insight", response_model=Optional[InsightOut])
 def get_lead_insight(
     lead_id: int,
     db: Session = Depends(get_db),
@@ -319,7 +319,7 @@ def get_lead_insight(
 ):
     insight = db.query(LeadInsight).filter(LeadInsight.lead_id == lead_id).first()
     if not insight:
-        raise HTTPException(404, "No insight yet — start a copilot session for this lead")
+        return None
     return insight
 
 
