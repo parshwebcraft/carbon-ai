@@ -3,24 +3,29 @@
  *
  * Uses MediaRecorder API to stream audio to the backend Voice AI WebSocket.
  * Receives live transcript chunks and AI suggestions back.
- *
- * Props:
- *   leadId        — lead ID to analyse
- *   sessionId     — copilot session ID for context
- *   onTranscript  — callback(line: string, isFinal: bool)
- *   onSuggestion  — callback(suggestions: object)
- *   onSaved       — callback(callId: int) when session is saved
  */
+
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Mic, MicOff, Square, Loader2, Waves, AlertCircle } from "lucide-react";
+import {
+  Mic,
+  Square,
+  Loader2,
+  Waves,
+  AlertCircle,
+} from "lucide-react";
 import { toast } from "sonner";
+import { API_BASE } from "@/lib/api";
 
-const WS_BASE = process.env.REACT_APP_WS_URL ||
-  (window.location.protocol === "https:" ? "wss://" : "ws://") +
-  (process.env.REACT_APP_API_HOST || "localhost:8001");
+// Derive WebSocket base from the HTTP API base
+// API_BASE = "http://localhost:8000/api"  →  WS_BASE = "ws://localhost:8000"
+const WS_BASE = API_BASE
+  .replace(/\/api\/?$/, "")   // remove trailing /api
+  .replace(/^https/, "wss")   // https → wss
+  .replace(/^http/, "ws");    // http  → ws
 
-const CHUNK_INTERVAL_MS = 500; // Send audio every 500ms
+const CHUNK_INTERVAL_MS = 500;
+const TOKEN_KEY = "facets_token"; // must match what Login.jsx uses
 
 export default function VoiceRecorder({
   leadId,
@@ -29,7 +34,7 @@ export default function VoiceRecorder({
   onSaved,
   disabled = false,
 }) {
-  const [state, setState] = useState("idle"); // idle | requesting | recording | stopping | error
+  const [state, setState] = useState("idle");
   const [duration, setDuration] = useState(0);
   const [error, setError] = useState("");
 
@@ -39,39 +44,62 @@ export default function VoiceRecorder({
   const timerRef = useRef(null);
   const durationRef = useRef(0);
 
-  // Cleanup on unmount
+  const stopAll = useCallback(() => {
+    clearInterval(timerRef.current);
+
+    if (
+      mediaRecRef.current &&
+      mediaRecRef.current.state !== "inactive"
+    ) {
+      try {
+        mediaRecRef.current.stop();
+      } catch (_) {}
+    }
+
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+
+    if (wsRef.current) {
+      try {
+        if (wsRef.current.readyState === WebSocket.OPEN) {
+          wsRef.current.send(JSON.stringify({ type: "stop" }));
+        }
+      } catch (_) {}
+
+      setTimeout(() => {
+        try {
+          wsRef.current?.close();
+        } catch (_) {}
+
+        wsRef.current = null;
+      }, 500);
+    }
+
+    setState("idle");
+  }, []);
+
   useEffect(() => {
     return () => {
       stopAll();
     };
-  }, []);
-
-  const stopAll = useCallback(() => {
-    clearInterval(timerRef.current);
-    if (mediaRecRef.current && mediaRecRef.current.state !== "inactive") {
-      try { mediaRecRef.current.stop(); } catch (_) {}
-    }
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(t => t.stop());
-      streamRef.current = null;
-    }
-    if (wsRef.current) {
-      try {
-        wsRef.current.send(JSON.stringify({ type: "stop" }));
-      } catch (_) {}
-      setTimeout(() => {
-        try { wsRef.current?.close(); } catch (_) {}
-        wsRef.current = null;
-      }, 500);
-    }
-  }, []);
+  }, [stopAll]);
 
   async function startRecording() {
     setError("");
     setState("requesting");
 
-    // Get mic permission
+    const token = localStorage.getItem("facets_token");
+
+    if (!token) {
+      setError("Please log in again.");
+      setState("error");
+      return;
+    }
+
     let stream;
+
     try {
       stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -79,89 +107,104 @@ export default function VoiceRecorder({
           sampleRate: 48000,
           echoCancellation: true,
           noiseSuppression: true,
-        }
+        },
       });
     } catch (e) {
-      setError("Microphone access denied. Please allow mic permission.");
+      setError("Microphone access denied. Please allow microphone access.");
       setState("error");
       return;
     }
+
     streamRef.current = stream;
 
-    // Connect WebSocket to backend
-    const token = localStorage.getItem("access_token") || "";
-    const wsUrl = `${WS_BASE}/api/voice-ai/ws/${leadId}?token=${token}`;
+    const wsUrl =
+      `${WS_BASE}/api/voice-ai/ws/${leadId}?token=${encodeURIComponent(token)}`;
+
     const ws = new WebSocket(wsUrl);
+
     wsRef.current = ws;
 
     ws.onopen = () => {
-      // Wait for "ready" before starting MediaRecorder
+      console.log("Voice WS connected:", wsUrl);
     };
 
     ws.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data);
-        handleServerMessage(msg);
-      } catch (_) {}
+
+        switch (msg.type) {
+          case "ready":
+            startMediaRecorder(stream, ws);
+            setState("recording");
+            startTimer();
+            break;
+
+          case "transcript":
+            if (msg.text && onTranscript) {
+              onTranscript(msg.text, msg.is_final, msg.speaker);
+            }
+            break;
+
+          case "suggestion":
+            if (msg.data && onSuggestion) {
+              onSuggestion(msg.data);
+            }
+            break;
+
+          case "session_saved":
+            clearInterval(timerRef.current);
+
+            setState("idle");
+            setDuration(0);
+            durationRef.current = 0;
+
+            if (onSaved && msg.call_id) {
+              onSaved(msg.call_id);
+            }
+
+            toast.success(
+              `Session saved — ${
+                msg.transcript_lines || 0
+              } utterances recorded`
+            );
+
+            break;
+
+          case "error":
+            setError(msg.message || "Unknown error");
+            setState("error");
+            break;
+
+          default:
+            break;
+        }
+      } catch (err) {
+        console.error("Voice WS message error:", err);
+      }
     };
 
-    ws.onerror = (e) => {
+    ws.onerror = (err) => {
+      console.error("Voice WS error:", err);
+
       setError("WebSocket connection failed");
       setState("error");
+
       stopAll();
     };
 
     ws.onclose = () => {
+      clearInterval(timerRef.current);
+
       if (state === "recording") {
         setState("idle");
       }
     };
-
-    function handleServerMessage(msg) {
-      switch (msg.type) {
-        case "ready":
-          // Backend ready — start MediaRecorder
-          startMediaRecorder(stream, ws);
-          setState("recording");
-          startTimer();
-          break;
-
-        case "transcript":
-          if (msg.text && onTranscript) {
-            onTranscript(msg.text, msg.is_final, msg.speaker);
-          }
-          break;
-
-        case "suggestion":
-          if (msg.data && onSuggestion) {
-            onSuggestion(msg.data);
-          }
-          break;
-
-        case "session_saved":
-          setState("idle");
-          setDuration(0);
-          durationRef.current = 0;
-          if (onSaved && msg.call_id) {
-            onSaved(msg.call_id);
-          }
-          toast.success(`Session saved — ${msg.transcript_lines || 0} utterances recorded`);
-          break;
-
-        case "error":
-          setError(msg.message || "Unknown error");
-          setState("error");
-          break;
-
-        default:
-          break;
-      }
-    }
   }
 
   function startMediaRecorder(stream, ws) {
-    // Use webm/opus for best browser support + Deepgram compatibility
-    const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+    const mimeType = MediaRecorder.isTypeSupported(
+      "audio/webm;codecs=opus"
+    )
       ? "audio/webm;codecs=opus"
       : "audio/webm";
 
@@ -169,10 +212,15 @@ export default function VoiceRecorder({
       mimeType,
       audioBitsPerSecond: 128000,
     });
+
     mediaRecRef.current = recorder;
 
     recorder.ondataavailable = (event) => {
-      if (event.data && event.data.size > 0 && ws.readyState === WebSocket.OPEN) {
+      if (
+        event.data &&
+        event.data.size > 0 &&
+        ws.readyState === WebSocket.OPEN
+      ) {
         ws.send(event.data);
       }
     };
@@ -187,37 +235,51 @@ export default function VoiceRecorder({
 
   function startTimer() {
     durationRef.current = 0;
+
     timerRef.current = setInterval(() => {
       durationRef.current += 1;
       setDuration(durationRef.current);
     }, 1000);
   }
 
-  async function stopRecording() {
+  function stopRecording() {
     setState("stopping");
+
     clearInterval(timerRef.current);
 
-    if (mediaRecRef.current && mediaRecRef.current.state !== "inactive") {
+    if (
+      mediaRecRef.current &&
+      mediaRecRef.current.state !== "inactive"
+    ) {
       mediaRecRef.current.stop();
     }
+
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
     }
 
-    // Signal backend to finalise session
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+    if (
+      wsRef.current &&
+      wsRef.current.readyState === WebSocket.OPEN
+    ) {
       wsRef.current.send(JSON.stringify({ type: "stop" }));
     } else {
       setState("idle");
     }
   }
 
-  const formatDuration = (secs) => {
-    const m = Math.floor(secs / 60).toString().padStart(2, "0");
-    const s = (secs % 60).toString().padStart(2, "0");
+  function formatDuration(secs) {
+    const m = Math.floor(secs / 60)
+      .toString()
+      .padStart(2, "0");
+
+    const s = (secs % 60)
+      .toString()
+      .padStart(2, "0");
+
     return `${m}:${s}`;
-  };
+  }
 
   return (
     <div className="flex items-center gap-3">
@@ -236,7 +298,12 @@ export default function VoiceRecorder({
       )}
 
       {state === "requesting" && (
-        <Button size="sm" variant="outline" disabled className="gap-2 text-slate-500">
+        <Button
+          size="sm"
+          variant="outline"
+          disabled
+          className="gap-2 text-slate-500"
+        >
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
           Connecting…
         </Button>
@@ -244,15 +311,17 @@ export default function VoiceRecorder({
 
       {state === "recording" && (
         <div className="flex items-center gap-2">
-          {/* Pulse indicator */}
           <div className="relative flex items-center justify-center">
             <div className="h-2.5 w-2.5 rounded-full bg-rose-500 animate-pulse" />
             <div className="absolute h-4 w-4 rounded-full border-2 border-rose-400 animate-ping opacity-40" />
           </div>
+
           <Waves className="h-4 w-4 text-rose-500" />
+
           <span className="text-xs font-mono text-rose-600 font-bold">
             {formatDuration(duration)}
           </span>
+
           <Button
             size="sm"
             className="bg-rose-600 hover:bg-rose-700 gap-1.5 h-8 text-xs"
@@ -266,7 +335,12 @@ export default function VoiceRecorder({
       )}
 
       {state === "stopping" && (
-        <Button size="sm" variant="outline" disabled className="gap-2 text-slate-500">
+        <Button
+          size="sm"
+          variant="outline"
+          disabled
+          className="gap-2 text-slate-500"
+        >
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
           Saving…
         </Button>
@@ -275,12 +349,19 @@ export default function VoiceRecorder({
       {state === "error" && (
         <div className="flex items-center gap-2">
           <AlertCircle className="h-4 w-4 text-rose-500 shrink-0" />
-          <span className="text-xs text-rose-600">{error}</span>
+
+          <span className="text-xs text-rose-600">
+            {error}
+          </span>
+
           <Button
             size="sm"
             variant="ghost"
             className="h-7 text-xs text-slate-500"
-            onClick={() => { setState("idle"); setError(""); }}
+            onClick={() => {
+              setState("idle");
+              setError("");
+            }}
           >
             Retry
           </Button>

@@ -2,9 +2,13 @@
 from __future__ import annotations
 
 import json
+import sqlite3
+from datetime import datetime
 from typing import Optional
 
 from services import deepseek
+
+DB_PATH = "backend/facets.db"
 
 # ── System prompt ────────────────────────────────────────────────────────────
 COPILOT_SYSTEM = (
@@ -97,7 +101,6 @@ Respond ONLY with the JSON object, no markdown, no explanation.
             max_tokens=700,
         )
     except deepseek.DeepSeekNotConfigured:
-        # Return a helpful placeholder when API key is not configured
         result = _placeholder_suggestions()
     except Exception:  # noqa: BLE001
         result = _placeholder_suggestions()
@@ -137,7 +140,6 @@ def _normalise(raw: dict) -> dict:
     for k, v in defaults.items():
         if k not in raw or raw[k] is None:
             raw[k] = v
-    # Clamp lead_score
     try:
         raw["lead_score"] = max(0, min(100, int(raw["lead_score"])))
     except (TypeError, ValueError):
@@ -148,10 +150,7 @@ def _normalise(raw: dict) -> dict:
 # ── Product recommendation ───────────────────────────────────────────────────
 
 def recommend_products(transcript: list[dict], products: list[dict]) -> list[dict]:
-    """
-    Match products from the catalogue to customer signals in transcript.
-    Returns up to 3 products with a 'reason' field added.
-    """
+    """Match products from the catalogue to customer signals in transcript."""
     convo = " ".join(m["content"].lower() for m in transcript[-10:])
 
     KEYWORDS = {
@@ -168,7 +167,6 @@ def recommend_products(transcript: list[dict], products: list[dict]) -> list[dic
         if any(kw in convo for kw in kws):
             matched_categories.append(cat)
 
-    # Score products
     scored: list[tuple[int, dict]] = []
     for p in products:
         score = 0
@@ -189,14 +187,11 @@ def recommend_products(transcript: list[dict], products: list[dict]) -> list[dic
         if score > 0:
             scored.append((score, p))
 
-    # Sort and pick top 3
     top = [p for _, p in sorted(scored, key=lambda x: -x[0])[:3]]
 
-    # If nothing matched, return cheapest 3
     if not top:
         top = sorted(products, key=lambda p: p.get("price", 0))[:3]
 
-    # Attach a brief reason
     reasons = [
         "Matches customer's stated interest",
         "Popular choice for this occasion",
@@ -264,10 +259,7 @@ WHATSAPP_SYSTEM = (
 
 
 def analyse_whatsapp_thread(messages: list[dict], lead: dict) -> dict:
-    """
-    Deep analysis of a WhatsApp thread.
-    Returns: {intent, sentiment, objections, conversion_probability, next_action, summary}
-    """
+    """Deep analysis of a WhatsApp thread."""
     lines = "\n".join(
         f"{'Customer' if m.get('direction') == 'in' else 'Agent'}: {m.get('message', '')}"
         for m in messages[-20:]
@@ -296,7 +288,6 @@ def analyse_whatsapp_thread(messages: list[dict], lead: dict) -> dict:
     except Exception:  # noqa: BLE001
         result = {}
 
-    # Normalise
     defaults = {
         "intent": "Unknown", "sentiment": "Neutral", "objections": "",
         "conversion_probability": 0, "next_action": "Follow up with customer",
@@ -315,10 +306,7 @@ def analyse_whatsapp_thread(messages: list[dict], lead: dict) -> dict:
 # ── Batch lead scoring ────────────────────────────────────────────────────────
 
 def score_lead_quick(lead: dict, activities: list[dict]) -> dict:
-    """
-    Quick AI scoring for a single lead using profile + activity history.
-    Returns normalised suggestion dict (subset of generate_copilot_suggestions output).
-    """
+    """Quick AI scoring for a single lead using profile + activity history."""
     act_lines = "\n".join(
         f"- [{a.get('activity_type')}] {(a.get('description') or '')[:80]}"
         for a in activities[:8]
@@ -374,12 +362,7 @@ FOLLOWUP_SYSTEM = (
 
 
 def generate_follow_up_suggestions(stale_leads: list[dict]) -> list[dict]:
-    """
-    Given a list of stale leads (no activity in N days), generate
-    a personalised follow-up suggestion for each.
-    Each lead dict: {id, name, city, customer_type, budget, status, last_activity_days, notes}
-    Returns list of {lead_id, lead_name, days_stale, priority, message, action_type}
-    """
+    """Given a list of stale leads, generate personalized follow-up actions."""
     if not stale_leads:
         return []
 
@@ -412,7 +395,6 @@ def generate_follow_up_suggestions(stale_leads: list[dict]) -> list[dict]:
             max_tokens=1200,
         )
         import json as _json
-        # Extract JSON array
         start = raw.find("[")
         end = raw.rfind("]")
         if start >= 0 and end > start:
@@ -422,7 +404,6 @@ def generate_follow_up_suggestions(stale_leads: list[dict]) -> list[dict]:
     except Exception:  # noqa: BLE001
         suggestions = []
 
-    # Enrich with lead info
     lead_map = {l["id"]: l for l in stale_leads}
     result = []
     for s in suggestions:
@@ -440,3 +421,97 @@ def generate_follow_up_suggestions(stale_leads: list[dict]) -> list[dict]:
             "action_type": s.get("action_type", "WhatsApp"),
         })
     return result
+
+
+# ── Analytical Direct Storage Tracing (Our 5 Custom Logging Tables) ───────────
+
+def save_conversation_memory(lead_id: int, interaction_type: str, raw_transcript: str, ai_summary: str) -> int:
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            INSERT INTO conversation_memory (lead_id, interaction_type, raw_transcript, ai_summary, created_at)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (lead_id, interaction_type, raw_transcript, ai_summary, datetime.utcnow().isoformat())
+        )
+        conn.commit()
+        return cursor.lastrowid or 0
+    except Exception as e:
+        print(f"Telemetry Exception (conversation_memory): {e}")
+        return 0
+    finally:
+        conn.close()
+
+
+def save_transcript_chunk(memory_id: int, speaker: str, content: str, sequence_order: int):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            INSERT INTO transcript_chunks (memory_id, speaker, content, sequence_order)
+            VALUES (?, ?, ?, ?)
+            """,
+            (memory_id, speaker, content, sequence_order)
+        )
+        conn.commit()
+    except Exception as e:
+        print(f"Telemetry Exception (transcript_chunks): {e}")
+    finally:
+        conn.close()
+
+
+def save_intent_log(lead_id: int, detected_intent: str, confidence_score: float, structural_meta: dict):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            INSERT INTO intent_logs (lead_id, detected_intent, confidence_score, structural_meta, created_at)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (lead_id, detected_intent, confidence_score, json.dumps(structural_meta), datetime.utcnow().isoformat())
+        )
+        conn.commit()
+    except Exception as e:
+        print(f"Telemetry Exception (intent_logs): {e}")
+    finally:
+        conn.close()
+
+
+def save_retrieval_log(memory_id: int, retrieval_type: str, query_string: str, results_count: int):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            INSERT INTO retrieval_logs (memory_id, retrieval_type, query_string, results_count, created_at)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (memory_id, retrieval_type, query_string, results_count, datetime.utcnow().isoformat())
+        )
+        conn.commit()
+    except Exception as e:
+        print(f"Telemetry Exception (retrieval_logs): {e}")
+    finally:
+        conn.close()
+
+
+def update_ai_feedback(log_id: int, table_target: str, is_positive: bool, correction_note: Optional[str] = None):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            INSERT INTO ai_feedback (log_id, table_target, is_positive, correction_note, created_at)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (log_id, table_target, 1 if is_positive else 0, correction_note, datetime.utcnow().isoformat())
+        )
+        conn.commit()
+    except Exception as e:
+        print(f"Telemetry Exception (ai_feedback): {e}")
+    finally:
+        conn.close()

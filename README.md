@@ -78,10 +78,7 @@ Open `.env` in VS Code and paste this content:
 
 ```env
 # ── Required ──────────────────────────────────────────
-SECRET_KEY=your-super-secret-key-change-this-in-production
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=60
-REFRESH_TOKEN_EXPIRE_DAYS=7
+JWT_SECRET=your-super-secret-key-change-this-in-production
 
 # ── DeepSeek AI (Required for all AI features) ────────
 DEEPSEEK_API_KEY=sk-your-deepseek-api-key-here
