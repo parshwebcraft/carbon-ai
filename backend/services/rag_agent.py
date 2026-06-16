@@ -57,12 +57,12 @@ def build_context(lead_id: int, db: Session) -> dict:
     insight_dict = {}
     if insight:
         insight_dict = {
-            "lead_score": insight.lead_score,
-            "intent": insight.intent,
-            "budget_qualification": insight.budget_qualification,
-            "authority": insight.authority,
-            "need": insight.need,
-            "timeline": insight.timeline,
+            "lead_score":     getattr(insight, "lead_score", 0),
+            "intent":         getattr(insight, "intent", None),
+            "budget":         getattr(insight, "budget", None),
+            "timeline":       getattr(insight, "timeline", None),
+            "decision_maker": getattr(insight, "decision_maker", None),
+            "summary":        getattr(insight, "summary", None),
         }
 
     # Recent activities (last 10)
