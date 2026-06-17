@@ -60,6 +60,7 @@ def place_call(lead_id: int, with_ai_script: bool = True,
                 "budget": lead.budget, "status": lead.status,
             },
             script=script_text,
+            db=db,
         )
     except vapi_voice.VapiNotConfigured as e:
         raise HTTPException(503, str(e))
