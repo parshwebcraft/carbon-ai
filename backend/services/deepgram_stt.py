@@ -58,9 +58,6 @@ def _stream_url(
         f"&smart_format={str(smart_format).lower()}"
         f"&interim_results={str(interim_results).lower()}"
         f"&utterance_end_ms={utterance_end_ms}"
-        f"&encoding=webm-opus"      # Browser MediaRecorder default
-        f"&channels=1"
-        f"&sample_rate=48000"
     )
     return f"{DEEPGRAM_BASE}?{params}"
 
