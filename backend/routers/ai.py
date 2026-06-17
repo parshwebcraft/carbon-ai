@@ -181,7 +181,7 @@ def quotation_suggest(lead_id: int, db: Session = Depends(get_db),
     if not lead:
         raise HTTPException(404, "Lead not found")
 
-    products = db.query(Product).filter(Product.is_active == True).limit(50).all()  # noqa: E712
+    products = db.query(Product).limit(50).all()
     products_list = [
         {
             "id": p.id,

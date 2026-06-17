@@ -110,7 +110,6 @@ def build_context(lead_id: int, db: Session) -> dict:
     budget_max = budget * 2.5 if budget > 0 else 9999999
     products = (
         db.query(Product)
-        .filter(Product.is_active == True)  # noqa: E712
         .limit(30).all()
     )
     products_list = [
