@@ -215,12 +215,12 @@ async def stream_transcribe(
     try:
         try:
             # websockets >= 14.0
-            async with websockets.connect(url, additional_headers=headers) as ws:
+            async with websockets.connect(url, additional_headers=headers, open_timeout=20.0) as ws:
                 await _run(ws)
         except TypeError as te:
             if "additional_headers" in str(te) or "unexpected keyword" in str(te):
                 # websockets < 14.0
-                async with websockets.connect(url, extra_headers=headers) as ws:
+                async with websockets.connect(url, extra_headers=headers, open_timeout=20.0) as ws:
                     await _run(ws)
             else:
                 raise te
