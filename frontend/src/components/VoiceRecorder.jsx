@@ -170,7 +170,7 @@ export default function VoiceRecorder({
 
           case "transcript":
             if (msg.text && onTranscript) {
-              onTranscript(msg.text, msg.is_final, msg.speaker);
+              onTranscript(msg.raw_text || msg.text, msg.is_final, msg.speaker);
             }
             break;
 
