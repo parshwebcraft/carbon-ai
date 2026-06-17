@@ -44,7 +44,7 @@ def is_configured() -> bool:
 def _stream_url(
     *,
     model: str = "nova-2",
-    language: str = "hi-en",      # Hindi+English code-switching (Indian jewellery stores)
+    language: str = "multi",      # Hindi+English code-switching (Indian jewellery stores)
     punctuate: bool = True,
     diarize: bool = True,          # Speaker labels: Customer vs Salesperson
     smart_format: bool = True,
@@ -68,7 +68,7 @@ def transcribe_bytes(audio_bytes: bytes, *, mimetype: str = "audio/webm") -> str
     """Synchronously transcribe a complete audio clip and return the transcript text."""
     key = _key()
     url = (
-        f"{DEEPGRAM_REST}?model=nova-2&language=hi-en"
+        f"{DEEPGRAM_REST}?model=nova-2&language=multi"
         "&punctuate=true&diarize=true&smart_format=true"
     )
     with httpx.Client(timeout=60.0) as client:
