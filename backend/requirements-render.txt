@@ -47,3 +47,5 @@ pymongo
 
 # ── WhatsApp / Comms ───────────────────────────────────────────────────────
 requests
+twilio
+
