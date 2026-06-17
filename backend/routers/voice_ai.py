@@ -77,8 +77,22 @@ async def transcribe_upload(
         raise HTTPException(404, "Lead not found")
 
     audio_bytes = await audio.read()
-    mimetype = audio.content_type or "audio/webm"
 
+    # Save audio file to recordings folder
+    try:
+        import os
+        os.makedirs("recordings", exist_ok=True)
+        ext = "webm"
+        if audio.filename and "." in audio.filename:
+            ext = audio.filename.split(".")[-1]
+        filename = f"recordings/lead_{lead_id}_{int(time.time())}.{ext}"
+        with open(filename, "wb") as f:
+            f.write(audio_bytes)
+        logger.info("Saved REST upload recording to %s", filename)
+    except Exception as e:
+        logger.error("Failed to save REST uploaded audio: %s", e)
+
+    mimetype = audio.content_type or "audio/webm"
     try:
         transcript_text = deepgram_stt.transcribe_bytes(audio_bytes, mimetype=mimetype)
     except deepgram_stt.DeepgramNotConfigured as e:
@@ -174,6 +188,7 @@ async def voice_ws(
     full_transcript_parts: list[str] = []
     last_suggestion_time = 0.0
     SUGGESTION_DEBOUNCE = 8.0  # seconds — don't spam DeepSeek
+    audio_chunks: list[bytes] = []
 
     # ── Deepgram streaming setup ──────────────────────────────────────────────
     audio_queue: asyncio.Queue = asyncio.Queue()
@@ -256,6 +271,7 @@ async def voice_ws(
             # Binary audio chunk → Deepgram
             raw_bytes = message.get("bytes")
             if raw_bytes:
+                audio_chunks.append(raw_bytes)
                 if deepgram_available:
                     await audio_queue.put(raw_bytes)
                 continue
@@ -276,6 +292,18 @@ async def voice_ws(
                 # ── Session end — save to DB ──────────────────────────────
                 stop_event.set()
                 await audio_queue.put(None)
+
+                # Save audio file to recordings folder if we got any binary data
+                if audio_chunks:
+                    try:
+                        import os
+                        os.makedirs("recordings", exist_ok=True)
+                        filename = f"recordings/lead_{lead_id}_{int(time.time())}.webm"
+                        with open(filename, "wb") as f:
+                            f.write(b"".join(audio_chunks))
+                        logger.info("Saved websocket recording to %s", filename)
+                    except Exception as e:
+                        logger.error("Failed to save websocket audio: %s", e)
 
                 full_transcript = "\n".join(full_transcript_parts)
                 call_id = None
