@@ -1,0 +1,37 @@
+==================================================
+FACETS SALES TRAINING TRANSCRIPT
+==================================================
+Customer Name:          Gauransh Jaroli
+Lead ID:                102
+Date/Time:              2026-06-17 17:14:43
+AI Qualification Score: 60/100
+
+Qualifiers Detected:
+  - Intent:             Diamond Purchase
+  - Budget:             2500000
+  - Timeline:           Unknown
+  - Decision Maker:     Unknown
+--------------------------------------------------
+CONVERSATION DIALOGUE
+--------------------------------------------------
+Customer: Hello.
+Salesperson: Welcome, Goranch. Are you looking for diamond piece
+Salesperson: or a special occasion?
+--------------------------------------------------
+AI SALES SUGGESTIONS FOR TRAINING
+--------------------------------------------------
+Next Question Recommendation:
+  "Are you looking for a diamond piece for a special occasion like a wedding or an engagement?"
+
+Product Recommendation:
+  "Recommend the Celestial Bridal Set (ID 9) at ₹2,076,904, within budget and perfect for bridal occasions."
+
+Offer Recommendation:
+  "We have a special bridal offer: complimentary jewellery cleaning and a gift box with purchase."
+
+Objection Handling:
+  "If price is a concern, we have other diamond pieces like the Heritage Ring (ID 7) at ₹277,627."
+
+Closing Technique:
+  "Would you like to schedule a virtual appointment to see the Celestial Bridal Set in detail?"
+==================================================
