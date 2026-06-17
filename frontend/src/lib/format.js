@@ -7,25 +7,55 @@ export function inr(n) {
   }).format(Number(n));
 }
 
+export function parseDate(d) {
+  if (!d) return null;
+  if (d instanceof Date) return d;
+  if (typeof d === "string") {
+    let str = d.trim();
+    if (!str.endsWith("Z") && !/[+-]\d{2}:?\d{2}$/.test(str)) {
+      if (!str.includes("T")) {
+        str = str.replace(" ", "T");
+      }
+      str = str + "Z";
+    }
+    const parsed = new Date(str);
+    if (!isNaN(parsed.getTime())) return parsed;
+  }
+  const parsed = new Date(d);
+  return isNaN(parsed.getTime()) ? null : parsed;
+}
+
 export function dateShort(d) {
-  if (!d) return "";
-  const dt = typeof d === "string" ? new Date(d) : d;
+  const dt = parseDate(d);
+  if (!dt) return "";
   return dt.toLocaleDateString("en-IN", {
     day: "2-digit", month: "short", year: "numeric",
+    timeZone: "Asia/Kolkata",
   });
 }
 
 export function dateTime(d) {
-  if (!d) return "";
-  const dt = typeof d === "string" ? new Date(d) : d;
+  const dt = parseDate(d);
+  if (!dt) return "";
   return dt.toLocaleString("en-IN", {
     day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+    timeZone: "Asia/Kolkata",
+  });
+}
+
+export function timeOnly(d) {
+  const dt = parseDate(d);
+  if (!dt) return "";
+  return dt.toLocaleTimeString("en-IN", {
+    hour: "2-digit", minute: "2-digit",
+    timeZone: "Asia/Kolkata",
   });
 }
 
 export function relative(d) {
-  if (!d) return "";
-  const t = new Date(d).getTime();
+  const dt = parseDate(d);
+  if (!dt) return "";
+  const t = dt.getTime();
   const diff = (Date.now() - t) / 1000;
   if (diff < 60) return "just now";
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
@@ -41,3 +71,4 @@ export function errMsg(e, fallback = "Something went wrong") {
   if (Array.isArray(d)) return d.map(x => x?.msg || JSON.stringify(x)).join(", ");
   return JSON.stringify(d);
 }
+

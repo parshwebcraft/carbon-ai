@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import api, { API_BASE } from "@/lib/api";
-import { inr, errMsg } from "@/lib/format";
+import { inr, errMsg, timeOnly } from "@/lib/format";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -122,7 +122,7 @@ function TranscriptBubble({ id, speaker, content, createdAt, onToggleSpeaker }) 
       <div className={`max-w-[80%] ${isCustomer ? "" : "order-first"}`}>
         <div className="flex items-center gap-1 text-[10px] text-slate-400 mb-1 font-medium justify-between">
           <span>
-            {speaker} {createdAt && `• ${new Date(createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`}
+            {speaker} {createdAt && `• ${timeOnly(createdAt)}`}
           </span>
           {onToggleSpeaker && id && (
             <button
