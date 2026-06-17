@@ -57,13 +57,13 @@ export default function Campaigns() {
           <h1 className="font-serif text-3xl flex items-center gap-2">
             <Sparkles className="h-7 w-7 text-amber-700" /> AI Calling Campaigns
           </h1>
-          <p className="text-sm text-slate-600">
+          <div className="text-sm text-slate-600">
             Bulk outbound AI dialer — provider:&nbsp;
             <Badge variant="outline" data-testid="campaigns-provider-badge"
                    className={provider === "vapi" ? "border-emerald-300 text-emerald-800" : "border-amber-300 text-amber-800"}>
               {provider === "vapi" ? "Vapi.ai (live)" : "MOCK"}
             </Badge>
-          </p>
+          </div>
         </div>
         <div className="flex gap-2">
           <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
