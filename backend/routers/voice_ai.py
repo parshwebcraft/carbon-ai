@@ -130,6 +130,59 @@ async def transcribe_upload(
         db.refresh(call)
         suggestions["call_id"] = call.id
 
+        # Save transcript text file under backend/transcripts/ folder for founder/manager training
+        try:
+            import os
+            import re
+            from datetime import datetime
+            os.makedirs("transcripts", exist_ok=True)
+            clean_name = re.sub(r'[^\w\s-]', '', lead.name).strip().replace(' ', '_')
+            time_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            transcript_filename = f"transcripts/{clean_name}_lead_{lead_id}_{time_str}.txt"
+
+            header = (
+                f"==================================================\n"
+                f"FACETS SALES TRAINING TRANSCRIPT (REST UPLOAD)\n"
+                f"==================================================\n"
+                f"Customer Name:          {lead.name}\n"
+                f"Lead ID:                {lead_id}\n"
+                f"Date/Time:              {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                f"AI Qualification Score: {suggestions.get('lead_score', 'N/A')}/100\n\n"
+                f"Qualifiers Detected:\n"
+                f"  - Intent:             {suggestions.get('intent', 'Unknown')}\n"
+                f"  - Budget:             {suggestions.get('budget', 'Unknown')}\n"
+                f"  - Timeline:           {suggestions.get('timeline', 'Unknown')}\n"
+                f"  - Decision Maker:     {suggestions.get('decision_maker', 'Unknown')}\n"
+                f"--------------------------------------------------\n"
+                f"CONVERSATION DIALOGUE\n"
+                f"--------------------------------------------------\n"
+            )
+
+            suggestions_footer = (
+                f"\n--------------------------------------------------\n"
+                f"AI SALES SUGGESTIONS FOR TRAINING\n"
+                f"--------------------------------------------------\n"
+                f"Next Question Recommendation:\n"
+                f"  \"{suggestions.get('next_question', 'N/A')}\"\n\n"
+                f"Product Recommendation:\n"
+                f"  \"{suggestions.get('product_suggestion', 'N/A')}\"\n\n"
+                f"Offer Recommendation:\n"
+                f"  \"{suggestions.get('offer_suggestion', 'N/A')}\"\n\n"
+                f"Objection Handling:\n"
+                f"  \"{suggestions.get('objection_handling', 'N/A')}\"\n\n"
+                f"Closing Technique:\n"
+                f"  \"{suggestions.get('closing_suggestion', 'N/A')}\"\n"
+                f"==================================================\n"
+            )
+
+            with open(transcript_filename, "w", encoding="utf-8") as f:
+                f.write(header)
+                f.write(transcript_text)
+                f.write(suggestions_footer)
+            logger.info("Saved training transcript to %s", transcript_filename)
+        except Exception as e:
+            logger.error("Failed to save training transcript file: %s", e)
+
     return {
         "transcript": transcript_text,
         "transcript_lines": transcript_lines,
@@ -345,6 +398,63 @@ async def voice_ws(
                         })
                     except Exception as e:  # noqa: BLE001
                         logger.warning("Final RAG error: %s", e)
+                        final_suggestions = {}
+
+                    # Save transcript text file under backend/transcripts/ folder for founder/manager training
+                    try:
+                        import os
+                        import re
+                        from datetime import datetime
+                        os.makedirs("transcripts", exist_ok=True)
+                        clean_name = re.sub(r'[^\w\s-]', '', lead.name).strip().replace(' ', '_')
+                        time_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                        transcript_filename = f"transcripts/{clean_name}_lead_{lead_id}_{time_str}.txt"
+
+                        # Extract qualifier values
+                        sug = final_suggestions
+                        
+                        header = (
+                            f"==================================================\n"
+                            f"FACETS SALES TRAINING TRANSCRIPT\n"
+                            f"==================================================\n"
+                            f"Customer Name:          {lead.name}\n"
+                            f"Lead ID:                {lead_id}\n"
+                            f"Date/Time:              {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                            f"AI Qualification Score: {sug.get('lead_score', 'N/A')}/100\n\n"
+                            f"Qualifiers Detected:\n"
+                            f"  - Intent:             {sug.get('intent', 'Unknown')}\n"
+                            f"  - Budget:             {sug.get('budget', 'Unknown')}\n"
+                            f"  - Timeline:           {sug.get('timeline', 'Unknown')}\n"
+                            f"  - Decision Maker:     {sug.get('decision_maker', 'Unknown')}\n"
+                            f"--------------------------------------------------\n"
+                            f"CONVERSATION DIALOGUE\n"
+                            f"--------------------------------------------------\n"
+                        )
+                        
+                        suggestions_footer = (
+                            f"\n--------------------------------------------------\n"
+                            f"AI SALES SUGGESTIONS FOR TRAINING\n"
+                            f"--------------------------------------------------\n"
+                            f"Next Question Recommendation:\n"
+                            f"  \"{sug.get('next_question', 'N/A')}\"\n\n"
+                            f"Product Recommendation:\n"
+                            f"  \"{sug.get('product_suggestion', 'N/A')}\"\n\n"
+                            f"Offer Recommendation:\n"
+                            f"  \"{sug.get('offer_suggestion', 'N/A')}\"\n\n"
+                            f"Objection Handling:\n"
+                            f"  \"{sug.get('objection_handling', 'N/A')}\"\n\n"
+                            f"Closing Technique:\n"
+                            f"  \"{sug.get('closing_suggestion', 'N/A')}\"\n"
+                            f"==================================================\n"
+                        )
+
+                        with open(transcript_filename, "w", encoding="utf-8") as f:
+                            f.write(header)
+                            f.write(full_transcript)
+                            f.write(suggestions_footer)
+                        logger.info("Saved training transcript to %s", transcript_filename)
+                    except Exception as e:
+                        logger.error("Failed to save training transcript file: %s", e)
 
                 await websocket.send_json({
                     "type": "session_saved",
