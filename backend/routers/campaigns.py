@@ -101,7 +101,7 @@ def _stats(db: Session, campaign_id: int) -> CampaignStats:
 def _serialise(c: Campaign, db: Session) -> CampaignOut:
     out = CampaignOut.model_validate(c)
     out.stats = _stats(db, c.id)
-    out.provider = campaign_dialer.provider_name()
+    out.provider = campaign_dialer.provider_name(db)
     return out
 
 
@@ -378,7 +378,7 @@ def analytics(cid: int, db: Session = Depends(get_db),
     payload = s.model_dump()
     payload["campaign"] = {
         "id": c.id, "name": c.name, "status": c.status,
-        "provider": campaign_dialer.provider_name(),
+        "provider": campaign_dialer.provider_name(db),
         "started_at": c.started_at, "completed_at": c.completed_at,
     }
     # Headline tiles

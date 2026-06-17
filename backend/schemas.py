@@ -327,6 +327,9 @@ class CallingSettings(BaseModel):
     end_time: str = "18:00"
     calls_per_minute: int = 5
     enabled: bool = True
+    vapi_api_key: str = ""
+    vapi_phone_number_id: str = ""
+    vapi_assistant_id: str = ""
 
 
 class CallingSettingsUpdate(BaseModel):
@@ -335,6 +338,9 @@ class CallingSettingsUpdate(BaseModel):
     end_time: Optional[str] = None
     calls_per_minute: Optional[int] = None
     enabled: Optional[bool] = None
+    vapi_api_key: Optional[str] = None
+    vapi_phone_number_id: Optional[str] = None
+    vapi_assistant_id: Optional[str] = None
 
 
 # ---------------- Campaigns ----------------

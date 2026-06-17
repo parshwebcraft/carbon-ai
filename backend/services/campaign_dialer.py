@@ -12,6 +12,7 @@ import random
 import time
 from dataclasses import dataclass
 from typing import Optional
+from sqlalchemy.orm import Session
 
 from services import vapi_voice
 
@@ -282,12 +283,12 @@ def mock_dial(*, target: dict, campaign_prompt: Optional[str],
 # Provider selection — keeps Vapi as a drop-in for the future
 # ---------------------------------------------------------------------------
 
-def provider_name() -> str:
-    return "vapi" if vapi_voice.is_configured() else "mock"
+def provider_name(db: Optional[Session] = None) -> str:
+    return "vapi" if vapi_voice.is_configured(db) else "mock"
 
 
 def dial(*, target: dict, campaign_prompt: Optional[str],
-         lead_prompt_override: Optional[str]) -> CallResult:
+         lead_prompt_override: Optional[str], db: Optional[Session] = None) -> CallResult:
     """Place a call via the active provider and return the final result.
 
     For the mock provider we resolve the full lifecycle synchronously.
@@ -296,7 +297,7 @@ def dial(*, target: dict, campaign_prompt: Optional[str],
     the row when Vapi posts an end-of-call report. The engine treats anything
     other than `completed/failed/busy/no_answer` as "pending finalisation".
     """
-    if provider_name() == "vapi":
+    if provider_name(db) == "vapi":
         try:
             script = lead_prompt_override or campaign_prompt
             resp = vapi_voice.place_call(
@@ -309,6 +310,7 @@ def dial(*, target: dict, campaign_prompt: Optional[str],
                     "status": target.get("status") or "New",
                 },
                 script=script,
+                db=db,
             )
             return CallResult(
                 final_status="dialing",

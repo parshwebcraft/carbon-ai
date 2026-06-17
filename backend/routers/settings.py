@@ -25,6 +25,7 @@ def update_calling(body: CallingSettingsUpdate,
 
 
 @router.get("/calling/provider")
-def calling_provider(_: User = Depends(get_current_user)):
-    return {"provider": campaign_dialer.provider_name(),
+def calling_provider(db: Session = Depends(get_db),
+                     _: User = Depends(get_current_user)):
+    return {"provider": campaign_dialer.provider_name(db),
             "outcomes": campaign_dialer.OUTCOMES}

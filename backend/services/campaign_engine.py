@@ -40,6 +40,9 @@ DEFAULT_CALLING_SETTINGS = {
     "end_time": "18:00",
     "calls_per_minute": 5,
     "enabled": True,
+    "vapi_api_key": "",
+    "vapi_phone_number_id": "",
+    "vapi_assistant_id": "",
 }
 
 
@@ -216,6 +219,7 @@ def _process_one(db, campaign: Campaign, tgt: CampaignTarget) -> None:
             target=target_payload,
             campaign_prompt=campaign.campaign_prompt,
             lead_prompt_override=tgt.lead_prompt_override,
+            db=db,
         )
     except Exception as e:  # noqa: BLE001
         logger.exception("Dial crashed for target %s: %s", tgt.id, e)
@@ -307,8 +311,16 @@ def run_tick_sync() -> dict:
 
 
 async def loop():
+    db = SessionLocal()
+    try:
+        provider = campaign_dialer.provider_name(db)
+    except Exception:
+        provider = "mock"
+    finally:
+        db.close()
+
     logger.info("Campaign engine started (tick=%ss, provider=%s)",
-                TICK_SECONDS, campaign_dialer.provider_name())
+                TICK_SECONDS, provider)
     while True:
         try:
             await asyncio.to_thread(run_tick_sync)

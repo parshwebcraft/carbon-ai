@@ -1,7 +1,9 @@
 """Vapi.ai outbound voice agent integration."""
 import os
+import json
 from typing import Optional, Dict, Any
 import httpx
+from sqlalchemy.orm import Session
 
 API_BASE = "https://api.vapi.ai"
 
@@ -10,31 +12,50 @@ class VapiNotConfigured(RuntimeError):
     pass
 
 
-def _key() -> str:
-    k = os.environ.get("VAPI_API_KEY", "").strip()
+def _get_setting(key: str, db: Optional[Session] = None) -> Optional[str]:
+    if db:
+        try:
+            from models import Setting
+            row = db.query(Setting).filter(Setting.key == "calling").first()
+            if row:
+                settings = json.loads(row.value)
+                val = settings.get(key)
+                if val:
+                    return str(val).strip()
+        except Exception:
+            pass
+    
+    # Fallback to env var
+    env_name = key.upper()
+    return os.environ.get(env_name, "").strip() or None
+
+
+def _key(db: Optional[Session] = None) -> str:
+    k = _get_setting("vapi_api_key", db)
     if not k:
-        raise VapiNotConfigured("VAPI_API_KEY not set. Add it to /app/backend/.env.")
+        raise VapiNotConfigured("Vapi API key not set. Please configure Vapi.ai keys in Calling Settings.")
     return k
 
 
-def _phone_number_id() -> str:
-    p = os.environ.get("VAPI_PHONE_NUMBER_ID", "").strip()
+def _phone_number_id(db: Optional[Session] = None) -> str:
+    p = _get_setting("vapi_phone_number_id", db)
     if not p:
-        raise VapiNotConfigured("VAPI_PHONE_NUMBER_ID not set.")
+        raise VapiNotConfigured("Vapi Phone Number ID not set. Please configure Vapi.ai keys in Calling Settings.")
     return p
 
 
-def _assistant_id() -> Optional[str]:
-    return os.environ.get("VAPI_ASSISTANT_ID", "").strip() or None
+def _assistant_id(db: Optional[Session] = None) -> Optional[str]:
+    return _get_setting("vapi_assistant_id", db) or None
 
 
-def is_configured() -> bool:
-    return bool(
-        os.environ.get("VAPI_API_KEY") and os.environ.get("VAPI_PHONE_NUMBER_ID")
-    )
+def is_configured(db: Optional[Session] = None) -> bool:
+    try:
+        return bool(_get_setting("vapi_api_key", db) and _get_setting("vapi_phone_number_id", db))
+    except Exception:
+        return False
 
 
-def place_call(*, to_number: str, lead: dict, script: Optional[str] = None) -> Dict[str, Any]:
+def place_call(*, to_number: str, lead: dict, script: Optional[str] = None, db: Optional[Session] = None) -> Dict[str, Any]:
     """Trigger an outbound AI voice call via Vapi.
 
     If VAPI_ASSISTANT_ID is set, uses that saved assistant. Otherwise sends a
@@ -43,10 +64,10 @@ def place_call(*, to_number: str, lead: dict, script: Optional[str] = None) -> D
     if not to_number:
         raise ValueError("to_number is required")
     body: Dict[str, Any] = {
-        "phoneNumberId": _phone_number_id(),
+        "phoneNumberId": _phone_number_id(db),
         "customer": {"number": to_number, "name": lead.get("name") or "Customer"},
     }
-    aid = _assistant_id()
+    aid = _assistant_id(db)
     if aid:
         body["assistantId"] = aid
     else:
@@ -77,7 +98,7 @@ def place_call(*, to_number: str, lead: dict, script: Optional[str] = None) -> D
     with httpx.Client(timeout=30.0) as client:
         r = client.post(
             f"{API_BASE}/call",
-            headers={"Authorization": f"Bearer {_key()}", "Content-Type": "application/json"},
+            headers={"Authorization": f"Bearer {_key(db)}", "Content-Type": "application/json"},
             json=body,
         )
         if r.status_code >= 400:
@@ -85,11 +106,11 @@ def place_call(*, to_number: str, lead: dict, script: Optional[str] = None) -> D
         return r.json()
 
 
-def get_call(call_id: str) -> Dict[str, Any]:
+def get_call(call_id: str, db: Optional[Session] = None) -> Dict[str, Any]:
     with httpx.Client(timeout=20.0) as client:
         r = client.get(
             f"{API_BASE}/call/{call_id}",
-            headers={"Authorization": f"Bearer {_key()}"},
+            headers={"Authorization": f"Bearer {_key(db)}"},
         )
         if r.status_code >= 400:
             raise RuntimeError(f"Vapi get error {r.status_code}: {r.text[:300]}")

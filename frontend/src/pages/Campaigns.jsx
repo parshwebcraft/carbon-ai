@@ -178,6 +178,25 @@ function CallingSettingsDialog({ onClose }) {
         <TimeField label="End Time (IST)" testid="settings-end"
           value={s.end_time}
           onChange={(v) => setS({ ...s, end_time: v })} />
+
+        <div className="col-span-2 border-t pt-3 mt-1 font-serif text-sm font-semibold text-amber-900">
+          Vapi.ai Integration
+        </div>
+        <div className="col-span-2">
+          <TextField label="Vapi API Key" testid="settings-vapi-key" type="password"
+            value={s.vapi_api_key}
+            onChange={(v) => setS({ ...s, vapi_api_key: v })} />
+        </div>
+        <div className="col-span-2">
+          <TextField label="Vapi Phone Number ID" testid="settings-vapi-phone"
+            value={s.vapi_phone_number_id}
+            onChange={(v) => setS({ ...s, vapi_phone_number_id: v })} />
+        </div>
+        <div className="col-span-2">
+          <TextField label="Vapi Assistant ID (Optional)" testid="settings-vapi-assistant"
+            value={s.vapi_assistant_id}
+            onChange={(v) => setS({ ...s, vapi_assistant_id: v })} />
+        </div>
       </div>
       <DialogFooter>
         <Button data-testid="settings-save"
@@ -414,11 +433,11 @@ function FilterChips({ label, options, selected, onToggle, valueKey, labelKey })
   );
 }
 
-function TextField({ label, value, onChange, testid }) {
+function TextField({ label, value, onChange, testid, type = "text" }) {
   return (
     <div>
       <Label className="text-xs text-slate-600">{label}</Label>
-      <Input data-testid={testid} value={value ?? ""} onChange={e => onChange(e.target.value)} className="mt-1" />
+      <Input data-testid={testid} type={type} value={value ?? ""} onChange={e => onChange(e.target.value)} className="mt-1" />
     </div>
   );
 }

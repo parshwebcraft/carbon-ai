@@ -22,8 +22,8 @@ class PlaceCallOut(BaseModel):
 
 
 @router.get("/status")
-def status():
-    return {"vapi_configured": vapi_voice.is_configured()}
+def status(db: Session = Depends(get_db)):
+    return {"vapi_configured": vapi_voice.is_configured(db)}
 
 
 @router.post("/place-call/{lead_id}", response_model=PlaceCallOut)
@@ -86,6 +86,27 @@ def place_call(lead_id: int, with_ai_script: bool = True,
                         status=resp.get("status", "queued"), raw=resp)
 
 
+def _determine_outcome(summary: str, transcript: str) -> str:
+    text = ((summary or "") + " " + (transcript or "")).lower()
+    if "appointment" in text or "visit" in text or "showroom" in text:
+        return "Appointment Booked"
+    elif "quote" in text or "quotation" in text or "price" in text:
+        return "Quotation Requested"
+    elif "not interested" in text or "remove my number" in text or "don't call" in text:
+        return "Not Interested"
+    elif "bridal" in text or "wedding" in text:
+        return "Bridal Inquiry"
+    elif "diamond" in text or "solitaire" in text:
+        return "Diamond Purchase"
+    elif "exchange" in text or "old gold" in text:
+        return "Exchange Inquiry"
+    elif "investment" in text or "digital gold" in text or "coin" in text:
+        return "Investment Gold"
+    elif "gold" in text:
+        return "Gold Purchase"
+    return "Not Interested"
+
+
 @router.post("/webhook")
 async def webhook(req: Request, db: Session = Depends(get_db)):
     """Vapi end-of-call report + status updates.
@@ -107,8 +128,53 @@ async def webhook(req: Request, db: Session = Depends(get_db)):
 
     call = db.query(Call).filter(Call.vapi_call_id == vapi_id).first()
     if not call:
-        logger.info("Unknown vapi call id %s — skipping", vapi_id)
-        return {"ok": True, "ignored": "unknown call"}
+        # Check if it is a CampaignTarget call!
+        from models import CampaignTarget, Campaign
+        from services.campaign_dialer import CallResult
+        from services.campaign_engine import _apply_outcome
+
+        tgt = db.query(CampaignTarget).filter(CampaignTarget.vapi_call_id == vapi_id).first()
+        if not tgt:
+            logger.info("Unknown vapi call id %s — skipping", vapi_id)
+            return {"ok": True, "ignored": "unknown call"}
+
+        campaign = db.query(Campaign).filter(Campaign.id == tgt.campaign_id).first()
+        if not campaign:
+            return {"ok": True, "ignored": "campaign not found"}
+
+        if msg_type == "status-update":
+            status = msg.get("status") or "Updated"
+            tgt.call_status = "completed" if status == "ended" else "dialing"
+        elif msg_type == "end-of-call-report":
+            duration = int(msg.get("durationSeconds") or msg.get("duration") or 0)
+            transcript = msg.get("transcript") or ""
+            summary = msg.get("summary") or ""
+            analysis = msg.get("analysis") or {}
+            sentiment = (analysis.get("sentiment") or "Neutral").capitalize()
+            if sentiment not in ("Positive", "Neutral", "Negative"):
+                sentiment = "Neutral"
+
+            outcome = _determine_outcome(summary, transcript)
+            lead_score = int(analysis.get("leadScore") or analysis.get("score") or 50)
+            next_action = analysis.get("successEvaluation") or analysis.get("nextAction") or "Follow up"
+
+            result = CallResult(
+                final_status="completed",
+                duration=duration,
+                outcome=outcome,
+                sentiment=sentiment,
+                summary=summary,
+                transcript=transcript,
+                lead_score=lead_score,
+                next_action=next_action,
+                recording_url=call_info.get("recordingUrl") or msg.get("recordingUrl"),
+                call_cost=float(msg.get("cost") or 0.0),
+                callback_requested=("callback" in (next_action or "").lower()),
+                vapi_call_id=vapi_id,
+            )
+            _apply_outcome(db, campaign, tgt, result)
+        db.commit()
+        return {"ok": True}
 
     if msg_type == "status-update":
         status = msg.get("status") or "Updated"
