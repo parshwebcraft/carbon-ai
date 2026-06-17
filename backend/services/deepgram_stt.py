@@ -156,67 +156,77 @@ async def stream_transcribe(
     url = _stream_url()
     headers = {"Authorization": f"Token {key}"}
 
-    try:
-        async with websockets.connect(url, extra_headers=headers) as ws:
-            logger.info("Deepgram WS connected")
-
-            async def _send():
-                """Read audio queue and send chunks to Deepgram."""
-                while not stop_event.is_set():
+    async def _run(ws):
+        logger.info("Deepgram WS connected")
+        async def _send():
+            """Read audio queue and send chunks to Deepgram."""
+            while not stop_event.is_set():
+                try:
+                    chunk = await asyncio.wait_for(audio_queue.get(), timeout=0.5)
+                except asyncio.TimeoutError:
+                    continue
+                if chunk is None:
+                    # Signal end of stream
                     try:
-                        chunk = await asyncio.wait_for(audio_queue.get(), timeout=0.5)
-                    except asyncio.TimeoutError:
-                        continue
-                    if chunk is None:
-                        # Signal end of stream
-                        try:
-                            await ws.send(json.dumps({"type": "CloseStream"}))
-                        except Exception:
-                            pass
-                        break
-                    try:
-                        await ws.send(chunk)
-                    except Exception as e:
-                        logger.warning("Deepgram send error: %s", e)
-                        break
-
-            async def _recv():
-                """Receive transcript events from Deepgram."""
-                async for message in ws:
-                    try:
-                        data = json.loads(message)
+                        await ws.send(json.dumps({"type": "CloseStream"}))
                     except Exception:
+                        pass
+                    break
+                try:
+                    await ws.send(chunk)
+                except Exception as e:
+                    logger.warning("Deepgram send error: %s", e)
+                    break
+
+        async def _recv():
+            """Receive transcript events from Deepgram."""
+            async for message in ws:
+                try:
+                    data = json.loads(message)
+                except Exception:
+                    continue
+
+                msg_type = data.get("type", "")
+
+                if msg_type == "Results":
+                    channel = data.get("channel", {})
+                    alts = channel.get("alternatives", [{}])
+                    transcript = alts[0].get("transcript", "").strip()
+                    is_final = data.get("is_final", False)
+
+                    if not transcript:
                         continue
 
-                    msg_type = data.get("type", "")
+                    # Extract speaker from first word if diarized
+                    words = alts[0].get("words", [])
+                    speaker = words[0].get("speaker") if words else None
 
-                    if msg_type == "Results":
-                        channel = data.get("channel", {})
-                        alts = channel.get("alternatives", [{}])
-                        transcript = alts[0].get("transcript", "").strip()
-                        is_final = data.get("is_final", False)
+                    await on_transcript(transcript, is_final, speaker)
 
-                        if not transcript:
-                            continue
+                elif msg_type == "UtteranceEnd":
+                    # Final silence — signal end of utterance
+                    pass
 
-                        # Extract speaker from first word if diarized
-                        words = alts[0].get("words", [])
-                        speaker = words[0].get("speaker") if words else None
+                elif msg_type in ("Metadata", "SpeechStarted"):
+                    pass  # Ignore metadata
 
-                        await on_transcript(transcript, is_final, speaker)
+                elif msg_type == "Close":
+                    break
 
-                    elif msg_type == "UtteranceEnd":
-                        # Final silence — signal end of utterance
-                        pass
+        await asyncio.gather(_send(), _recv())
 
-                    elif msg_type in ("Metadata", "SpeechStarted"):
-                        pass  # Ignore metadata
-
-                    elif msg_type == "Close":
-                        break
-
-            await asyncio.gather(_send(), _recv())
-
+    try:
+        try:
+            # websockets >= 14.0
+            async with websockets.connect(url, additional_headers=headers) as ws:
+                await _run(ws)
+        except TypeError as te:
+            if "additional_headers" in str(te) or "unexpected keyword" in str(te):
+                # websockets < 14.0
+                async with websockets.connect(url, extra_headers=headers) as ws:
+                    await _run(ws)
+            else:
+                raise te
     except Exception as e:
         logger.error("Deepgram streaming error: %s", e)
         await on_transcript(f"[STT error: {e}]", True, None)
