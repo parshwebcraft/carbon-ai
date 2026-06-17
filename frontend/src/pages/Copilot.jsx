@@ -80,18 +80,29 @@ function QualificationRow({ icon: Icon, label, value, highlight }) {
   );
 }
 
-function TranscriptBubble({ speaker, content, createdAt }) {
+function TranscriptBubble({ id, speaker, content, createdAt, onToggleSpeaker }) {
   const isCustomer = speaker === "Customer";
   return (
-    <div className={`flex gap-2 ${isCustomer ? "justify-start" : "justify-end"} mb-3`}>
+    <div className={`flex gap-2 ${isCustomer ? "justify-start" : "justify-end"} mb-3 group`}>
       {isCustomer && (
         <div className="h-7 w-7 rounded-full bg-amber-100 flex items-center justify-center shrink-0 mt-1">
           <User className="h-3.5 w-3.5 text-amber-700" />
         </div>
       )}
       <div className={`max-w-[80%] ${isCustomer ? "" : "order-first"}`}>
-        <div className="text-[10px] text-slate-400 mb-1 font-medium">
-          {speaker} {createdAt && `• ${new Date(createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`}
+        <div className="flex items-center gap-1 text-[10px] text-slate-400 mb-1 font-medium justify-between">
+          <span>
+            {speaker} {createdAt && `• ${new Date(createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`}
+          </span>
+          {onToggleSpeaker && id && (
+            <button
+              onClick={() => onToggleSpeaker(id)}
+              className="opacity-0 group-hover:opacity-100 text-amber-700 hover:text-amber-800 hover:underline cursor-pointer ml-2 transition-opacity font-semibold"
+              title="Change speaker role (Customer <-> Salesperson)"
+            >
+              • Toggle Role
+            </button>
+          )}
         </div>
         <div className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm ${
           isCustomer
@@ -346,6 +357,18 @@ export default function Copilot() {
       wsRef.current?.close();
       toast.success("Session ended");
     } catch (e) { toast.error(errMsg(e)); }
+  }
+
+  async function toggleMessageSpeaker(messageId) {
+    try {
+      const res = await api.patch(`/copilot/messages/${messageId}/toggle-speaker`);
+      setMessages((prev) =>
+        prev.map((m) => (m.id === messageId ? { ...m, speaker: res.data.speaker } : m))
+      );
+      toast.success("Speaker updated");
+    } catch (e) {
+      toast.error(errMsg(e));
+    }
   }
 
   async function sendMessage() {
@@ -625,7 +648,14 @@ export default function Copilot() {
 
                   {/* Manual typed messages */}
                   {messages.map((m) => (
-                    <TranscriptBubble key={m.id} speaker={m.speaker} content={m.content} createdAt={m.created_at} />
+                    <TranscriptBubble
+                      key={m.id}
+                      id={m.id}
+                      speaker={m.speaker}
+                      content={m.content}
+                      createdAt={m.created_at}
+                      onToggleSpeaker={toggleMessageSpeaker}
+                    />
                   ))}
                   {aiLoading && (
                     <div className="flex items-center gap-2 text-xs text-amber-600 pl-2">

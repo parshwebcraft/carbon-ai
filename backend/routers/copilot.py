@@ -275,6 +275,25 @@ def get_messages(
              .order_by(ConversationMessage.created_at.asc()).all()
 
 
+@router.patch("/messages/{message_id}/toggle-speaker", response_model=MessageOut)
+def toggle_message_speaker(
+    message_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    msg = db.query(ConversationMessage).filter(ConversationMessage.id == message_id).first()
+    if not msg:
+        raise HTTPException(status_code=404, detail="Message not found")
+    msg.speaker = "Salesperson" if msg.speaker == "Customer" else "Customer"
+    db.commit()
+    db.refresh(msg)
+
+    # Re-run AI analysis on the updated transcript and broadcast suggestions
+    asyncio.create_task(_analyse_and_broadcast(msg.session_id))
+
+    return msg
+
+
 @router.get("/sessions/{session_id}/suggestions", response_model=List[SuggestionOut])
 def get_suggestions(
     session_id: int,
