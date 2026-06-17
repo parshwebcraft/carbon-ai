@@ -1,0 +1,35 @@
+==================================================
+FACETS SALES TRAINING TRANSCRIPT
+==================================================
+Customer Name:          Dayamai Sastry
+Lead ID:                52
+Date/Time:              2026-06-17 12:14:38
+AI Qualification Score: 60/100
+
+Qualifiers Detected:
+  - Intent:             Bridal
+  - Budget:             814844
+  - Timeline:           Unknown
+  - Decision Maker:     Unknown
+--------------------------------------------------
+CONVERSATION DIALOGUE
+--------------------------------------------------
+[STT error: timed out during opening handshake]
+--------------------------------------------------
+AI SALES SUGGESTIONS FOR TRAINING
+--------------------------------------------------
+Next Question Recommendation:
+  "Are you looking for bridal jewellery for yourself or a family member?"
+
+Product Recommendation:
+  "Recommend Nakshatra Bridal Set (ID 18) at ₹334,825, within budget and perfect for bridal needs."
+
+Offer Recommendation:
+  "We have a special bridal discount and free engraving this month."
+
+Objection Handling:
+  "If budget is a concern, we offer easy EMI plans with no cost."
+
+Closing Technique:
+  "Let's schedule a private viewing for you and your family."
+==================================================

@@ -1,0 +1,35 @@
+==================================================
+FACETS SALES TRAINING TRANSCRIPT
+==================================================
+Customer Name:          Dayamai Sastry
+Lead ID:                52
+Date/Time:              2026-06-17 12:12:46
+AI Qualification Score: 65/100
+
+Qualifiers Detected:
+  - Intent:             Bridal
+  - Budget:             814844
+  - Timeline:           Unknown
+  - Decision Maker:     Unknown
+--------------------------------------------------
+CONVERSATION DIALOGUE
+--------------------------------------------------
+Customer: Caba turno.
+--------------------------------------------------
+AI SALES SUGGESTIONS FOR TRAINING
+--------------------------------------------------
+Next Question Recommendation:
+  "Could you please share your preferred design style for the bridal necklace?"
+
+Product Recommendation:
+  "Recommend Nakshatra Bridal Set (Gold, product 18) at ₹334,825, within budget."
+
+Offer Recommendation:
+  "We have a special bridal discount and free engraving this month."
+
+Objection Handling:
+  "If budget is a concern, we offer easy EMI plans with no cost."
+
+Closing Technique:
+  "Ask if they'd like to see the piece in person during their scheduled visit."
+==================================================

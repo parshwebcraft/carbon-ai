@@ -1,0 +1,40 @@
+==================================================
+FACETS SALES TRAINING TRANSCRIPT
+==================================================
+Customer Name:          Aryan Batra
+Lead ID:                24
+Date/Time:              2026-06-17 12:40:15
+AI Qualification Score: 85/100
+
+Qualifiers Detected:
+  - Intent:             Bridal
+  - Budget:             2281823
+  - Timeline:           Within 1 Month
+  - Decision Maker:     Yes
+--------------------------------------------------
+CONVERSATION DIALOGUE
+--------------------------------------------------
+Customer: Aló, Hello.
+Customer: Hello?
+Salesperson: Diamond cassette vector
+Salesperson: y
+Salesperson: This Lakka Diamond Set
+Salesperson: Do you have diamond set worth 30 lakhs?
+--------------------------------------------------
+AI SALES SUGGESTIONS FOR TRAINING
+--------------------------------------------------
+Next Question Recommendation:
+  "Would you like to see our Celestial Bridal Set, which is within your budget?"
+
+Product Recommendation:
+  "Recommend Celestial Bridal Set (ID: 9) at ₹2,076,904, a diamond bridal set perfect for high-value buyers."
+
+Offer Recommendation:
+  "We have a special Diwali offer: 0% EMI and complimentary gift wrapping."
+
+Objection Handling:
+  "If price is a concern, we can customize a set within your budget without compromising quality."
+
+Closing Technique:
+  "Let me reserve the Celestial Bridal Set for your visit this week."
+==================================================

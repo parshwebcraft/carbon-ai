@@ -1,0 +1,99 @@
+==================================================
+FACETS SALES TRAINING TRANSCRIPT
+==================================================
+Customer Name:          Varenya Gopal
+Lead ID:                80
+Date/Time:              2026-06-17 12:59:43
+AI Qualification Score: 60/100
+
+Qualifiers Detected:
+  - Intent:             Bridal
+  - Budget:             2160129
+  - Timeline:           Within 1 Month
+  - Decision Maker:     Unknown
+--------------------------------------------------
+CONVERSATION DIALOGUE
+--------------------------------------------------
+Customer: Hello,
+Salesperson: Bueno, Sar,
+Salesperson: Hello, good afternoon sir.
+Customer: Good afternoon,
+Salesperson: How can I help you today?
+Customer: I am looking for a bracelet.
+Customer: And
+Salesperson: Okay. What's your budget range?
+Customer: My budget is around 1 to 2 lakh.
+Salesperson: Okay.
+Salesperson: So
+Salesperson: I'm going to show you how to do this.
+Salesperson: In which collection would you like to go with
+Salesperson: We have Hughes, Wows, Essentials,
+Customer: I want to
+Customer: waistlet under 1 lakh.
+Salesperson: So I would suggest you some bracelets.
+Customer: Okay show me the collection
+Customer: y
+Salesperson: Would you like to see the bracelet in gold or diamond?
+Customer: I want to see bracelet in diamond.
+Salesperson: Would you like to see the diamond bracelets in specific style like tennis
+Salesperson: or bangle?
+Customer: What is this tennis and bangle
+Customer: Can you
+Salesperson: tennis bracelet have diamonds all around. Bengal style is solid.
+Salesperson: Which what do you prefer?
+Customer: I will prefer solid Bengal style.
+Salesperson: So
+Salesperson: Okay Sir, so it would be better
+Salesperson: if you would like to book an appointment with us and visit our nearest store.
+Salesperson: So can you tell me, would, and which store would you like to prefer?
+Customer: I am from Udehpur, Alstan, where
+Customer: are your stores in India?
+Salesperson: Okay sir,
+Salesperson: So,
+Salesperson: we don't have, currently, we don't have any store in, Rajasthan.
+Salesperson: So it will be better. Like, if, we have store nearest
+Salesperson: in, like, in Abuzrat,
+Salesperson: then in Delhi,
+Salesperson: Noida in Gurga,
+Salesperson: So, in Mumbai.
+Customer: Okay.
+Customer: Am visiting Ahmedabad next month
+Customer: I can come in Ahmedabad. Share me the details of location
+Customer: and
+Customer: photos on WhatsApp.
+Salesperson: Sure Sir,
+Salesperson: We would, we will share it. But, if you wanted
+Salesperson: earlier, then you can visit our Google search for Gavanjwalari, and you will get
+Customer: What I have to search on Google So,
+Salesperson: search for carbon jewellery.
+Customer: Is it an app or website?
+Salesperson: So we have a website and also you can check our
+Salesperson: Google reviews page. There you can, see our details
+Salesperson: also get the map link.
+Customer: Okay, I will search on Google. Thank you. Also,
+Salesperson: sir can you share me your whatsapp details
+Salesperson: WhatsApp number and, name?
+Salesperson: So we can
+Customer: okay. Write my number
+Customer: and
+Customer: 9876 54 3212 Thank you.
+Salesperson: A lot, sir. We'll surely contact you sooner.
+Salesperson: Okay. Thank you.
+--------------------------------------------------
+AI SALES SUGGESTIONS FOR TRAINING
+--------------------------------------------------
+Next Question Recommendation:
+  "Sir, would you like me to share bridal set photos on WhatsApp now?"
+
+Product Recommendation:
+  "Recommend Celestial Bridal Set (ID:9) at ₹2,076,904 – fits budget and bridal interest."
+
+Offer Recommendation:
+  "We have a special Diwali offer: free diamond pendant on bridal sets above ₹2L."
+
+Objection Handling:
+  "If hesitant, offer a virtual try-on or store visit with free pickup."
+
+Closing Technique:
+  "Ask for permission to send top 3 bridal set images via WhatsApp."
+==================================================

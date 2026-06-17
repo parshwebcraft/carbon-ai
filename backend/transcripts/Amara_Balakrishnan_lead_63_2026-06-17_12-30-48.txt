@@ -1,0 +1,44 @@
+==================================================
+FACETS SALES TRAINING TRANSCRIPT
+==================================================
+Customer Name:          Amara Balakrishnan
+Lead ID:                63
+Date/Time:              2026-06-17 12:30:48
+AI Qualification Score: 60/100
+
+Qualifiers Detected:
+  - Intent:             Diamond Purchase
+  - Budget:             400000
+  - Timeline:           Immediate
+  - Decision Maker:     Yes
+--------------------------------------------------
+CONVERSATION DIALOGUE
+--------------------------------------------------
+Customer: Hello.
+Salesperson: Are you looking for diamond jewellery necklace for running special occasion?
+Salesperson: I am looking for a bracelet
+Salesperson: and
+Salesperson: I am looking for a bracelet.
+Salesperson: Could you tell me your preferred style for the bracelet?
+Salesperson: I am looking for a simple bracelet in diamond.
+Salesperson: Hello.
+Salesperson: I will get back to you. Thank you.
+Customer: Thank you.
+--------------------------------------------------
+AI SALES SUGGESTIONS FOR TRAINING
+--------------------------------------------------
+Next Question Recommendation:
+  "Would you like to see our Aurora Bangle at ₹4,01,764? It's a simple diamond bangle."
+
+Product Recommendation:
+  "Recommend product 23: Aurora Bangle (Diamond, Bangle) at ₹4,01,764 – simple and elegant."
+
+Offer Recommendation:
+  "We have a special 10% discount on diamond bangles this week."
+
+Objection Handling:
+  "If price is a concern, we have easy EMI options starting at ₹12,000/month."
+
+Closing Technique:
+  "Ask: Shall I reserve the Aurora Bangle for you with a small token amount?"
+==================================================
