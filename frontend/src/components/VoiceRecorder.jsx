@@ -88,7 +88,13 @@ export default function VoiceRecorder({
       return;
     }
 
-    // Microphone permission
+    // Microphone permission check
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setError("Microphone access requires a secure connection (HTTPS or localhost). Please check your browser's address bar.");
+      setStateBoth("error");
+      return;
+    }
+
     let stream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({
@@ -100,13 +106,20 @@ export default function VoiceRecorder({
         },
       });
     } catch (e) {
-      setError(
-        e.name === "NotAllowedError"
-          ? "Microphone access denied. Click the 🔒 icon in the address bar to allow."
-          : `Mic error: ${e.message}`
-      );
-      setStateBoth("error");
-      return;
+      console.warn("[VoiceRecorder] High-quality mic constraints failed, trying basic audio fallback:", e);
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+      } catch (fallbackError) {
+        setError(
+          fallbackError.name === "NotAllowedError"
+            ? "Microphone access denied. Click the 🔒 icon in the address bar to allow."
+            : `Mic error: ${fallbackError.message}`
+        );
+        setStateBoth("error");
+        return;
+      }
     }
     streamRef.current = stream;
 
