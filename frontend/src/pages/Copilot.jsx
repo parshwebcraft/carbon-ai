@@ -13,7 +13,7 @@ import {
   Target, Wallet, Clock, User, TrendingUp, Play, Square,
   Send, RefreshCw, Loader2, Gem, ChevronRight, Sparkles,
   MessageSquare, History, Star, Flame, BarChart2, ListChecks,
-  CheckCircle2, Zap, Mic,
+  CheckCircle2, Zap, Mic, ThumbsUp, ThumbsDown,
 } from "lucide-react";
 import VoiceRecorder from "@/components/VoiceRecorder";
 
@@ -47,11 +47,15 @@ const SUGGESTION_CONFIG = {
 
 // ─── sub-components ───────────────────────────────────────────────────────────
 
-function SuggestionCard({ type, content, confidence }) {
+function SuggestionCard({ type, content, confidence, onAction }) {
   const cfg = SUGGESTION_CONFIG[type] || { icon: Lightbulb, label: type, accent: "border-slate-200 bg-slate-50", iconClass: "text-slate-500" };
   const Icon = cfg.icon;
+  const [status, setStatus] = useState(null); // 'accepted' | 'rejected' | 'edited'
+
+  if (status === "rejected") return null;
+
   return (
-    <div className={`rounded-xl border p-4 ${cfg.accent} transition-all duration-300`}>
+    <div className={`rounded-xl border p-4 ${cfg.accent} transition-all duration-300 relative group`}>
       <div className="flex items-center gap-2 mb-2">
         <Icon className={`h-4 w-4 ${cfg.iconClass} shrink-0`} />
         <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{cfg.label}</span>
@@ -61,7 +65,33 @@ function SuggestionCard({ type, content, confidence }) {
           </span>
         )}
       </div>
-      <p className="text-sm text-slate-800 leading-relaxed">{content}</p>
+      <p className="text-sm text-slate-800 leading-relaxed pr-14">{content}</p>
+
+      {/* Floating telemetry actions */}
+      <div className="absolute right-3 bottom-3 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 backdrop-blur-sm shadow-sm border border-slate-100 rounded-lg p-1">
+        <button
+          onClick={() => {
+            onAction(type, content, "accepted");
+            setStatus("accepted");
+            toast.success("Suggestion accepted & copied to input");
+          }}
+          className={`p-1.5 rounded hover:bg-emerald-50 text-slate-400 hover:text-emerald-600 transition ${status === "accepted" ? "text-emerald-600 bg-emerald-50" : ""}`}
+          title="Accept Suggestion (Copy to Input)"
+        >
+          <ThumbsUp className="h-3.5 w-3.5" />
+        </button>
+        <button
+          onClick={() => {
+            onAction(type, content, "rejected");
+            setStatus("rejected");
+            toast.info("Suggestion dismissed");
+          }}
+          className="p-1.5 rounded hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition"
+          title="Dismiss / Reject"
+        >
+          <ThumbsDown className="h-3.5 w-3.5" />
+        </button>
+      </div>
     </div>
   );
 }
@@ -167,6 +197,48 @@ export default function Copilot() {
   const [followUpsLoading, setFollowUpsLoading] = useState(false);
   const [creatingTask, setCreatingTask] = useState(null);
 
+  // Analytics & Feedback Telemetry States
+  const [analytics, setAnalytics] = useState(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const lastUsedSuggestionRef = useRef(null);
+
+  async function loadAnalytics() {
+    setAnalyticsLoading(true);
+    try {
+      const res = await api.get("/copilot/analytics");
+      setAnalytics(res.data);
+    } catch (e) {
+      console.warn("Failed to load analytics:", e);
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  }
+
+  const handleSuggestionAction = async (type, suggestionText, action) => {
+    if (action === "accepted") {
+      setMsgInput(suggestionText);
+      lastUsedSuggestionRef.current = {
+        type,
+        ai_suggested_response: suggestionText,
+        session_id: session?.id ? String(session.id) : (selectedLead ? `voice_${selectedLead.id}_1` : "unknown")
+      };
+    }
+    
+    const payload = {
+      session_id: session?.id ? String(session.id) : (selectedLead ? `voice_${selectedLead.id}_1` : "unknown"),
+      ai_suggested_response: suggestionText,
+      final_used_response: suggestionText,
+      feedback_status: action,
+      latency_ms: 1200
+    };
+    
+    try {
+      await api.post("/copilot/feedback", payload);
+    } catch (err) {
+      console.warn("Feedback telemetry failed:", err.message);
+    }
+  };
+
   const wsRef = useRef(null);
   const transcriptEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -246,6 +318,55 @@ export default function Copilot() {
 
   // ── Cleanup WS ───────────────────────────────────────────────────────────
   useEffect(() => { return () => wsRef.current?.close(); }, []);
+
+  // ── Auto-select active WebRTC call ─────────────────────────────────────────
+  useEffect(() => {
+    if (window.activeCrmCall && leads.length > 0) {
+      const activeLead = leads.find((l) => l.id === window.activeCrmCall.leadId);
+      if (activeLead) {
+        setSelectedLead(activeLead);
+      }
+    }
+  }, [leads]);
+
+  // ── Sync with active WebRTC call details when selectedLead matches ────────
+  useEffect(() => {
+    if (selectedLead && window.activeCrmCall && window.activeCrmCall.leadId === selectedLead.id) {
+      // Load active call's voice transcript and suggestions
+      const mapped = (window.activeCrmCall.voiceTranscript || []).map((line) => ({
+        ...line,
+        label: resolveLabel(line.speaker, speakerFlip),
+      }));
+      setVoiceTranscript(mapped);
+      handleVoiceSuggestion(window.activeCrmCall.suggestions || {});
+    }
+  }, [selectedLead, speakerFlip]);
+
+  // ── Listen for custom WebRTC dialer events ────────────────────────────────
+  useEffect(() => {
+    const handleCrmTranscript = (e) => {
+      const { text, raw_text, is_final, speaker, leadId } = e.detail;
+      if (selectedLead && leadId === selectedLead.id) {
+        handleVoiceTranscript(raw_text || text, is_final, speaker);
+      }
+    };
+
+    const handleCrmSuggestion = (e) => {
+      const { data, leadId } = e.detail;
+      if (selectedLead && leadId === selectedLead.id) {
+        handleVoiceSuggestion(data);
+      }
+    };
+
+    window.addEventListener("crm-call-transcript", handleCrmTranscript);
+    window.addEventListener("crm-call-suggestion", handleCrmSuggestion);
+
+    return () => {
+      window.removeEventListener("crm-call-transcript", handleCrmTranscript);
+      window.removeEventListener("crm-call-suggestion", handleCrmSuggestion);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedLead, session, speakerFlip]);
 
   // ── Pipeline loaders ─────────────────────────────────────────────────────
   function loadPipeline() {
@@ -340,7 +461,7 @@ export default function Copilot() {
       const res = await api.post("/copilot/sessions", { lead_id: selectedLead.id });
       const sess = res.data;
       setSession(sess);
-      setMessages([]); setSuggestions({}); setInsight(null);
+      setMessages([]); setSuggestions({}); setInsight(null); setVoiceTranscript([]);
       connectWs(sess.id);
       try { const r = await api.get(`/copilot/leads/${selectedLead.id}/insight`); setInsight(r.data); } catch (_) {}
       loadProducts();
@@ -375,6 +496,23 @@ export default function Copilot() {
     const content = msgInput.trim();
     if (!content || !session) return;
     if (session.status === "ended") { toast.error("Session has ended"); return; }
+
+    // Check if message was edited from suggestion
+    if (lastUsedSuggestionRef.current && lastUsedSuggestionRef.current.session_id === String(session.id)) {
+      const { ai_suggested_response } = lastUsedSuggestionRef.current;
+      if (content !== ai_suggested_response) {
+        const payload = {
+          session_id: String(session.id),
+          ai_suggested_response,
+          final_used_response: content,
+          feedback_status: "edited",
+          latency_ms: 1200
+        };
+        api.post("/copilot/feedback", payload).catch(() => {});
+      }
+      lastUsedSuggestionRef.current = null;
+    }
+
     const optimistic = { id: Date.now(), session_id: session.id, speaker, content, created_at: new Date().toISOString() };
     setMessages((prev) => [...prev, optimistic]);
     setMsgInput("");
@@ -491,7 +629,7 @@ export default function Copilot() {
                 const lead = leads.find((l) => l.id === parseInt(v));
                 setSelectedLead(lead || null);
                 setSession(null); setMessages([]); setSuggestions({});
-                setInsight(null); setHistorySummary("");
+                setInsight(null); setHistorySummary(""); setVoiceTranscript([]);
                 wsRef.current?.close();
               }}
             >
@@ -695,12 +833,14 @@ export default function Copilot() {
                     { id: "suggestions", Icon: Sparkles, label: "AI Suggestions" },
                     { id: "products",    Icon: Package,  label: "Products" },
                     { id: "history",     Icon: History,  label: "History" },
+                    { id: "analytics",   Icon: BarChart2, label: "Analytics" },
                   ].map(({ id, Icon, label }) => (
                     <button key={id}
                       onClick={() => {
                         setActiveTab(id);
                         if (id === "history" && !historySummary) loadHistorySummary();
                         if (id === "products" && products.length === 0) loadProducts();
+                        if (id === "analytics") loadAnalytics();
                       }}
                       className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-medium transition-colors ${
                         activeTab === id ? "text-amber-700 border-b-2 border-amber-700 bg-amber-50/50" : "text-slate-500 hover:text-slate-700"
@@ -737,7 +877,15 @@ export default function Copilot() {
                       {Object.entries(SUGGESTION_CONFIG).map(([type]) => {
                         const s = suggestions[type];
                         if (!s) return null;
-                        return <SuggestionCard key={type} type={type} content={s.content} confidence={s.confidence} />;
+                        return (
+                          <SuggestionCard
+                            key={type}
+                            type={type}
+                            content={s.content}
+                            confidence={s.confidence}
+                            onAction={handleSuggestionAction}
+                          />
+                        );
                       })}
                     </div>
                   )}
@@ -794,6 +942,83 @@ export default function Copilot() {
                               </div>
                             ))}
                           </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {activeTab === "analytics" && (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-slate-400">Copilot Telemetry &amp; Performance</span>
+                        <Button variant="ghost" size="sm" className="h-7 text-xs text-amber-700 hover:bg-amber-50"
+                          onClick={loadAnalytics} disabled={analyticsLoading}>
+                          <RefreshCw className={`h-3 w-3 mr-1 ${analyticsLoading ? "animate-spin" : ""}`} /> Refresh
+                        </Button>
+                      </div>
+
+                      {analyticsLoading ? (
+                        <div className="py-12 text-center">
+                          <Loader2 className="h-7 w-7 mx-auto animate-spin text-amber-400" />
+                        </div>
+                      ) : analytics ? (
+                        <div className="space-y-4">
+                          {/* Key metrics grid */}
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="rounded-xl border border-emerald-100 bg-emerald-50/20 p-4 text-center">
+                              <div className="text-[10px] uppercase font-bold text-emerald-800 tracking-wider">Acceptance Rate</div>
+                              <div className="text-2xl font-serif font-bold text-emerald-700 mt-1">{analytics.acceptance_rate}%</div>
+                              <div className="text-[10px] text-slate-400 mt-1">Accept vs Reject</div>
+                            </div>
+                            <div className="rounded-xl border border-amber-100 bg-amber-50/20 p-4 text-center">
+                              <div className="text-[10px] uppercase font-bold text-amber-800 tracking-wider">Total Sessions</div>
+                              <div className="text-2xl font-serif font-bold text-amber-700 mt-1">{analytics.total_sessions}</div>
+                              <div className="text-[10px] text-slate-400 mt-1">Logged telemetry</div>
+                            </div>
+                          </div>
+
+                          {/* Feedback Breakdown */}
+                          <div className="rounded-xl border border-amber-100 bg-white p-4 space-y-2">
+                            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Feedback Logs</div>
+                            {[
+                              { label: "Accepted Suggestions", count: analytics.feedback_breakdown?.accepted, color: "bg-emerald-500" },
+                              { label: "Edited Suggestions", count: analytics.feedback_breakdown?.edited, color: "bg-amber-500" },
+                              { label: "Rejected Suggestions", count: analytics.feedback_breakdown?.rejected, color: "bg-rose-400" }
+                            ].map((item) => {
+                              const total = Object.values(analytics.feedback_breakdown || {}).reduce((a, b) => a + b, 0) || 1;
+                              return (
+                                <div key={item.label} className="space-y-1">
+                                  <div className="flex justify-between text-xs text-slate-600">
+                                    <span>{item.label}</span>
+                                    <span className="font-semibold">{item.count || 0}</span>
+                                  </div>
+                                  <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                    <div className={`h-full ${item.color} rounded-full`}
+                                      style={{ width: `${(item.count / total) * 100}%` }} />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {/* Common Intents */}
+                          <div className="rounded-xl border border-amber-100 bg-white p-4 space-y-3">
+                            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Top Classified Intents</div>
+                            {analytics.common_intents?.length === 0 ? (
+                              <div className="text-xs text-slate-400 text-center py-2">No classified intents yet.</div>
+                            ) : (
+                              analytics.common_intents?.map((item, i) => (
+                                <div key={i} className="flex justify-between items-center text-xs text-slate-600 border-b border-amber-50 pb-1.5 last:border-0">
+                                  <span className="font-medium text-slate-800">{item.intent}</span>
+                                  <span className="bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-bold">{item.count} times</span>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="py-12 text-center text-slate-400">
+                          <BarChart2 className="h-8 w-8 mx-auto mb-3 text-slate-200" />
+                          <p className="text-sm">Click Refresh to load telemetry metrics</p>
                         </div>
                       )}
                     </div>

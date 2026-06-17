@@ -142,6 +142,14 @@ export default function LeadDetail() {
     finally { setAiBusy(false); }
   }
 
+  async function placeWebRtcCall() {
+    if (!lead.phone) { toast.error("Lead has no phone number"); return; }
+    if (!window.confirm(`Start WebRTC Call to ${lead.name} (${lead.phone}) with AI Copilot?`)) return;
+    window.dispatchEvent(new CustomEvent("trigger-crm-call", { 
+      detail: { leadId: lead.id, phone: lead.phone, name: lead.name } 
+    }));
+  }
+
   async function aiInsightsForCall(callId) {
     setAiBusy(true);
     try {
@@ -219,6 +227,10 @@ export default function LeadDetail() {
           <Button data-testid="ai-voice-call" className="w-full justify-start bg-amber-700 hover:bg-amber-800"
             disabled={aiBusy} onClick={placeAiCall}>
             <PhoneCall className="h-4 w-4 mr-2" /> Place AI Voice Call
+          </Button>
+          <Button data-testid="webrtc-voice-call" className="w-full justify-start bg-indigo-700 hover:bg-indigo-800 text-white"
+            onClick={placeWebRtcCall}>
+            <Phone className="h-4 w-4 mr-2" /> Call with AI Assist
           </Button>
           <Button data-testid="quick-quote" variant="outline" className="w-full justify-start" onClick={createQuote}>
             <FileText className="h-4 w-4 mr-2" /> Create Quotation

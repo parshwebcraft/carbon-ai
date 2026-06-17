@@ -273,6 +273,17 @@ async def voice_ws(
             full_transcript_parts.append(labelled)
             transcript_lines.append(labelled)
 
+            # Log transcript chunk to database
+            try:
+                from services import copilot as copilot_svc
+                copilot_svc.save_transcript_chunk(
+                    session_id=f"voice_{lead_id}_{user_id}",
+                    speaker_label="Customer" if speaker == 0 else "Salesperson",
+                    chunk_text=text
+                )
+            except Exception as e:
+                logger.error("Failed to save voice transcript chunk: %s", e)
+
             # Debounced RAG + DeepSeek analysis
             now = time.time()
             if now - last_suggestion_time >= SUGGESTION_DEBOUNCE:
@@ -282,6 +293,26 @@ async def voice_ws(
                         lead_id, db, list(transcript_lines), context=context
                     )
                     await websocket.send_json({"type": "suggestion", "data": suggestions})
+
+                    # Log intent classification and knowledge retrieval telemetry
+                    try:
+                        from services import copilot as copilot_svc
+                        session_id = f"voice_{lead_id}_{user_id}"
+                        copilot_svc.save_intent_log(
+                            session_id=session_id,
+                            text_segment=text,
+                            classified_intent=suggestions.get("intent", "Unknown"),
+                            confidence_score=0.9
+                        )
+                        copilot_svc.save_retrieval_log(
+                            session_id=session_id,
+                            query_keywords=context.get("lead", {}).get("customer_type", "General") if context else "General",
+                            retrieved_source="products",
+                            source_reference_id=1
+                        )
+                    except Exception as e:
+                        logger.error("Failed to save voice telemetry log: %s", e)
+
                 except Exception as e:  # noqa: BLE001
                     logger.warning("RAG error during voice session: %s", e)
 
@@ -383,6 +414,19 @@ async def voice_ws(
                         db.commit()
                         db.refresh(call)
                         call_id = call.id
+                        
+                        # Save conversation memory telemetry log
+                        try:
+                            from services import copilot as copilot_svc
+                            copilot_svc.save_conversation_memory(
+                                session_id=f"voice_{lead_id}_{user_id}",
+                                customer_id=lead_id,
+                                salesperson_id=user_id,
+                                channel="Call",
+                                raw_text=full_transcript
+                            )
+                        except Exception as e:
+                            logger.error("Failed to save voice conversation memory: %s", e)
                     except Exception as e:
                         logger.error("DB commit error: %s", e)
 

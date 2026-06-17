@@ -300,3 +300,61 @@ class LeadInsight(Base):
     decision_maker = Column(String(100))
     summary = Column(Text)
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+
+class ConversationMemory(Base):
+    """Conversation Memory Table for telemetry analysis."""
+    __tablename__ = "conversation_memory"
+    memory_id = Column(Integer, primary_key=True, autoincrement=True)
+    session_id = Column(String(100), nullable=False, index=True)
+    customer_id = Column(Integer, ForeignKey("leads.id"), nullable=False)
+    salesperson_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    channel = Column(String(50))  # 'Call', 'WhatsApp', 'CRM'
+    raw_text = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+
+class TranscriptChunk(Base):
+    """Transcript chunks collected during live streaming sessions."""
+    __tablename__ = "transcript_chunks"
+    chunk_id = Column(Integer, primary_key=True, autoincrement=True)
+    session_id = Column(String(100), nullable=False, index=True)
+    speaker_label = Column(String(50))  # 'Customer' | 'Salesperson'
+    chunk_text = Column(Text, nullable=False)
+    start_time = Column(Float)
+    end_time = Column(Float)
+    received_at = Column(DateTime, default=utcnow, nullable=False)
+
+
+class IntentLog(Base):
+    """Logs intent classification events and confidence scores."""
+    __tablename__ = "intent_logs"
+    intent_id = Column(Integer, primary_key=True, autoincrement=True)
+    session_id = Column(String(100), nullable=False, index=True)
+    text_segment = Column(Text, nullable=False)
+    classified_intent = Column(String(100), nullable=False)
+    confidence_score = Column(Float)
+    logged_at = Column(DateTime, default=utcnow, nullable=False)
+
+
+class RetrievalLog(Base):
+    """Logs knowledge retrieval queries and matching results."""
+    __tablename__ = "retrieval_logs"
+    retrieval_id = Column(Integer, primary_key=True, autoincrement=True)
+    session_id = Column(String(100), nullable=False, index=True)
+    query_keywords = Column(Text, nullable=False)
+    retrieved_source = Column(String(50))  # 'products', 'quotations', 'leads', 'history'
+    source_reference_id = Column(Integer, nullable=False)
+    retrieved_at = Column(DateTime, default=utcnow, nullable=False)
+
+
+class AiFeedback(Base):
+    """Human feedback log on Copilot suggestions."""
+    __tablename__ = "ai_feedback"
+    feedback_id = Column(Integer, primary_key=True, autoincrement=True)
+    session_id = Column(String(100), nullable=False, index=True)
+    ai_suggested_response = Column(Text, nullable=False)
+    final_used_response = Column(Text, nullable=False)
+    feedback_status = Column(String(20))  # 'accepted', 'edited', 'rejected'
+    latency_ms = Column(Integer)
+    created_at = Column(DateTime, default=utcnow, nullable=False)

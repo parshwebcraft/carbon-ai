@@ -126,6 +126,14 @@ class ProductRecommendationOut(BaseModel):
     reason: str
 
 
+class FeedbackIn(BaseModel):
+    session_id: str
+    ai_suggested_response: str
+    final_used_response: str
+    feedback_status: str  # accepted | edited | rejected
+    latency_ms: Optional[int] = None
+
+
 # ── Helper ───────────────────────────────────────────────────────────────────
 
 def _session_or_404(session_id: int, db: Session) -> ConversationSession:
@@ -143,7 +151,7 @@ def _run_ai_analysis(session_id: int, db: Session) -> dict:
     lead = db.query(Lead).filter(Lead.id == sess.lead_id).first() if sess.lead_id else None
     products = db.query(Product).limit(50).all()
     product_dicts = [
-        {"product_name": p.product_name, "metal_type": p.metal_type,
+        {"id": p.id, "product_name": p.product_name, "metal_type": p.metal_type,
          "category": p.category, "purity": p.purity,
          "price": p.price or 0.0}
         for p in products
@@ -187,6 +195,23 @@ def _run_ai_analysis(session_id: int, db: Session) -> dict:
         insight.timeline = ai.get("timeline", "Unknown")
         insight.decision_maker = ai.get("decision_maker", "Unknown")
         insight.updated_at = datetime.now(timezone.utc)
+
+    # Save intent classification telemetry log
+    copilot_svc.save_intent_log(
+        session_id=str(session_id),
+        text_segment=messages[-1]["content"] if messages else "",
+        classified_intent=ai.get("intent", "Unknown"),
+        confidence_score=0.9
+    )
+
+    # Save product retrieval telemetry log
+    for p in product_dicts[:5]:
+        copilot_svc.save_retrieval_log(
+            session_id=str(session_id),
+            query_keywords=lead_dict.get("customer_type", "General") if lead_dict else "General",
+            retrieved_source="products",
+            source_reference_id=p["id"]
+        )
 
     db.commit()
     return ai
@@ -236,6 +261,20 @@ def end_session(
     sess.ended_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(sess)
+
+    # Save conversation memory telemetry log
+    try:
+        raw_text = "\n".join([f"{m.speaker}: {m.content}" for m in sess.messages])
+        copilot_svc.save_conversation_memory(
+            session_id=str(session_id),
+            customer_id=sess.lead_id or 0,
+            salesperson_id=1,  # fallback salesperson/user ID
+            channel="CRM",
+            raw_text=raw_text
+        )
+    except Exception as e:
+        print(f"Failed to save conversation memory: {e}")
+
     return sess
 
 
@@ -256,6 +295,16 @@ async def add_message(
     db.add(msg)
     db.commit()
     db.refresh(msg)
+
+    # Save transcript chunk telemetry log
+    try:
+        copilot_svc.save_transcript_chunk(
+            session_id=str(session_id),
+            speaker_label=body.speaker,
+            chunk_text=body.content
+        )
+    except Exception as e:
+        print(f"Failed to save transcript chunk: {e}")
 
     # Run AI in background and broadcast via WebSocket
     asyncio.create_task(_analyse_and_broadcast(session_id))
@@ -693,3 +742,72 @@ async def _batch_score_background(lead_ids: list[int]):
         logger.info("Batch scored %s leads", n)
     except Exception as e:  # noqa: BLE001
         logger.error("Batch score failed: %s", e)
+
+
+@router.post("/feedback")
+def submit_feedback(
+    body: FeedbackIn,
+    _: User = Depends(get_current_user),
+):
+    """Save human feedback on Copilot suggestions."""
+    try:
+        copilot_svc.update_ai_feedback(
+            session_id=body.session_id,
+            ai_suggested_response=body.ai_suggested_response,
+            final_used_response=body.final_used_response,
+            feedback_status=body.feedback_status,
+            latency_ms=body.latency_ms
+        )
+        return {"status": "ok", "message": "Feedback submitted successfully"}
+    except Exception as e:
+        raise HTTPException(500, f"Failed to submit feedback: {e}")
+
+
+@router.get("/analytics")
+def get_copilot_analytics(
+    _: User = Depends(get_current_user),
+):
+    """Retrieve Copilot usage and telemetry analytics."""
+    import sqlite3
+    conn = sqlite3.connect("backend/facets.db")
+    cursor = conn.cursor()
+    try:
+        # 1. Suggestion Acceptance Rate
+        cursor.execute("SELECT feedback_status, COUNT(*) FROM ai_feedback GROUP BY feedback_status")
+        feedback_counts = dict(cursor.fetchall())
+        total_feedback = sum(feedback_counts.values())
+        accepted = feedback_counts.get("accepted", 0)
+        acceptance_rate = (accepted / total_feedback * 100) if total_feedback > 0 else 0.0
+
+        # 2. Common Intents
+        cursor.execute("SELECT classified_intent, COUNT(*) FROM intent_logs GROUP BY classified_intent ORDER BY COUNT(*) DESC LIMIT 5")
+        common_intents = [{"intent": r[0], "count": r[1]} for r in cursor.fetchall()]
+
+        # 3. Retrieval counts by source
+        cursor.execute("SELECT retrieved_source, COUNT(*) FROM retrieval_logs GROUP BY retrieved_source")
+        retrieval_counts = dict(cursor.fetchall())
+
+        # 4. Total logged sessions
+        cursor.execute("SELECT COUNT(DISTINCT session_id) FROM conversation_memory")
+        total_sessions = cursor.fetchone()[0] or 0
+
+        return {
+            "acceptance_rate": round(acceptance_rate, 1),
+            "feedback_breakdown": {
+                "accepted": feedback_counts.get("accepted", 0),
+                "edited": feedback_counts.get("edited", 0),
+                "rejected": feedback_counts.get("rejected", 0)
+            },
+            "common_intents": common_intents,
+            "retrieval_counts": {
+                "products": retrieval_counts.get("products", 0),
+                "quotations": retrieval_counts.get("quotations", 0),
+                "leads": retrieval_counts.get("leads", 0),
+                "history": retrieval_counts.get("history", 0)
+            },
+            "total_sessions": total_sessions
+        }
+    except Exception as e:
+        raise HTTPException(500, f"Failed to retrieve analytics: {e}")
+    finally:
+        conn.close()

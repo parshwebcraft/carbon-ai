@@ -27,6 +27,54 @@ HISTORY_SYSTEM = (
 )
 
 
+def get_similar_successful_examples(query_text: str) -> str:
+    """Retrieve up to 2 similar accepted suggestions from history based on keyword match."""
+    import re
+    if not query_text:
+        return ""
+    # Clean and split query text into alphanumeric keywords longer than 3 characters
+    keywords = [re.sub(r'\W+', '', w).lower() for w in query_text.split()]
+    keywords = [w for w in keywords if len(w) > 3]
+    if not keywords:
+        return ""
+    
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    examples = []
+    try:
+        # Check if the ai_feedback table exists before querying
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='ai_feedback'")
+        if not cursor.fetchone():
+            return ""
+
+        # Build query for checking keyword matches in raw_text or ai_suggested_response
+        like_clause = " OR ".join(["ai_suggested_response LIKE ?" for _ in keywords])
+        params = [f"%{k}%" for k in keywords]
+        
+        sql = f"""
+            SELECT ai_suggested_response, final_used_response
+            FROM ai_feedback
+            WHERE feedback_status = 'accepted' AND ({like_clause})
+            LIMIT 2
+        """
+        cursor.execute(sql, params)
+        rows = cursor.fetchall()
+        for idx, row in enumerate(rows):
+            examples.append(
+                f"Example {idx + 1}:\n"
+                f"  AI Suggestion: \"{row[0]}\"\n"
+                f"  Used by Salesperson: \"{row[1]}\""
+            )
+    except Exception as e:
+        print(f"Error fetching successful examples: {e}")
+    finally:
+        conn.close()
+        
+    if examples:
+        return "HISTORICAL SUCCESSFUL EXAMPLES (Few-shot learning):\n" + "\n\n".join(examples)
+    return ""
+
+
 # ── Core copilot suggestion engine ───────────────────────────────────────────
 
 def generate_copilot_suggestions(
@@ -46,6 +94,10 @@ def generate_copilot_suggestions(
     convo_lines = "\n".join(
         f"{m['speaker']}: {m['content']}" for m in transcript[-20:]
     )
+
+    # Find similar successful examples using keyword match from the last turn
+    last_turn_text = transcript[-1]["content"] if transcript else ""
+    few_shot_examples = get_similar_successful_examples(last_turn_text)
 
     # Build product catalogue snippet (top 10 by price relevance)
     product_snippet = ""
@@ -73,6 +125,8 @@ Analyse this live jewellery sales conversation and respond ONLY with a JSON obje
 {lead_profile}
 
 {product_snippet}
+
+{few_shot_examples}
 
 Conversation transcript:
 {convo_lines}
@@ -425,16 +479,16 @@ def generate_follow_up_suggestions(stale_leads: list[dict]) -> list[dict]:
 
 # ── Analytical Direct Storage Tracing (Our 5 Custom Logging Tables) ───────────
 
-def save_conversation_memory(lead_id: int, interaction_type: str, raw_transcript: str, ai_summary: str) -> int:
+def save_conversation_memory(session_id: str, customer_id: int, salesperson_id: int, channel: str, raw_text: str) -> int:
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     try:
         cursor.execute(
             """
-            INSERT INTO conversation_memory (lead_id, interaction_type, raw_transcript, ai_summary, created_at)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO conversation_memory (session_id, customer_id, salesperson_id, channel, raw_text, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
             """,
-            (lead_id, interaction_type, raw_transcript, ai_summary, datetime.utcnow().isoformat())
+            (session_id, customer_id, salesperson_id, channel, raw_text, datetime.utcnow().isoformat())
         )
         conn.commit()
         return cursor.lastrowid or 0
@@ -445,16 +499,16 @@ def save_conversation_memory(lead_id: int, interaction_type: str, raw_transcript
         conn.close()
 
 
-def save_transcript_chunk(memory_id: int, speaker: str, content: str, sequence_order: int):
+def save_transcript_chunk(session_id: str, speaker_label: str, chunk_text: str, start_time: Optional[float] = None, end_time: Optional[float] = None):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     try:
         cursor.execute(
             """
-            INSERT INTO transcript_chunks (memory_id, speaker, content, sequence_order)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO transcript_chunks (session_id, speaker_label, chunk_text, start_time, end_time, received_at)
+            VALUES (?, ?, ?, ?, ?, ?)
             """,
-            (memory_id, speaker, content, sequence_order)
+            (session_id, speaker_label, chunk_text, start_time, end_time, datetime.utcnow().isoformat())
         )
         conn.commit()
     except Exception as e:
@@ -463,16 +517,16 @@ def save_transcript_chunk(memory_id: int, speaker: str, content: str, sequence_o
         conn.close()
 
 
-def save_intent_log(lead_id: int, detected_intent: str, confidence_score: float, structural_meta: dict):
+def save_intent_log(session_id: str, text_segment: str, classified_intent: str, confidence_score: float):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     try:
         cursor.execute(
             """
-            INSERT INTO intent_logs (lead_id, detected_intent, confidence_score, structural_meta, created_at)
+            INSERT INTO intent_logs (session_id, text_segment, classified_intent, confidence_score, logged_at)
             VALUES (?, ?, ?, ?, ?)
             """,
-            (lead_id, detected_intent, confidence_score, json.dumps(structural_meta), datetime.utcnow().isoformat())
+            (session_id, text_segment, classified_intent, confidence_score, datetime.utcnow().isoformat())
         )
         conn.commit()
     except Exception as e:
@@ -481,16 +535,16 @@ def save_intent_log(lead_id: int, detected_intent: str, confidence_score: float,
         conn.close()
 
 
-def save_retrieval_log(memory_id: int, retrieval_type: str, query_string: str, results_count: int):
+def save_retrieval_log(session_id: str, query_keywords: str, retrieved_source: str, source_reference_id: int):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     try:
         cursor.execute(
             """
-            INSERT INTO retrieval_logs (memory_id, retrieval_type, query_string, results_count, created_at)
+            INSERT INTO retrieval_logs (session_id, query_keywords, retrieved_source, source_reference_id, retrieved_at)
             VALUES (?, ?, ?, ?, ?)
             """,
-            (memory_id, retrieval_type, query_string, results_count, datetime.utcnow().isoformat())
+            (session_id, query_keywords, retrieved_source, source_reference_id, datetime.utcnow().isoformat())
         )
         conn.commit()
     except Exception as e:
@@ -499,16 +553,16 @@ def save_retrieval_log(memory_id: int, retrieval_type: str, query_string: str, r
         conn.close()
 
 
-def update_ai_feedback(log_id: int, table_target: str, is_positive: bool, correction_note: Optional[str] = None):
+def update_ai_feedback(session_id: str, ai_suggested_response: str, final_used_response: str, feedback_status: str, latency_ms: Optional[int] = None):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     try:
         cursor.execute(
             """
-            INSERT INTO ai_feedback (log_id, table_target, is_positive, correction_note, created_at)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO ai_feedback (session_id, ai_suggested_response, final_used_response, feedback_status, latency_ms, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
             """,
-            (log_id, table_target, 1 if is_positive else 0, correction_note, datetime.utcnow().isoformat())
+            (session_id, ai_suggested_response, final_used_response, feedback_status, latency_ms, datetime.utcnow().isoformat())
         )
         conn.commit()
     except Exception as e:

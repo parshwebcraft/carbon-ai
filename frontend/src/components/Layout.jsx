@@ -23,6 +23,8 @@ const NAV = [
   { to: "/ai-logs", label: "AI Agent", icon: Bot },
 ];
 
+import CrmDialer from "@/components/CrmDialer";
+
 export default function Layout({ children }) {
   const { user, logout } = useAuth();
   const nav = useNavigate();
@@ -139,6 +141,7 @@ export default function Layout({ children }) {
       </div>
 
       <InstallPrompt />
+      <CrmDialer />
     </div>
   );
 }
