@@ -1,0 +1,47 @@
+==================================================
+FACETS SALES TRAINING TRANSCRIPT
+==================================================
+Customer Name:          Amara Balakrishnan
+Lead ID:                63
+Date/Time:              2026-06-17 06:11:49
+AI Qualification Score: 20/100
+
+Qualifiers Detected:
+  - Intent:             Diamond Purchase
+  - Budget:             100000
+  - Timeline:           Immediate
+  - Decision Maker:     Yes
+--------------------------------------------------
+CONVERSATION DIALOGUE
+--------------------------------------------------
+Customer: Hello,
+Customer: Nysel Guranjaroli, I M
+Customer: from Uddepurazstan.
+Customer: Hello.
+Customer: I have
+Customer: designed but
+Customer: my budget is 1 lakh only.
+Customer: Food you can offer me in one leg.
+Customer: Okay bye
+Customer: You don't have anything and you are not suggesting me good
+Customer: Your your marketing skills is not good.
+Customer: I am leaving.
+Customer: Bye. Thank you.
+--------------------------------------------------
+AI SALES SUGGESTIONS FOR TRAINING
+--------------------------------------------------
+Next Question Recommendation:
+  "I understand your budget is ₹1 lakh. May I show you our Heritage Ring at ₹2,77,627?"
+
+Product Recommendation:
+  "Heritage Ring (product_id: 7) at ₹2,77,627 – a beautiful diamond ring within reach."
+
+Offer Recommendation:
+  "We can offer a 10% discount on the Heritage Ring, bringing it to ₹2,49,864."
+
+Objection Handling:
+  "I apologize for the poor experience. Let me personally find the best option within your budget."
+
+Closing Technique:
+  "Let me send you a special offer on the Heritage Ring via WhatsApp right now."
+==================================================

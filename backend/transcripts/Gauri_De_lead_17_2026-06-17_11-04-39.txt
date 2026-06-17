@@ -1,0 +1,36 @@
+==================================================
+FACETS SALES TRAINING TRANSCRIPT
+==================================================
+Customer Name:          Gauri De
+Lead ID:                17
+Date/Time:              2026-06-17 11:04:39
+AI Qualification Score: 40/100
+
+Qualifiers Detected:
+  - Intent:             Diamond Purchase
+  - Budget:             642555
+  - Timeline:           Within 1 Month
+  - Decision Maker:     Unknown
+--------------------------------------------------
+CONVERSATION DIALOGUE
+--------------------------------------------------
+Customer: Hello.
+Salesperson: A permanezca
+--------------------------------------------------
+AI SALES SUGGESTIONS FOR TRAINING
+--------------------------------------------------
+Next Question Recommendation:
+  "Are you looking for a diamond ring or earrings for a special occasion?"
+
+Product Recommendation:
+  "Recommend Heritage Ring (ID 7) at ₹277,627, within budget and perfect for a diamond buyer."
+
+Offer Recommendation:
+  "We can offer a 5% discount on the Heritage Ring for today's purchase."
+
+Objection Handling:
+  "If price is a concern, we have flexible payment plans and a 30-day return policy."
+
+Closing Technique:
+  "Let me reserve the Heritage Ring for you with a small token amount."
+==================================================
