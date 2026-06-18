@@ -40,12 +40,12 @@ export default function LeadDetail() {
   const [aiBusy, setAiBusy] = useState(false);
 
   function loadAll() {
-    api.get(`/leads/${id}`).then(r => setLead(r.data));
-    api.get(`/activities`, { params: { lead_id: id } }).then(r => setActs(r.data));
-    api.get(`/calls`, { params: { lead_id: id } }).then(r => setCalls(r.data));
-    api.get(`/whatsapp/${id}`).then(r => setMsgs(r.data));
-    api.get(`/quotations`, { params: { lead_id: id } }).then(r => setQuotes(r.data));
-    api.get(`/ai-logs`, { params: { lead_id: id } }).then(r => setAiLogs(r.data));
+    api.get(`/leads/${id}`).then(r => setLead(r.data)).catch(() => {});
+    api.get(`/activities`, { params: { lead_id: id } }).then(r => setActs(r.data)).catch(() => {});
+    api.get(`/calls`, { params: { lead_id: id } }).then(r => setCalls(r.data)).catch(() => {});
+    api.get(`/whatsapp/${id}`).then(r => setMsgs(r.data)).catch(() => {});
+    api.get(`/quotations`, { params: { lead_id: id } }).then(r => setQuotes(r.data)).catch(() => {});
+    api.get(`/ai-logs`, { params: { lead_id: id } }).then(r => setAiLogs(r.data)).catch(() => {});
   }
   useEffect(loadAll, [id]);
 

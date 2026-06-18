@@ -30,24 +30,32 @@ export default function CrmDialer() {
     setCallState("registering");
     api.get("/voice-dialer/token")
       .then((res) => {
-        const dev = new Device(res.data.token, {
-          codecPreferences: ["opus", "pcmu"],
-          fakeLocalDTMF: true,
-          enableIceRestart: true,
-        });
+        if (!res.data || !res.data.token) {
+          throw new Error("Invalid token payload");
+        }
+        try {
+          const dev = new Device(res.data.token, {
+            codecPreferences: ["opus", "pcmu"],
+            fakeLocalDTMF: true,
+            enableIceRestart: true,
+          });
 
-        dev.on("registered", () => {
-          console.log("[CrmDialer] Twilio WebRTC registered");
+          dev.on("registered", () => {
+            console.log("[CrmDialer] Twilio WebRTC registered");
+            setCallState("idle");
+          });
+
+          dev.on("error", (err) => {
+            console.error("[CrmDialer] Twilio Device error:", err);
+            setCallState("idle");
+          });
+
+          dev.register();
+          setDevice(dev);
+        } catch (e) {
+          console.error("[CrmDialer] Failed to initialize Twilio Device:", e);
           setCallState("idle");
-        });
-
-        dev.on("error", (err) => {
-          console.error("[CrmDialer] Twilio Device error:", err);
-          setCallState("idle");
-        });
-
-        dev.register();
-        setDevice(dev);
+        }
       })
       .catch((err) => {
         console.warn("[CrmDialer] Twilio Voice Token missing or config unavailable:", err.message);
