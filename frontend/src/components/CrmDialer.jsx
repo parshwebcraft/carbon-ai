@@ -58,7 +58,7 @@ export default function CrmDialer() {
         }
       })
       .catch((err) => {
-        console.warn("[CrmDialer] Twilio Voice Token missing or config unavailable:", err.message);
+        console.warn("[CrmDialer] Twilio Voice Token missing or config unavailable:", err?.message || err);
         setCallState("idle");
       });
 
@@ -135,7 +135,7 @@ export default function CrmDialer() {
 
     } catch (err) {
       console.error("[CrmDialer] Make call failed:", err);
-      toast.error(`Call failed: ${err.message}`);
+      toast.error(`Call failed: ${err?.message || err || "Device connection error"}`);
       cleanupCall();
     }
   }
