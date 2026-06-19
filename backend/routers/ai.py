@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models import Lead, Call, WhatsappMessage, Activity, AIAgentLog, User, Product
 from deps import get_current_user
-from services import deepseek
+from services import llm
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
@@ -29,7 +29,7 @@ class ScriptOut(BaseModel):
 def status():
     import os
     return {
-        "deepseek_configured": bool(os.environ.get("DEEPSEEK_API_KEY")),
+        "deepseek_configured": bool(os.environ.get("DEEPSEEK_API_KEY")) or bool(os.environ.get("OPENAI_API_KEY")),
         "vapi_configured": bool(os.environ.get("VAPI_API_KEY")) and bool(os.environ.get("VAPI_PHONE_NUMBER_ID")),
         "whatsapp_configured": bool(os.environ.get("WHATSAPP_TOKEN")) and bool(os.environ.get("WHATSAPP_PHONE_NUMBER_ID")),
         "automation_auto_reply": (os.environ.get("AUTOMATION_AUTO_REPLY", "false").lower() == "true"),
@@ -47,12 +47,12 @@ def whatsapp_reply(lead_id: int, db: Session = Depends(get_db),
                  .filter(WhatsappMessage.lead_id == lead_id)
                  .order_by(WhatsappMessage.created_at.asc()).all())
     try:
-        reply = deepseek.whatsapp_reply(
+        reply = llm.whatsapp_reply(
             {"name": lead.name, "city": lead.city, "customer_type": lead.customer_type,
              "budget": lead.budget, "status": lead.status},
             [{"direction": m.direction, "message": m.message} for m in history],
         )
-    except deepseek.DeepSeekNotConfigured as e:
+    except llm.DeepSeekNotConfigured as e:
         raise HTTPException(503, str(e))
     except Exception as e:  # noqa: BLE001
         raise HTTPException(502, f"AI error: {e}")
@@ -67,7 +67,7 @@ def call_insights(call_id: int, db: Session = Depends(get_db),
         raise HTTPException(404, "Call not found")
     lead = db.query(Lead).filter(Lead.id == call.lead_id).first()
     try:
-        data = deepseek.call_insights(
+        data = llm.call_insights(
             {"call_status": call.call_status, "call_duration": call.call_duration,
              "call_summary": call.call_summary, "transcript": getattr(call, "transcript", None)},
             {"name": lead.name if lead else "Customer",
@@ -75,7 +75,7 @@ def call_insights(call_id: int, db: Session = Depends(get_db),
              "status": lead.status if lead else None,
              "budget": lead.budget if lead else 0},
         )
-    except deepseek.DeepSeekNotConfigured as e:
+    except llm.DeepSeekNotConfigured as e:
         raise HTTPException(503, str(e))
     except Exception as e:  # noqa: BLE001
         raise HTTPException(502, f"AI error: {e}")
@@ -105,12 +105,12 @@ def call_script(lead_id: int, db: Session = Depends(get_db),
                  .filter(Activity.lead_id == lead_id)
                  .order_by(Activity.created_at.desc()).limit(8).all())
     try:
-        text = deepseek.call_script(
+        text = llm.call_script(
             {"name": lead.name, "city": lead.city, "customer_type": lead.customer_type,
              "budget": lead.budget, "status": lead.status},
             [{"activity_type": a.activity_type, "description": a.description} for a in history],
         )
-    except deepseek.DeepSeekNotConfigured as e:
+    except llm.DeepSeekNotConfigured as e:
         raise HTTPException(503, str(e))
     except Exception as e:  # noqa: BLE001
         raise HTTPException(502, f"AI error: {e}")
@@ -160,13 +160,13 @@ class CampaignDraftOut(BaseModel):
 def campaign_draft(payload: CampaignDraftIn, _: User = Depends(get_current_user)):
     """Generate an AI-drafted WhatsApp/SMS campaign message."""
     try:
-        text = deepseek.campaign_draft(
+        text = llm.campaign_draft(
             campaign_name=payload.campaign_name,
             segment=payload.segment,
             tone=payload.tone,
             product_hint=payload.product_hint,
         )
-    except deepseek.DeepSeekNotConfigured as e:
+    except llm.DeepSeekNotConfigured as e:
         raise HTTPException(503, str(e))
     except Exception as e:  # noqa: BLE001
         raise HTTPException(502, f"AI error: {e}")
@@ -201,8 +201,8 @@ def quotation_suggest(lead_id: int, db: Session = Depends(get_db),
         "status": lead.status,
     }
     try:
-        result = deepseek.quotation_suggest(lead_dict, products_list)
-    except deepseek.DeepSeekNotConfigured as e:
+        result = llm.quotation_suggest(lead_dict, products_list)
+    except llm.DeepSeekNotConfigured as e:
         raise HTTPException(503, str(e))
     except Exception as e:  # noqa: BLE001
         raise HTTPException(502, f"AI error: {e}")

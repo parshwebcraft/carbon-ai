@@ -6,7 +6,7 @@ import sqlite3
 from datetime import datetime
 from typing import Optional
 
-from services import deepseek
+from services import llm
 
 DB_PATH = "backend/facets.db"
 
@@ -146,7 +146,7 @@ Return JSON with EXACTLY these keys (all required):
 Respond ONLY with the JSON object, no markdown, no explanation.
 """
     try:
-        result = deepseek.chat_json(
+        result = llm.chat_json(
             [
                 {"role": "system", "content": COPILOT_SYSTEM},
                 {"role": "user", "content": prompt.strip()},
@@ -154,7 +154,7 @@ Respond ONLY with the JSON object, no markdown, no explanation.
             temperature=0.3,
             max_tokens=700,
         )
-    except deepseek.DeepSeekNotConfigured:
+    except llm.DeepSeekNotConfigured:
         result = _placeholder_suggestions()
     except Exception:  # noqa: BLE001
         result = _placeholder_suggestions()
@@ -291,7 +291,7 @@ def generate_history_summary(
         "Write a 4-bullet summary: Last Interaction, Stated Interest, Key Objections, Conversion Probability."
     )
     try:
-        return deepseek.chat(
+        return llm.chat(
             [
                 {"role": "system", "content": HISTORY_SYSTEM},
                 {"role": "user", "content": prompt},
@@ -300,7 +300,7 @@ def generate_history_summary(
             max_tokens=200,
         ).strip()
     except Exception:  # noqa: BLE001
-        return "AI summary unavailable — configure DEEPSEEK_API_KEY."
+        return "AI summary unavailable — configure OPENAI_API_KEY."
 
 
 # ── WhatsApp thread intelligence ─────────────────────────────────────────────
@@ -331,7 +331,7 @@ def analyse_whatsapp_thread(messages: list[dict], lead: dict) -> dict:
         "- summary: 1-sentence conversation summary"
     )
     try:
-        result = deepseek.chat_json(
+        result = llm.chat_json(
             [
                 {"role": "system", "content": WHATSAPP_SYSTEM},
                 {"role": "user", "content": prompt},
@@ -380,7 +380,7 @@ def score_lead_quick(lead: dict, activities: list[dict]) -> dict:
         "- conversion_probability: integer 0-100"
     )
     try:
-        result = deepseek.chat_json(
+        result = llm.chat_json(
             [
                 {"role": "system", "content": COPILOT_SYSTEM},
                 {"role": "user", "content": prompt},
@@ -440,7 +440,7 @@ def generate_follow_up_suggestions(stale_leads: list[dict]) -> list[dict]:
         "\nRespond ONLY with the JSON array."
     )
     try:
-        raw = deepseek.chat(
+        raw = llm.chat(
             [
                 {"role": "system", "content": FOLLOWUP_SYSTEM},
                 {"role": "user", "content": prompt},

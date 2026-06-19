@@ -11,7 +11,7 @@ import logging
 from typing import Optional
 from sqlalchemy.orm import Session
 
-from services import deepseek
+from services import llm
 
 logger = logging.getLogger("facets.rag")
 
@@ -262,7 +262,7 @@ def analyse_with_rag(
     prompt = _format_context_prompt(context, transcript_lines)
 
     try:
-        result = deepseek.chat_json(
+        result = llm.chat_json(
             [
                 {"role": "system", "content": RAG_SYSTEM},
                 {"role": "user", "content": prompt},
@@ -271,7 +271,7 @@ def analyse_with_rag(
             max_tokens=700,
         )
         return result
-    except deepseek.DeepSeekNotConfigured as e:
+    except llm.DeepSeekNotConfigured as e:
         return _fallback_response(str(e))
     except Exception as e:  # noqa: BLE001
         logger.error("RAG analysis error: %s", e)

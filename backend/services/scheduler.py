@@ -16,7 +16,7 @@ from sqlalchemy import func
 
 from database import SessionLocal
 from models import Lead, WhatsappMessage
-from services import deepseek, whatsapp_cloud
+from services import llm, whatsapp_cloud
 
 logger = logging.getLogger("facets.scheduler")
 
@@ -37,7 +37,7 @@ def run_once_sync() -> int:
     """One pass over all conversations. Returns number of follow-ups sent."""
     if not followups_enabled():
         return 0
-    if not deepseek.os.environ.get("DEEPSEEK_API_KEY"):
+    if not (os.environ.get("DEEPSEEK_API_KEY") or os.environ.get("OPENAI_API_KEY")):
         return 0
 
     sent = 0
@@ -70,7 +70,7 @@ def run_once_sync() -> int:
                 continue  # we already replied last
 
             try:
-                body = deepseek.followup_message(
+                body = llm.followup_message(
                     {
                         "name": lead.name, "customer_type": lead.customer_type,
                         "status": lead.status, "budget": lead.budget, "city": lead.city,
@@ -78,7 +78,7 @@ def run_once_sync() -> int:
                     [{"direction": m.direction, "message": m.message} for m in history],
                 )
             except Exception as e:  # noqa: BLE001
-                logger.warning("DeepSeek followup failed: %s", e)
+                logger.warning("LLM followup failed: %s", e)
                 continue
 
             try:

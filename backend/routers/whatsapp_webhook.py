@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models import Lead, WhatsappMessage, User
 from deps import get_current_user
-from services import whatsapp_cloud, deepseek
+from services import whatsapp_cloud, llm
 
 logger = logging.getLogger("facets.whatsapp")
 router = APIRouter(prefix="/whatsapp", tags=["whatsapp"])
@@ -82,12 +82,12 @@ async def receive(request: Request, db: Session = Depends(get_db)):
         db.commit()
 
         # Auto-reply
-        if _auto_reply_enabled() and os.environ.get("DEEPSEEK_API_KEY"):
+        if _auto_reply_enabled() and (os.environ.get("OPENAI_API_KEY") or os.environ.get("DEEPSEEK_API_KEY")):
             history = (db.query(WhatsappMessage)
                          .filter(WhatsappMessage.lead_id == lead.id)
                          .order_by(WhatsappMessage.created_at.asc()).all())
             try:
-                reply = deepseek.whatsapp_reply(
+                reply = llm.whatsapp_reply(
                     {"name": lead.name, "city": lead.city,
                      "customer_type": lead.customer_type, "budget": lead.budget,
                      "status": lead.status},

@@ -97,8 +97,8 @@ def stats(db: Session = Depends(get_db), _: User = Depends(get_current_user)):
 
 @router.get("/ai-summary")
 def ai_summary(db: Session = Depends(get_db), _: User = Depends(get_current_user)):
-    """DeepSeek-generated morning briefing based on current pipeline stats."""
-    from services import deepseek
+    """LLM-generated morning briefing based on current pipeline stats."""
+    from services import llm
 
     total_leads = db.query(func.count(Lead.id)).scalar() or 0
     new_leads = db.query(func.count(Lead.id)).filter(Lead.status == "New").scalar() or 0
@@ -129,8 +129,8 @@ def ai_summary(db: Session = Depends(get_db), _: User = Depends(get_current_user
     }
 
     try:
-        briefing = deepseek.dashboard_briefing(stats_dict)
-    except deepseek.DeepSeekNotConfigured:
+        briefing = llm.dashboard_briefing(stats_dict)
+    except llm.DeepSeekNotConfigured:
         briefing = (
             f"Good morning! You have {total_leads} leads in your pipeline worth "
             f"₹{int(pipeline_value):,}. {hot_lead_count} leads are hot — prioritise them today. "

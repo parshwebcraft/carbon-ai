@@ -1,48 +1,72 @@
-"""DeepSeek (OpenAI-compatible) text client used by AI features."""
+"""Unified LLM service provider (OpenAI ChatGPT & DeepSeek) used by AI features."""
 import os
 import json
+import logging
 from typing import List, Dict, Optional
-import httpx
+from openai import OpenAI
 
-BASE_URL = "https://api.deepseek.com"
-MODEL = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
+logger = logging.getLogger("facets.llm")
 
 
-class DeepSeekNotConfigured(RuntimeError):
+class LlmNotConfigured(RuntimeError):
     pass
 
 
-def _key() -> str:
-    k = os.environ.get("DEEPSEEK_API_KEY", "").strip()
-    if not k:
-        raise DeepSeekNotConfigured(
-            "DEEPSEEK_API_KEY is not set. Add it to /app/backend/.env."
-        )
-    return k
+# Backward compatibility alias
+DeepSeekNotConfigured = LlmNotConfigured
+
+PROVIDER = os.environ.get("LLM_PROVIDER", "openai").lower().strip()
+
+
+def _get_client():
+    if PROVIDER == "deepseek":
+        api_key = os.environ.get("DEEPSEEK_API_KEY", "").strip()
+        if not api_key:
+            raise LlmNotConfigured(
+                "DEEPSEEK_API_KEY is not set. Add it to /app/backend/.env."
+            )
+        base_url = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com").strip()
+        model = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat").strip()
+        return OpenAI(api_key=api_key, base_url=base_url), model
+    else:
+        # Default to OpenAI
+        api_key = os.environ.get("OPENAI_API_KEY", "").strip()
+        if not api_key:
+            raise LlmNotConfigured(
+                "OPENAI_API_KEY is not set. Add it to /app/backend/.env."
+            )
+        base_url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1").strip()
+        model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini").strip()
+        return OpenAI(api_key=api_key, base_url=base_url), model
 
 
 def chat(messages: List[Dict[str, str]], *, temperature: float = 0.4,
          max_tokens: int = 600, response_format: Optional[str] = None) -> str:
-    """Return the assistant text from a DeepSeek chat completion."""
-    body = {
-        "model": MODEL,
+    """Return the assistant text from a chat completion using the configured provider."""
+    client, model = _get_client()
+
+    kwargs = {
+        "model": model,
         "messages": messages,
         "temperature": temperature,
         "max_tokens": max_tokens,
-        "stream": False,
     }
+
     if response_format == "json":
-        body["response_format"] = {"type": "json_object"}
-    with httpx.Client(timeout=60.0) as client:
-        r = client.post(
-            f"{BASE_URL}/chat/completions",
-            headers={"Authorization": f"Bearer {_key()}", "Content-Type": "application/json"},
-            json=body,
+        kwargs["response_format"] = {"type": "json_object"}
+
+    try:
+        response = client.chat.completions.create(**kwargs)
+        content = response.choices[0].message.content
+        if content is None:
+            return ""
+        return content
+    except Exception as e:
+        logger.error(
+            "LLM completion failed (provider=%s, model=%s): %s",
+            PROVIDER, model, e
         )
-        if r.status_code >= 400:
-            raise RuntimeError(f"DeepSeek error {r.status_code}: {r.text[:400]}")
-        data = r.json()
-    return data["choices"][0]["message"]["content"]
+        raise RuntimeError(f"LLM completion error: {e}") from e
 
 
 def chat_json(messages: List[Dict[str, str]], **kw) -> dict:

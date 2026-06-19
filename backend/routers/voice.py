@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models import Lead, Call, AIAgentLog, Activity, User
 from deps import get_current_user
-from services import vapi_voice, deepseek
+from services import vapi_voice, llm
 
 logger = logging.getLogger("facets.voice")
 router = APIRouter(prefix="/voice", tags=["voice"])
@@ -43,7 +43,7 @@ def place_call(lead_id: int, with_ai_script: bool = True,
             history = (db.query(Activity)
                          .filter(Activity.lead_id == lead_id)
                          .order_by(Activity.created_at.desc()).limit(8).all())
-            script_text = deepseek.call_script(
+            script_text = llm.call_script(
                 {"name": lead.name, "city": lead.city,
                  "customer_type": lead.customer_type,
                  "budget": lead.budget, "status": lead.status},
