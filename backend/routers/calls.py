@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models import Call, Lead, LeadInsight, User
 from schemas import CallCreate, CallUpdate, CallOut
-from deps import get_current_user
+from deps import get_current_user, require_roles
 
 router = APIRouter(prefix="/calls", tags=["calls"])
 
