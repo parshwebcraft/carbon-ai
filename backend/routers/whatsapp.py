@@ -6,7 +6,7 @@ from sqlalchemy import func
 from database import get_db
 from models import WhatsappMessage, Lead, User
 from schemas import WhatsappCreate, WhatsappOut
-from deps import get_current_user
+from deps import get_current_user, require_roles
 
 router = APIRouter(prefix="/whatsapp", tags=["whatsapp"])
 
@@ -68,5 +68,29 @@ def delete_message(msg_id: int, db: Session = Depends(get_db),
     if not m:
         raise HTTPException(404, "Message not found")
     db.delete(m)
+    db.commit()
+    return None
+
+
+@router.delete("/thread/{lead_id}", status_code=204)
+def delete_thread(lead_id: int, db: Session = Depends(get_db),
+                  _: User = Depends(require_roles("Admin", "Manager"))):
+    db.query(WhatsappMessage).filter(WhatsappMessage.lead_id == lead_id).delete(synchronize_session=False)
+    db.commit()
+    return None
+
+
+@router.post("/delete-multiple", status_code=204)
+def delete_multiple_whatsapp(msg_ids: list[int], db: Session = Depends(get_db),
+                             _: User = Depends(require_roles("Admin", "Manager"))):
+    db.query(WhatsappMessage).filter(WhatsappMessage.id.in_(msg_ids)).delete(synchronize_session=False)
+    db.commit()
+    return None
+
+
+@router.post("/delete-all", status_code=204)
+def delete_all_whatsapp(db: Session = Depends(get_db),
+                        _: User = Depends(require_roles("Admin", "Manager"))):
+    db.query(WhatsappMessage).delete(synchronize_session=False)
     db.commit()
     return None

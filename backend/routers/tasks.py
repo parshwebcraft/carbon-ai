@@ -68,3 +68,19 @@ def delete_task(task_id: int, db: Session = Depends(get_db), _: User = Depends(g
     db.delete(t)
     db.commit()
     return None
+
+
+@router.post("/delete-multiple", status_code=204)
+def delete_multiple_tasks(task_ids: list[int], db: Session = Depends(get_db),
+                          _: User = Depends(require_roles("Admin", "Manager"))):
+    db.query(Task).filter(Task.id.in_(task_ids)).delete(synchronize_session=False)
+    db.commit()
+    return None
+
+
+@router.post("/delete-all", status_code=204)
+def delete_all_tasks(db: Session = Depends(get_db),
+                     _: User = Depends(require_roles("Admin", "Manager"))):
+    db.query(Task).delete(synchronize_session=False)
+    db.commit()
+    return None

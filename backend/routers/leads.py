@@ -102,3 +102,19 @@ def delete_lead(lead_id: int, db: Session = Depends(get_db),
     db.delete(lead)
     db.commit()
     return None
+
+
+@router.post("/delete-multiple", status_code=204)
+def delete_multiple_leads(lead_ids: list[int], db: Session = Depends(get_db),
+                          _: User = Depends(require_roles("Admin", "Manager"))):
+    db.query(Lead).filter(Lead.id.in_(lead_ids)).delete(synchronize_session=False)
+    db.commit()
+    return None
+
+
+@router.post("/delete-all", status_code=204)
+def delete_all_leads(db: Session = Depends(get_db),
+                     _: User = Depends(require_roles("Admin", "Manager"))):
+    db.query(Lead).delete(synchronize_session=False)
+    db.commit()
+    return None

@@ -84,13 +84,56 @@ export default function Whatsapp() {
     finally { setAnalysing(false); }
   }
 
+  const deleteMsg = async (msgId) => {
+    if (!window.confirm("Are you sure you want to delete this message?")) return;
+    try {
+      await api.delete(`/whatsapp/${msgId}`);
+      toast.success("Message deleted");
+      const r = await api.get(`/whatsapp/${activeId}`);
+      setMsgs(r.data);
+      loadConvos();
+    } catch (e) {
+      toast.error(errMsg(e, "Failed to delete message"));
+    }
+  };
+
+  const deleteThread = async (leadId) => {
+    if (!window.confirm("Are you sure you want to delete the entire chat history for this lead?")) return;
+    try {
+      await api.delete(`/whatsapp/thread/${leadId}`);
+      toast.success("Chat history cleared");
+      setMsgs([]);
+      loadConvos();
+    } catch (e) {
+      toast.error(errMsg(e, "Failed to delete chat history"));
+    }
+  };
+
+  const deleteAllChats = async () => {
+    if (!window.confirm("Are you sure you want to delete ALL chats for ALL leads in the database? This cannot be undone.")) return;
+    try {
+      await api.post("/whatsapp/delete-all");
+      toast.success("All chats deleted successfully");
+      setMsgs([]);
+      setActiveId(null);
+      loadConvos();
+    } catch (e) {
+      toast.error(errMsg(e, "Failed to delete all chats"));
+    }
+  };
+
   const active = conversations.find(c => c.lead_id === activeId);
 
   return (
     <div data-testid="whatsapp-page" className="space-y-4">
-      <div>
-        <h1 className="font-serif text-3xl">WhatsApp</h1>
-        <p className="text-sm text-slate-600">{conversations.length} active conversations (mocked)</p>
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="font-serif text-3xl">WhatsApp</h1>
+          <p className="text-sm text-slate-600">{conversations.length} active conversations (mocked)</p>
+        </div>
+        <Button variant="outline" className="text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700" onClick={deleteAllChats}>
+          Delete All Chats
+        </Button>
       </div>
 
       <div className="grid lg:grid-cols-[280px_1fr_300px] gap-4 h-[72vh]">
@@ -136,24 +179,58 @@ export default function Whatsapp() {
                   <Link to={`/leads/${active.lead_id}`} className="text-xs text-indigo-700 hover:underline"
                     data-testid="open-lead-from-whatsapp">View lead →</Link>
                 </div>
-                <Button size="sm" variant="outline"
-                  className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 gap-1.5"
-                  onClick={analyseConversation}
-                  disabled={analysing || msgs.length === 0}
-                  data-testid="whatsapp-analyse-btn"
-                >
-                  {analysing
-                    ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    : <Brain className="h-3.5 w-3.5" />}
-                  {analysing ? "Analysing…" : "AI Analysis"}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="outline"
+                    className="text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700"
+                    onClick={() => deleteThread(active.lead_id)}
+                  >
+                    Delete Thread
+                  </Button>
+                  <Button size="sm" variant="outline"
+                    className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 gap-1.5"
+                    onClick={analyseConversation}
+                    disabled={analysing || msgs.length === 0}
+                    data-testid="whatsapp-analyse-btn"
+                  >
+                    {analysing
+                      ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      : <Brain className="h-3.5 w-3.5" />}
+                    {analysing ? "Analysing…" : "AI Analysis"}
+                  </Button>
+                </div>
               </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-[#F8FAFC]">
                 {msgs.map(m => (
-                  <div key={m.id}
-                    className={`max-w-[80%] rounded-2xl px-3 py-2 ${m.direction === "out" ? "bg-emerald-50 ml-auto" : "bg-white border border-indigo-100"}`}>
-                    <div className="text-sm text-slate-800 whitespace-pre-wrap">{m.message}</div>
-                    <div className="text-[10px] text-slate-500 mt-1 text-right">{dateTime(m.created_at)}</div>
+                  <div key={m.id} className="group flex items-center gap-2 max-w-[80%] hover:max-w-full mr-auto ml-0 relative">
+                    {m.direction === "out" ? (
+                      <div className="flex items-center gap-2 ml-auto">
+                        <button
+                          onClick={() => deleteMsg(m.id)}
+                          className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-600 transition-opacity p-1 font-bold text-xs"
+                          title="Delete message"
+                        >
+                          ✕
+                        </button>
+                        <div className="rounded-2xl px-3 py-2 bg-emerald-50 text-left">
+                          <div className="text-sm text-slate-800 whitespace-pre-wrap">{m.message}</div>
+                          <div className="text-[10px] text-slate-500 mt-1 text-right">{dateTime(m.created_at)}</div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <div className="rounded-2xl px-3 py-2 bg-white border border-indigo-100 text-left">
+                          <div className="text-sm text-slate-800 whitespace-pre-wrap">{m.message}</div>
+                          <div className="text-[10px] text-slate-500 mt-1 text-right">{dateTime(m.created_at)}</div>
+                        </div>
+                        <button
+                          onClick={() => deleteMsg(m.id)}
+                          className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-600 transition-opacity p-1 font-bold text-xs"
+                          title="Delete message"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

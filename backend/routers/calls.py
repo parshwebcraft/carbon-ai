@@ -78,3 +78,19 @@ def delete_call(call_id: int, db: Session = Depends(get_db), _: User = Depends(g
     db.delete(c)
     db.commit()
     return None
+
+
+@router.post("/delete-multiple", status_code=204)
+def delete_multiple_calls(call_ids: list[int], db: Session = Depends(get_db),
+                          _: User = Depends(require_roles("Admin", "Manager"))):
+    db.query(Call).filter(Call.id.in_(call_ids)).delete(synchronize_session=False)
+    db.commit()
+    return None
+
+
+@router.post("/delete-all", status_code=204)
+def delete_all_calls(db: Session = Depends(get_db),
+                     _: User = Depends(require_roles("Admin", "Manager"))):
+    db.query(Call).delete(synchronize_session=False)
+    db.commit()
+    return None

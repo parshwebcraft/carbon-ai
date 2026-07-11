@@ -35,15 +35,69 @@ export default function Calls() {
   const [expanded, setExpanded] = useState(null);
   const [analysing, setAnalysing] = useState(null);
   const [insights, setInsights] = useState({}); // call_id -> insight data
+  const [selectedIds, setSelectedIds] = useState(new Set());
 
-  useEffect(() => {
+  function load() {
+    setLoading(true);
     api.get("/calls")
-      .then(r => setItems(r.data))
+      .then(r => {
+        setItems(r.data);
+        setSelectedIds(new Set());
+      })
       .catch(e => toast.error(errMsg(e)))
       .finally(() => setLoading(false));
-  }, []);
+  }
+
+  useEffect(load, []);
 
   const totalDur = items.reduce((s, c) => s + (c.call_duration || 0), 0);
+
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedIds((prev) => {
+      if (prev.size === items.length) {
+        return new Set();
+      } else {
+        return new Set(items.map((item) => item.id));
+      }
+    });
+  };
+
+  const deleteSelected = async () => {
+    if (selectedIds.size === 0) return;
+    if (!window.confirm(`Are you sure you want to delete ${selectedIds.size} selected call(s)?`)) return;
+    try {
+      await api.post("/calls/delete-multiple", Array.from(selectedIds));
+      toast.success("Selected calls deleted successfully.");
+      setSelectedIds(new Set());
+      load();
+    } catch (e) {
+      toast.error(errMsg(e, "Failed to delete selected calls"));
+    }
+  };
+
+  const deleteAll = async () => {
+    if (!window.confirm("Are you sure you want to delete ALL call logs in the database? This cannot be undone.")) return;
+    try {
+      await api.post("/calls/delete-all");
+      toast.success("All call logs deleted successfully.");
+      setSelectedIds(new Set());
+      load();
+    } catch (e) {
+      toast.error(errMsg(e, "Failed to delete all calls"));
+    }
+  };
 
   async function analyseCall(callId) {
     setAnalysing(callId);
@@ -60,11 +114,34 @@ export default function Calls() {
 
   return (
     <div data-testid="calls-page" className="space-y-5">
-      <div>
-        <h1 className="font-serif text-3xl">Call Logs</h1>
-        <p className="text-sm text-slate-600">
-          {items.length} calls · {(totalDur / 60).toFixed(0)} minutes total
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-serif text-3xl">Call Logs</h1>
+          <p className="text-sm text-slate-600">
+            {items.length} calls · {(totalDur / 60).toFixed(0)} minutes total
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {items.length > 0 && (
+            <label className="flex items-center text-xs text-slate-600 cursor-pointer mr-2 border border-slate-200 px-2 py-1.5 rounded bg-white hover:bg-slate-50">
+              <input
+                type="checkbox"
+                checked={items.length > 0 && selectedIds.size === items.length}
+                onChange={toggleSelectAll}
+                className="mr-1.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+              />
+              Select All
+            </label>
+          )}
+          {selectedIds.size > 0 && (
+            <Button variant="destructive" className="bg-rose-600 hover:bg-rose-700 text-white" onClick={deleteSelected}>
+              Delete Selected ({selectedIds.size})
+            </Button>
+          )}
+          <Button variant="outline" className="text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700" onClick={deleteAll}>
+            Delete All
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-3">
@@ -90,9 +167,17 @@ export default function Calls() {
             <Card key={c.id} className="border-indigo-100 bg-white overflow-hidden">
               {/* Main row */}
               <div className="flex items-start gap-4 p-4">
-                {/* Left: icon + status */}
-                <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0 border border-indigo-100">
-                  <Phone className="h-4.5 w-4.5 text-indigo-700" />
+                {/* Left: checkbox + icon */}
+                <div className="flex items-center gap-2 self-center shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(c.id)}
+                    onChange={() => toggleSelect(c.id)}
+                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                  />
+                  <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center border border-indigo-100">
+                    <Phone className="h-4.5 w-4.5 text-indigo-700" />
+                  </div>
                 </div>
 
                 {/* Center: info */}

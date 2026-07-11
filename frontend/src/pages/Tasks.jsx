@@ -23,13 +23,66 @@ export default function Tasks() {
   const [statusFilter, setStatusFilter] = useState("");
   const [open, setOpen] = useState(false);
   const [users, setUsers] = useState([]);
+  const [selectedIds, setSelectedIds] = useState(new Set());
 
   function load() {
     const params = statusFilter ? { status: statusFilter } : {};
-    api.get("/tasks", { params }).then(r => setItems(r.data)).catch(e => toast.error(errMsg(e)));
+    api.get("/tasks", { params })
+      .then(r => {
+        setItems(r.data);
+        setSelectedIds(new Set());
+      })
+      .catch(e => toast.error(errMsg(e)));
   }
   useEffect(() => { api.get("/users").then(r => setUsers(r.data)); }, []);
   useEffect(load, [statusFilter]);
+
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedIds((prev) => {
+      if (prev.size === items.length) {
+        return new Set();
+      } else {
+        return new Set(items.map((item) => item.id));
+      }
+    });
+  };
+
+  const deleteSelected = async () => {
+    if (selectedIds.size === 0) return;
+    if (!window.confirm(`Are you sure you want to delete ${selectedIds.size} selected task(s)?`)) return;
+    try {
+      await api.post("/tasks/delete-multiple", Array.from(selectedIds));
+      toast.success("Selected tasks deleted successfully.");
+      setSelectedIds(new Set());
+      load();
+    } catch (e) {
+      toast.error(errMsg(e, "Failed to delete selected tasks"));
+    }
+  };
+
+  const deleteAll = async () => {
+    if (!window.confirm("Are you sure you want to delete ALL tasks in the database? This cannot be undone.")) return;
+    try {
+      await api.post("/tasks/delete-all");
+      toast.success("All tasks deleted successfully.");
+      setSelectedIds(new Set());
+      load();
+    } catch (e) {
+      toast.error(errMsg(e, "Failed to delete all tasks"));
+    }
+  };
 
   async function updateStatus(t, s) {
     try {
@@ -45,7 +98,15 @@ export default function Tasks() {
           <h1 className="font-serif text-3xl">Tasks</h1>
           <p className="text-sm text-slate-600">{items.length} tasks</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          {selectedIds.size > 0 && (
+            <Button variant="destructive" className="bg-rose-600 hover:bg-rose-700 text-white" onClick={deleteSelected}>
+              Delete Selected ({selectedIds.size})
+            </Button>
+          )}
+          <Button variant="outline" className="text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700" onClick={deleteAll}>
+            Delete All
+          </Button>
           <Select value={statusFilter || "all"} onValueChange={v => setStatusFilter(v === "all" ? "" : v)}>
             <SelectTrigger data-testid="tasks-filter" className="w-40"><SelectValue placeholder="All status" /></SelectTrigger>
             <SelectContent>
@@ -69,6 +130,14 @@ export default function Tasks() {
           <table className="w-full text-sm" data-testid="tasks-table">
             <thead className="bg-indigo-50/60 text-slate-700">
               <tr>
+                <th className="px-4 py-3 w-10 text-center">
+                  <input
+                    type="checkbox"
+                    checked={items.length > 0 && selectedIds.size === items.length}
+                    onChange={toggleSelectAll}
+                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                  />
+                </th>
                 <th className="text-left px-4 py-3">Title</th>
                 <th className="text-left px-4 py-3">Priority</th>
                 <th className="text-left px-4 py-3">Status</th>
@@ -76,9 +145,17 @@ export default function Tasks() {
               </tr>
             </thead>
             <tbody>
-              {items.length === 0 ? <tr><td colSpan={4} className="p-6 text-center text-slate-500">No tasks.</td></tr> :
+              {items.length === 0 ? <tr><td colSpan={5} className="p-6 text-center text-slate-500">No tasks.</td></tr> :
                 items.map(t => (
                   <tr key={t.id} className="border-t border-indigo-50">
+                    <td className="px-4 py-3 text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(t.id)}
+                        onChange={() => toggleSelect(t.id)}
+                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                      />
+                    </td>
                     <td className="px-4 py-3">
                       <div className="font-medium">{t.title}</div>
                       {t.description && <div className="text-xs text-slate-500 mt-0.5">{t.description}</div>}

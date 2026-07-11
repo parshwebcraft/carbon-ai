@@ -16,10 +16,10 @@ import StatusBadge from "@/components/StatusBadge";
 import { Plus, Search, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 
-const STATUSES = ["New", "Contacted", "Follow Up", "Interested", "Visit Scheduled",
-  "Quotation Sent", "Negotiation", "Won", "Lost"];
-const SOURCES = ["Website", "WhatsApp", "Instagram", "Facebook", "Walk-In", "Referral", "Google Ads"];
-const CUSTOMER_TYPES = ["Gold Buyer", "Diamond Buyer", "Bridal Enquiry", "Existing Customer", "High Value"];
+const STATUSES = ["New", "Contacted", "Follow Up", "Interested", "Meeting Scheduled",
+  "Proposal Sent", "Negotiation", "Won", "Lost"];
+const SOURCES = ["Website", "WhatsApp", "LinkedIn", "Facebook", "Walk-In", "Referral", "Google Ads"];
+const CUSTOMER_TYPES = ["Startup Website", "E-commerce Business", "Mobile App Client", "Local SEO Audit", "SaaS Software Partner"];
 
 export default function Leads() {
   const [data, setData] = useState({ items: [], total: 0, page: 1, page_size: 20 });
@@ -27,6 +27,7 @@ export default function Leads() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
 
   function load() {
     setLoading(true);
@@ -35,13 +36,63 @@ export default function Leads() {
     if (filters.status) params.status = filters.status;
     if (filters.source) params.source = filters.source;
     api.get("/leads", { params })
-      .then((r) => setData(r.data))
+      .then((r) => {
+        setData(r.data);
+        setSelectedIds(new Set());
+      })
       .catch((e) => toast.error(errMsg(e)))
       .finally(() => setLoading(false));
   }
   useEffect(load, [page, filters.status, filters.source]);
 
   const totalPages = Math.max(1, Math.ceil(data.total / 20));
+
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedIds((prev) => {
+      if (prev.size === data.items.length) {
+        return new Set();
+      } else {
+        return new Set(data.items.map((item) => item.id));
+      }
+    });
+  };
+
+  const deleteSelected = async () => {
+    if (selectedIds.size === 0) return;
+    if (!window.confirm(`Are you sure you want to delete ${selectedIds.size} selected lead(s)?`)) return;
+    try {
+      await api.post("/leads/delete-multiple", Array.from(selectedIds));
+      toast.success("Selected leads deleted successfully.");
+      setSelectedIds(new Set());
+      load();
+    } catch (e) {
+      toast.error(errMsg(e, "Failed to delete selected leads"));
+    }
+  };
+
+  const deleteAll = async () => {
+    if (!window.confirm("Are you sure you want to delete ALL leads in the database? This will also clear all calls, tasks, and chats linked to them.")) return;
+    try {
+      await api.post("/leads/delete-all");
+      toast.success("All leads deleted successfully.");
+      setSelectedIds(new Set());
+      load();
+    } catch (e) {
+      toast.error(errMsg(e, "Failed to delete all leads"));
+    }
+  };
 
   return (
     <div data-testid="leads-page" className="space-y-5">
@@ -50,14 +101,24 @@ export default function Leads() {
           <h1 className="font-serif text-3xl">Leads</h1>
           <p className="text-sm text-slate-600">{data.total} leads in pipeline</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button data-testid="new-lead-btn" className="bg-indigo-700 hover:bg-indigo-800">
-              <Plus className="h-4 w-4 mr-1.5" /> New Lead
+        <div className="flex items-center gap-2">
+          {selectedIds.size > 0 && (
+            <Button variant="destructive" className="bg-rose-600 hover:bg-rose-700 text-white" onClick={deleteSelected}>
+              Delete Selected ({selectedIds.size})
             </Button>
-          </DialogTrigger>
-          <NewLeadDialog onSaved={() => { setOpen(false); load(); }} />
-        </Dialog>
+          )}
+          <Button variant="outline" className="text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700" onClick={deleteAll}>
+            Delete All
+          </Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button data-testid="new-lead-btn" className="bg-indigo-700 hover:bg-indigo-800">
+                <Plus className="h-4 w-4 mr-1.5" /> New Lead
+              </Button>
+            </DialogTrigger>
+            <NewLeadDialog onSaved={() => { setOpen(false); load(); }} />
+          </Dialog>
+        </div>
       </div>
 
       <Card className="p-4 border-indigo-100 bg-white">
@@ -101,6 +162,14 @@ export default function Leads() {
           <table className="w-full text-sm" data-testid="leads-table">
             <thead className="bg-indigo-50/60 text-slate-700">
               <tr>
+                <th className="px-4 py-3 w-10 text-center">
+                  <input
+                    type="checkbox"
+                    checked={data.items.length > 0 && selectedIds.size === data.items.length}
+                    onChange={toggleSelectAll}
+                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                  />
+                </th>
                 <th className="text-left px-4 py-3 font-semibold">Name</th>
                 <th className="text-left px-4 py-3 font-semibold">City</th>
                 <th className="text-left px-4 py-3 font-semibold">Source</th>
@@ -115,11 +184,19 @@ export default function Leads() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={7} className="p-6 text-center text-slate-500">Loading…</td></tr>
+                <tr><td colSpan={9} className="p-6 text-center text-slate-500">Loading…</td></tr>
               ) : data.items.length === 0 ? (
-                <tr><td colSpan={7} className="p-6 text-center text-slate-500">No leads</td></tr>
+                <tr><td colSpan={9} className="p-6 text-center text-slate-500">No leads</td></tr>
               ) : data.items.map((l) => (
                 <tr key={l.id} className="border-t border-indigo-50 hover:bg-indigo-50/30">
+                  <td className="px-4 py-3 text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(l.id)}
+                      onChange={() => toggleSelect(l.id)}
+                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                    />
+                  </td>
                   <td className="px-4 py-3">
                     <Link to={`/leads/${l.id}`} data-testid={`lead-row-${l.id}`} className="font-medium text-slate-900 hover:text-indigo-800">
                       {l.name}
@@ -168,7 +245,7 @@ export default function Leads() {
 function NewLeadDialog({ onSaved }) {
   const [form, setForm] = useState({
     name: "", phone: "", email: "", city: "", company: "",
-    source: "Website", status: "New", customer_type: "Gold Buyer",
+    source: "Website", status: "New", customer_type: "Startup Website",
     budget: 0, notes: "",
   });
   const [saving, setSaving] = useState(false);
