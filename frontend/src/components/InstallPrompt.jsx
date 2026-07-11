@@ -20,7 +20,7 @@ export default function InstallPrompt() {
   return (
     <div
       data-testid="install-prompt"
-      className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 z-50 max-w-sm rounded-xl border border-amber-200 bg-white shadow-lg p-4 flex items-start gap-3"
+      className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 z-50 max-w-sm rounded-xl border border-indigo-200 bg-white shadow-lg p-4 flex items-start gap-3"
     >
       <div className="flex-1">
         <div className="font-semibold text-slate-900">Install ParshWebCraft CRM</div>
@@ -31,7 +31,7 @@ export default function InstallPrompt() {
           <Button
             data-testid="install-prompt-install"
             size="sm"
-            className="bg-amber-700 hover:bg-amber-800"
+            className="bg-indigo-700 hover:bg-indigo-800"
             onClick={async () => { evt.prompt(); await evt.userChoice; setHidden(true); }}
           >
             <Download className="h-4 w-4 mr-1.5" /> Install

@@ -35,8 +35,8 @@ const STATUS_COLORS = {
   connected: "bg-emerald-100 text-emerald-800",
   completed: "bg-emerald-100 text-emerald-800",
   failed: "bg-rose-100 text-rose-800",
-  busy: "bg-amber-100 text-amber-800",
-  no_answer: "bg-amber-100 text-amber-800",
+  busy: "bg-indigo-100 text-indigo-800",
+  no_answer: "bg-indigo-100 text-indigo-800",
 };
 
 export default function CampaignDetail() {
@@ -105,7 +105,7 @@ export default function CampaignDetail() {
   return (
     <div data-testid="campaign-detail" className="space-y-5">
       <div>
-        <Link to="/campaigns" className="text-sm text-slate-600 hover:text-amber-800 inline-flex items-center gap-1"
+        <Link to="/campaigns" className="text-sm text-slate-600 hover:text-indigo-800 inline-flex items-center gap-1"
               data-testid="back-to-campaigns">
           <ChevronLeft className="h-4 w-4" /> All campaigns
         </Link>
@@ -116,7 +116,7 @@ export default function CampaignDetail() {
           <h1 className="font-serif text-3xl" data-testid="campaign-name">{campaign.name}</h1>
           <p className="text-sm text-slate-600">
             {campaign.description || "—"} · Provider:{" "}
-            <Badge variant="outline" className={campaign.provider === "vapi" ? "border-emerald-300 text-emerald-800" : "border-amber-300 text-amber-800"}>
+            <Badge variant="outline" className={campaign.provider === "vapi" ? "border-emerald-300 text-emerald-800" : "border-indigo-300 text-indigo-800"}>
               {campaign.provider === "vapi" ? "Vapi.ai" : "MOCK"}
             </Badge>
             <span className="ml-2">Status:{" "}
@@ -142,7 +142,7 @@ export default function CampaignDetail() {
           )}
           {campaign.status === "paused" && (
             <Button data-testid="campaign-resume-btn" onClick={() => action("resume")} disabled={busy}
-                    className="bg-amber-700 hover:bg-amber-800">
+                    className="bg-indigo-700 hover:bg-indigo-800">
               <Play className="h-4 w-4 mr-1.5" /> Resume
             </Button>
           )}
@@ -188,7 +188,7 @@ export default function CampaignDetail() {
       <AIDraftCard campaignName={campaign.name} segment={campaign.description} />
 
       <div className="grid lg:grid-cols-2 gap-4">
-        <Card className="p-4 border-amber-100">
+        <Card className="p-4 border-indigo-100">
           <div className="font-serif text-lg mb-1">Outcome Distribution</div>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%" minHeight={250}>
@@ -203,7 +203,7 @@ export default function CampaignDetail() {
             </ResponsiveContainer>
           </div>
         </Card>
-        <Card className="p-4 border-amber-100">
+        <Card className="p-4 border-indigo-100">
           <div className="font-serif text-lg mb-1">Sentiment</div>
           <div className="h-72 flex items-center justify-center">
             {sentimentData.length === 0 ? (
@@ -226,24 +226,24 @@ export default function CampaignDetail() {
       </div>
 
       {/* Funnel/status row */}
-      <Card className="p-4 border-amber-100">
+      <Card className="p-4 border-indigo-100">
         <div className="font-serif text-lg mb-3 flex items-center gap-2">
-          <BarChart3 className="h-5 w-5 text-amber-700" /> Funnel
+          <BarChart3 className="h-5 w-5 text-indigo-700" /> Funnel
         </div>
         <div className="grid grid-cols-2 md:grid-cols-7 gap-2">
           <FunnelChip label="Pending" value={s.pending || 0} cls="bg-slate-100 text-slate-700" />
           <FunnelChip label="In-Progress" value={s.in_progress || 0} cls="bg-blue-100 text-blue-800" />
           <FunnelChip label="Connected" value={s.connected || 0} cls="bg-emerald-100 text-emerald-800" />
-          <FunnelChip label="No Answer" value={s.no_answer || 0} cls="bg-amber-100 text-amber-800" />
-          <FunnelChip label="Busy" value={s.busy || 0} cls="bg-amber-100 text-amber-800" />
+          <FunnelChip label="No Answer" value={s.no_answer || 0} cls="bg-indigo-100 text-indigo-800" />
+          <FunnelChip label="Busy" value={s.busy || 0} cls="bg-indigo-100 text-indigo-800" />
           <FunnelChip label="Failed" value={s.failed || 0} cls="bg-rose-100 text-rose-800" />
           <FunnelChip label="Total" value={s.total_targets || 0} cls="bg-slate-900 text-white" />
         </div>
       </Card>
 
       {/* Targets */}
-      <Card className="border-amber-100 bg-white overflow-hidden">
-        <div className="flex flex-wrap items-center gap-2 p-3 border-b border-amber-100 bg-amber-50/40">
+      <Card className="border-indigo-100 bg-white overflow-hidden">
+        <div className="flex flex-wrap items-center gap-2 p-3 border-b border-indigo-100 bg-indigo-50/40">
           <div className="font-serif text-lg flex-1">Call Queue & History</div>
           <Input data-testid="targets-search" value={search}
             placeholder="Search name / phone"
@@ -267,7 +267,7 @@ export default function CampaignDetail() {
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm" data-testid="targets-table">
-            <thead className="bg-amber-50/30 text-slate-700">
+            <thead className="bg-indigo-50/30 text-slate-700">
               <tr>
                 <th className="text-left px-4 py-2 font-semibold">Name / Phone</th>
                 <th className="text-left px-4 py-2 font-semibold">City</th>
@@ -283,7 +283,7 @@ export default function CampaignDetail() {
               {targets.items.length === 0 ? (
                 <tr><td colSpan={8} className="p-6 text-center text-slate-500">No targets match.</td></tr>
               ) : targets.items.map(t => (
-                <tr key={t.id} className="border-t border-amber-50 hover:bg-amber-50/30 cursor-pointer"
+                <tr key={t.id} className="border-t border-indigo-50 hover:bg-indigo-50/30 cursor-pointer"
                     onClick={() => setOpenTarget(t)}
                     data-testid={`target-row-${t.id}`}>
                   <td className="px-4 py-2">
@@ -308,7 +308,7 @@ export default function CampaignDetail() {
             </tbody>
           </table>
         </div>
-        <div className="flex items-center justify-between p-3 border-t border-amber-100 bg-amber-50/30 text-sm">
+        <div className="flex items-center justify-between p-3 border-t border-indigo-100 bg-indigo-50/30 text-sm">
           <div>Page {targets.page} · {targets.total} targets</div>
           <div className="flex gap-2">
             <Button size="sm" variant="outline" disabled={page <= 1}
@@ -331,7 +331,7 @@ export default function CampaignDetail() {
 
 function Tile({ label, value, testid }) {
   return (
-    <Card className="p-4 border-amber-100 bg-white" data-testid={testid}>
+    <Card className="p-4 border-indigo-100 bg-white" data-testid={testid}>
       <div className="text-xs text-slate-600 uppercase tracking-wider">{label}</div>
       <div className="text-2xl font-serif mt-1">{value}</div>
     </Card>
@@ -380,7 +380,7 @@ function CsvUploadDialog({ id, onSaved }) {
              className="block w-full text-sm" />
       <DialogFooter>
         <Button data-testid="csv-upload-btn" disabled={busy} onClick={upload}
-                className="bg-amber-700 hover:bg-amber-800">Upload</Button>
+                className="bg-indigo-700 hover:bg-indigo-800">Upload</Button>
       </DialogFooter>
     </DialogContent>
   );
@@ -425,7 +425,7 @@ function TargetDialog({ target, onClose }) {
         )}
         {target.lead_id && (
           <div className="text-sm">
-            <Link to={`/leads/${target.lead_id}`} className="text-amber-800 underline" data-testid="target-open-lead">
+            <Link to={`/leads/${target.lead_id}`} className="text-indigo-800 underline" data-testid="target-open-lead">
               Open linked lead →
             </Link>
           </div>
@@ -468,9 +468,9 @@ function AIDraftCard({ campaignName, segment }) {
   }
 
   return (
-    <Card className="border-amber-200 bg-amber-50/30 p-5">
+    <Card className="border-indigo-200 bg-indigo-50/30 p-5">
       <div className="flex items-center gap-2 mb-4">
-        <div className="h-8 w-8 rounded-lg bg-amber-700 flex items-center justify-center">
+        <div className="h-8 w-8 rounded-lg bg-indigo-700 flex items-center justify-center">
           <Sparkles className="h-4 w-4 text-white" />
         </div>
         <div>
@@ -482,7 +482,7 @@ function AIDraftCard({ campaignName, segment }) {
         <div>
           <div className="text-xs text-slate-500 mb-1">Tone</div>
           <Select value={tone} onValueChange={setTone}>
-            <SelectTrigger className="h-8 w-36 text-xs border-amber-200" data-testid="ai-draft-tone">
+            <SelectTrigger className="h-8 w-36 text-xs border-indigo-200" data-testid="ai-draft-tone">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -495,7 +495,7 @@ function AIDraftCard({ campaignName, segment }) {
         <div className="flex-1 min-w-40">
           <div className="text-xs text-slate-500 mb-1">Product focus (optional)</div>
           <input
-            className="w-full h-8 text-xs px-3 rounded-md border border-amber-200 bg-white focus:outline-none focus:border-amber-400"
+            className="w-full h-8 text-xs px-3 rounded-md border border-indigo-200 bg-white focus:outline-none focus:border-indigo-400"
             placeholder="e.g. Bridal necklace, Diamond rings…"
             value={productHint}
             onChange={e => setProductHint(e.target.value)}
@@ -505,7 +505,7 @@ function AIDraftCard({ campaignName, segment }) {
         <div className="flex items-end">
           <Button
             size="sm"
-            className="bg-amber-700 hover:bg-amber-800 h-8 gap-1.5"
+            className="bg-indigo-700 hover:bg-indigo-800 h-8 gap-1.5"
             onClick={generateDraft}
             disabled={loading}
             data-testid="ai-draft-btn"
@@ -516,12 +516,12 @@ function AIDraftCard({ campaignName, segment }) {
         </div>
       </div>
       {draft && (
-        <div className="rounded-xl border border-amber-200 bg-white p-4">
+        <div className="rounded-xl border border-indigo-200 bg-white p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-amber-700 uppercase tracking-wide">AI Draft</span>
+            <span className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">AI Draft</span>
             <button
               onClick={() => { navigator.clipboard.writeText(draft); toast.success("Copied!"); }}
-              className="text-xs text-slate-400 hover:text-amber-700 transition-colors"
+              className="text-xs text-slate-400 hover:text-indigo-700 transition-colors"
               data-testid="ai-draft-copy"
             >
               Copy

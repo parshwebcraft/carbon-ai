@@ -95,7 +95,7 @@ export default function Whatsapp() {
 
       <div className="grid lg:grid-cols-[280px_1fr_300px] gap-4 h-[72vh]">
         {/* Conversations list */}
-        <Card className="border-amber-100 bg-white overflow-hidden">
+        <Card className="border-indigo-100 bg-white overflow-hidden">
           <div className="overflow-y-auto h-full" data-testid="whatsapp-conversations">
             {conversations.length === 0
               ? <div className="p-5 text-center text-slate-500">No conversations.</div>
@@ -103,7 +103,7 @@ export default function Whatsapp() {
                 <button
                   key={c.lead_id}
                   data-testid={`convo-${c.lead_id}`}
-                  className={`w-full text-left px-4 py-3 border-b border-amber-50 hover:bg-amber-50/30 ${activeId === c.lead_id ? "bg-amber-50" : ""}`}
+                  className={`w-full text-left px-4 py-3 border-b border-indigo-50 hover:bg-indigo-50/30 ${activeId === c.lead_id ? "bg-indigo-50" : ""}`}
                   onClick={() => setActiveId(c.lead_id)}
                 >
                   <div className="flex items-center justify-between">
@@ -120,7 +120,7 @@ export default function Whatsapp() {
         </Card>
 
         {/* Message thread */}
-        <Card className="border-amber-100 bg-white overflow-hidden flex flex-col">
+        <Card className="border-indigo-100 bg-white overflow-hidden flex flex-col">
           {!active ? (
             <div className="flex-1 grid place-items-center text-slate-500">
               <div className="text-center">
@@ -130,14 +130,14 @@ export default function Whatsapp() {
             </div>
           ) : (
             <>
-              <div className="px-4 py-3 border-b border-amber-100 bg-amber-50/40 flex items-center justify-between">
+              <div className="px-4 py-3 border-b border-indigo-100 bg-indigo-50/40 flex items-center justify-between">
                 <div>
                   <div className="font-semibold text-slate-900">{active.lead_name}</div>
-                  <Link to={`/leads/${active.lead_id}`} className="text-xs text-amber-700 hover:underline"
+                  <Link to={`/leads/${active.lead_id}`} className="text-xs text-indigo-700 hover:underline"
                     data-testid="open-lead-from-whatsapp">View lead →</Link>
                 </div>
                 <Button size="sm" variant="outline"
-                  className="border-amber-200 text-amber-700 hover:bg-amber-50 gap-1.5"
+                  className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 gap-1.5"
                   onClick={analyseConversation}
                   disabled={analysing || msgs.length === 0}
                   data-testid="whatsapp-analyse-btn"
@@ -148,22 +148,22 @@ export default function Whatsapp() {
                   {analysing ? "Analysing…" : "AI Analysis"}
                 </Button>
               </div>
-              <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-[#FBF8F3]">
+              <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-[#F8FAFC]">
                 {msgs.map(m => (
                   <div key={m.id}
-                    className={`max-w-[80%] rounded-2xl px-3 py-2 ${m.direction === "out" ? "bg-emerald-50 ml-auto" : "bg-white border border-amber-100"}`}>
+                    className={`max-w-[80%] rounded-2xl px-3 py-2 ${m.direction === "out" ? "bg-emerald-50 ml-auto" : "bg-white border border-indigo-100"}`}>
                     <div className="text-sm text-slate-800 whitespace-pre-wrap">{m.message}</div>
                     <div className="text-[10px] text-slate-500 mt-1 text-right">{dateTime(m.created_at)}</div>
                   </div>
                 ))}
               </div>
-              <div className="border-t border-amber-100 p-3 flex flex-wrap gap-2">
+              <div className="border-t border-indigo-100 p-3 flex flex-wrap gap-2">
                 <Input data-testid="whatsapp-page-input" placeholder="Type a message…" value={text}
                   onChange={e => setText(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && send()}
                   className="flex-1 min-w-[140px]" />
                 <Button data-testid="whatsapp-page-ai" variant="outline" disabled={aiBusy} onClick={aiDraft}>
-                  <Sparkles className="h-4 w-4 mr-1.5 text-amber-700" /> AI
+                  <Sparkles className="h-4 w-4 mr-1.5 text-indigo-700" /> AI
                 </Button>
                 <Button data-testid="whatsapp-page-send" className="bg-emerald-600 hover:bg-emerald-700" onClick={send}>
                   <Send className="h-4 w-4" />
@@ -177,9 +177,9 @@ export default function Whatsapp() {
         </Card>
 
         {/* AI Copilot Analysis Panel */}
-        <Card className="border-amber-100 bg-white overflow-hidden flex flex-col">
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-amber-100 bg-amber-50/40">
-            <Brain className="h-4 w-4 text-amber-700" />
+        <Card className="border-indigo-100 bg-white overflow-hidden flex flex-col">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-indigo-100 bg-indigo-50/40">
+            <Brain className="h-4 w-4 text-indigo-700" />
             <h2 className="font-semibold text-slate-800 text-sm">AI Conversation Analysis</h2>
           </div>
           <div className="flex-1 overflow-y-auto p-4">
@@ -194,7 +194,7 @@ export default function Whatsapp() {
               <div className="h-full flex flex-col items-center justify-center text-slate-400 text-center gap-3">
                 <Sparkles className="h-8 w-8 text-slate-200" />
                 <p className="text-sm">Click AI Analysis to get insights on this conversation</p>
-                <Button size="sm" className="bg-amber-700 hover:bg-amber-800 mt-1"
+                <Button size="sm" className="bg-indigo-700 hover:bg-indigo-800 mt-1"
                   onClick={analyseConversation} disabled={msgs.length === 0}>
                   <Brain className="h-3.5 w-3.5 mr-1.5" /> Analyse Now
                 </Button>
@@ -203,7 +203,7 @@ export default function Whatsapp() {
 
             {analysing && (
               <div className="h-full flex flex-col items-center justify-center">
-                <Loader2 className="h-7 w-7 animate-spin text-amber-400 mb-2" />
+                <Loader2 className="h-7 w-7 animate-spin text-indigo-400 mb-2" />
                 <p className="text-sm text-slate-400">AI is analysing…</p>
               </div>
             )}
@@ -211,8 +211,8 @@ export default function Whatsapp() {
             {aiAnalysis && !analysing && (
               <div className="space-y-4">
                 {/* Summary */}
-                <div className="rounded-xl bg-amber-50 border border-amber-100 p-3">
-                  <p className="text-xs text-amber-700 font-semibold uppercase tracking-wide mb-1">Summary</p>
+                <div className="rounded-xl bg-indigo-50 border border-indigo-100 p-3">
+                  <p className="text-xs text-indigo-700 font-semibold uppercase tracking-wide mb-1">Summary</p>
                   <p className="text-sm text-slate-700">{aiAnalysis.summary}</p>
                 </div>
 
@@ -239,14 +239,14 @@ export default function Whatsapp() {
                       </span>
                       <span className={`text-xs font-bold ${
                         aiAnalysis.conversion_probability >= 70 ? "text-emerald-600" :
-                        aiAnalysis.conversion_probability >= 40 ? "text-amber-600" : "text-rose-500"
+                        aiAnalysis.conversion_probability >= 40 ? "text-indigo-600" : "text-rose-500"
                       }`}>{aiAnalysis.conversion_probability}%</span>
                     </div>
                     <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all ${
                           aiAnalysis.conversion_probability >= 70 ? "bg-emerald-500" :
-                          aiAnalysis.conversion_probability >= 40 ? "bg-amber-500" : "bg-rose-400"
+                          aiAnalysis.conversion_probability >= 40 ? "bg-indigo-500" : "bg-rose-400"
                         }`}
                         style={{ width: `${aiAnalysis.conversion_probability}%` }}
                       />
@@ -270,7 +270,7 @@ export default function Whatsapp() {
                   <p className="text-sm text-slate-700 font-medium">{aiAnalysis.next_action}</p>
                 </div>
 
-                <Button size="sm" variant="ghost" className="w-full text-xs text-amber-700 hover:bg-amber-50"
+                <Button size="sm" variant="ghost" className="w-full text-xs text-indigo-700 hover:bg-indigo-50"
                   onClick={analyseConversation}>
                   <RefreshCw className="h-3 w-3 mr-1.5" /> Re-Analyse
                 </Button>

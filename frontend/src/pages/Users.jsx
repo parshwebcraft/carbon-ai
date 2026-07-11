@@ -37,29 +37,29 @@ export default function Users() {
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button data-testid="new-user-btn" className="bg-amber-700 hover:bg-amber-800"><Plus className="h-4 w-4 mr-1.5" />Invite user</Button>
+            <Button data-testid="new-user-btn" className="bg-indigo-700 hover:bg-indigo-800"><Plus className="h-4 w-4 mr-1.5" />Invite user</Button>
           </DialogTrigger>
           <NewUserDialog onSaved={() => { setOpen(false); load(); }} />
         </Dialog>
       </div>
-      <Card className="border-amber-100 bg-white overflow-hidden">
+      <Card className="border-indigo-100 bg-white overflow-hidden">
         <table className="w-full text-sm" data-testid="users-table">
-          <thead className="bg-amber-50/60 text-slate-700">
+          <thead className="bg-indigo-50/60 text-slate-700">
             <tr><th className="text-left px-4 py-3">User</th><th className="text-left px-4 py-3">Role</th><th className="text-left px-4 py-3">Active</th><th className="text-left px-4 py-3">Created</th></tr>
           </thead>
           <tbody>
             {items.map(u => (
-              <tr key={u.id} className="border-t border-amber-50">
+              <tr key={u.id} className="border-t border-indigo-50">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-full bg-amber-50 text-amber-700 grid place-items-center"><UserCog className="h-4 w-4" /></div>
+                    <div className="h-9 w-9 rounded-full bg-indigo-50 text-indigo-700 grid place-items-center"><UserCog className="h-4 w-4" /></div>
                     <div>
                       <div className="font-medium">{u.name}</div>
                       <div className="text-xs text-slate-500">{u.email}</div>
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-3"><span className="text-xs uppercase tracking-wider text-amber-800">{u.role}</span></td>
+                <td className="px-4 py-3"><span className="text-xs uppercase tracking-wider text-indigo-800">{u.role}</span></td>
                 <td className="px-4 py-3">{u.is_active ? "Yes" : "No"}</td>
                 <td className="px-4 py-3 text-slate-500">{dateShort(u.created_at)}</td>
               </tr>
@@ -100,7 +100,7 @@ function NewUserDialog({ onSaved }) {
         </div>
       </div>
       <DialogFooter>
-        <Button data-testid="new-user-save" className="bg-amber-700 hover:bg-amber-800"
+        <Button data-testid="new-user-save" className="bg-indigo-700 hover:bg-indigo-800"
           disabled={saving || !form.name || !form.email || !form.password}
           onClick={save}>Save</Button>
       </DialogFooter>

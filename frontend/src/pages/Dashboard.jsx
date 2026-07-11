@@ -14,13 +14,13 @@ import {
   ChevronRight, Bot,
 } from "lucide-react";
 
-const STATUS_COLORS = ["#B45309", "#0EA5E9", "#6366F1", "#8B5CF6", "#0D9488",
+const STATUS_COLORS = ["#4F46E5", "#0EA5E9", "#6366F1", "#8B5CF6", "#0D9488",
   "#F97316", "#D946EF", "#059669", "#E11D48"];
 
 function ScorePill({ score }) {
   if (score == null) return null;
   const cls = score >= 75 ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-    : score >= 50 ? "bg-amber-100 text-amber-700 border-amber-200"
+    : score >= 50 ? "bg-indigo-100 text-indigo-700 border-indigo-200"
     : "bg-rose-100 text-rose-600 border-rose-200";
   return (
     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${cls}`}>
@@ -60,7 +60,7 @@ export default function Dashboard() {
   const sourceData = Object.entries(stats.lead_source_distribution).map(([name, value]) => ({ name, value }));
 
   const tiles = [
-    { label: "Total Leads",    value: stats.total_leads,           icon: Users,        accent: "text-amber-700 bg-amber-50" },
+    { label: "Total Leads",    value: stats.total_leads,           icon: Users,        accent: "text-indigo-700 bg-indigo-50" },
     { label: "Pipeline Value", value: inr(stats.pipeline_value),   icon: TrendingUp,   accent: "text-emerald-700 bg-emerald-50" },
     { label: "Won Revenue",    value: inr(stats.won_value),        icon: Trophy,       accent: "text-yellow-700 bg-yellow-50" },
     { label: "Open Tasks",     value: stats.open_tasks,            icon: CheckCircle2, accent: "text-sky-700 bg-sky-50" },
@@ -80,25 +80,25 @@ export default function Dashboard() {
           <p className="text-sm text-slate-600">Pipeline health for ParshWebCraft</p>
         </div>
         <div className="flex items-center gap-2 text-xs text-slate-400">
-          <Bot className="h-4 w-4 text-amber-700" />
-          <span className="text-amber-700 font-medium">AI Intelligence Active</span>
+          <Bot className="h-4 w-4 text-indigo-700" />
+          <span className="text-indigo-700 font-medium">AI Intelligence Active</span>
         </div>
       </div>
 
       {/* ── AI Morning Briefing ─────────────────────────────────────────── */}
-      <Card className="border-amber-200 bg-gradient-to-r from-amber-50 to-amber-50/30 p-5">
+      <Card className="border-indigo-200 bg-gradient-to-r from-indigo-50 to-indigo-50/30 p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3 flex-1 min-w-0">
-            <div className="h-9 w-9 rounded-xl bg-amber-700 flex items-center justify-center shrink-0 mt-0.5">
+            <div className="h-9 w-9 rounded-xl bg-indigo-700 flex items-center justify-center shrink-0 mt-0.5">
               <Sparkles className="h-4 w-4 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-xs font-semibold uppercase tracking-wide text-amber-700 mb-1">
+              <div className="text-xs font-semibold uppercase tracking-wide text-indigo-700 mb-1">
                 AI Morning Briefing
               </div>
               {briefingLoading ? (
                 <div className="flex items-center gap-2 text-sm text-slate-500">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin text-amber-600" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-600" />
                   Generating your briefing…
                 </div>
               ) : briefing ? (
@@ -113,7 +113,7 @@ export default function Dashboard() {
           <Button
             size="sm"
             variant="outline"
-            className="border-amber-300 text-amber-700 hover:bg-amber-100 shrink-0"
+            className="border-indigo-300 text-indigo-700 hover:bg-indigo-100 shrink-0"
             onClick={loadBriefing}
             disabled={briefingLoading}
             data-testid="ai-briefing-btn"
@@ -128,7 +128,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
         {tiles.map((t) => (
           <Card key={t.label} data-testid={`stat-${t.label.toLowerCase().replace(/\s+/g, "-")}`}
-            className="p-4 border-amber-100 bg-white">
+            className="p-4 border-indigo-100 bg-white">
             <div className={`inline-flex h-9 w-9 items-center justify-center rounded-lg ${t.accent}`}>
               <t.icon className="h-4 w-4" />
             </div>
@@ -142,7 +142,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
         {/* Hot Leads */}
-        <Card className="border-amber-100 bg-white p-5 lg:col-span-1">
+        <Card className="border-indigo-100 bg-white p-5 lg:col-span-1">
           <div className="flex items-center gap-2 mb-4">
             <Flame className="h-4 w-4 text-rose-500" />
             <h2 className="font-semibold text-slate-800 text-sm">Hot Leads</h2>
@@ -157,7 +157,7 @@ export default function Dashboard() {
             <div className="space-y-2">
               {hotLeads.map((lead) => (
                 <div key={lead.lead_id}
-                  className="flex items-center gap-3 p-2.5 rounded-lg border border-amber-50 hover:border-amber-200 hover:bg-amber-50/30 transition-colors">
+                  className="flex items-center gap-3 p-2.5 rounded-lg border border-indigo-50 hover:border-indigo-200 hover:bg-indigo-50/30 transition-colors">
                   <div className="h-7 w-7 rounded-full bg-rose-50 flex items-center justify-center shrink-0">
                     <Flame className="h-3.5 w-3.5 text-rose-500" />
                   </div>
@@ -181,7 +181,7 @@ export default function Dashboard() {
         <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
 
           {/* Conversion Forecast */}
-          <Card className="border-amber-100 bg-white p-5">
+          <Card className="border-indigo-100 bg-white p-5">
             <div className="flex items-center gap-2 mb-3">
               <Target className="h-4 w-4 text-emerald-600" />
               <h2 className="font-semibold text-slate-800 text-sm">Conversion Forecast</h2>
@@ -199,12 +199,12 @@ export default function Dashboard() {
           </Card>
 
           {/* Revenue at Risk */}
-          <Card className="border-amber-100 bg-white p-5">
+          <Card className="border-indigo-100 bg-white p-5">
             <div className="flex items-center gap-2 mb-3">
-              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              <AlertTriangle className="h-4 w-4 text-indigo-600" />
               <h2 className="font-semibold text-slate-800 text-sm">Revenue at Risk</h2>
             </div>
-            <div className="text-3xl font-bold text-amber-700 mb-1">{inr(revenueAtRisk)}</div>
+            <div className="text-3xl font-bold text-indigo-700 mb-1">{inr(revenueAtRisk)}</div>
             <p className="text-xs text-slate-500 mb-4">
               High-value pipeline (≥ ₹50k) with no activity in 14+ days
             </p>
@@ -212,7 +212,7 @@ export default function Dashboard() {
               revenueAtRisk > 500000
                 ? "bg-rose-50 text-rose-600 border border-rose-200"
                 : revenueAtRisk > 0
-                ? "bg-amber-50 text-amber-700 border border-amber-200"
+                ? "bg-indigo-50 text-indigo-700 border border-indigo-200"
                 : "bg-emerald-50 text-emerald-700 border border-emerald-200"
             }`}>
               {revenueAtRisk > 500000 ? "⚠️ High risk — act now" :
@@ -221,7 +221,7 @@ export default function Dashboard() {
           </Card>
 
           {/* Task Completion */}
-          <Card className="border-amber-100 bg-white p-5 sm:col-span-2">
+          <Card className="border-indigo-100 bg-white p-5 sm:col-span-2">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-sky-600" />
@@ -243,7 +243,7 @@ export default function Dashboard() {
 
       {/* ── Charts ─────────────────────────────────────────────────────── */}
       <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
-        <Card className="p-5 border-amber-100 bg-white">
+        <Card className="p-5 border-indigo-100 bg-white">
           <div className="flex items-center justify-between mb-2">
             <h2 className="font-serif text-lg">Lead Status Distribution</h2>
           </div>
@@ -262,16 +262,16 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        <Card className="p-5 border-amber-100 bg-white">
+        <Card className="p-5 border-indigo-100 bg-white">
           <h2 className="font-serif text-lg mb-2">Leads by Source</h2>
           <div className="h-64" style={{ minHeight: 240 }}>
             <ResponsiveContainer width="100%" height="100%" minHeight={240}>
               <BarChart data={sourceData}>
-                <CartesianGrid stroke="#F3E9D7" vertical={false} />
+                <CartesianGrid stroke="#EEF2F6" vertical={false} />
                 <XAxis dataKey="name" stroke="#78716C" fontSize={11} angle={-15} dy={10} height={50} />
                 <YAxis stroke="#78716C" fontSize={11} />
                 <Tooltip />
-                <Bar dataKey="value" fill="#B45309" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="value" fill="#4F46E5" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -279,11 +279,11 @@ export default function Dashboard() {
       </div>
 
       {/* ── Status Summary ──────────────────────────────────────────────── */}
-      <Card className="p-5 border-amber-100 bg-white">
+      <Card className="p-5 border-indigo-100 bg-white">
         <h2 className="font-serif text-lg mb-3">Quick status summary</h2>
         <div className="flex flex-wrap gap-2">
           {statusData.map((s) => (
-            <div key={s.name} className="flex items-center gap-2 rounded-lg bg-[#FBF8F3] border border-amber-100 px-3 py-1.5">
+            <div key={s.name} className="flex items-center gap-2 rounded-lg bg-[#F8FAFC] border border-indigo-100 px-3 py-1.5">
               <StatusBadge value={s.name} />
               <span className="text-sm font-semibold">{s.value}</span>
             </div>

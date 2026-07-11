@@ -286,7 +286,7 @@ export default function CrmDialer() {
           <button
             onClick={toggleMute}
             className={`p-2.5 rounded-full transition ${
-              isMuted ? "bg-amber-600 hover:bg-amber-700 text-white" : "bg-slate-800 hover:bg-slate-700 text-slate-300"
+              isMuted ? "bg-indigo-600 hover:bg-indigo-700 text-white" : "bg-slate-800 hover:bg-slate-700 text-slate-300"
             }`}
             title={isMuted ? "Unmute Microphone" : "Mute Microphone"}
           >

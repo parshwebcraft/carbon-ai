@@ -21,15 +21,15 @@ export default function AILogs() {
       </div>
       <div className="space-y-3" data-testid="ai-logs-list">
         {items.map(l => (
-          <Card key={l.id} className="p-4 border-amber-100 bg-white">
+          <Card key={l.id} className="p-4 border-indigo-100 bg-white">
             <div className="flex items-center gap-2 mb-1">
-              <Bot className="h-4 w-4 text-amber-700" />
-              <Link to={`/leads/${l.lead_id}`} className="text-sm font-semibold text-amber-800 hover:underline" data-testid={`ai-lead-link-${l.id}`}>Lead #{l.lead_id}</Link>
+              <Bot className="h-4 w-4 text-indigo-700" />
+              <Link to={`/leads/${l.lead_id}`} className="text-sm font-semibold text-indigo-800 hover:underline" data-testid={`ai-lead-link-${l.id}`}>Lead #{l.lead_id}</Link>
               <StatusBadge value={l.sentiment} />
               <span className="text-xs text-slate-400 ml-auto">{relative(l.created_at)}</span>
             </div>
             <p className="text-sm text-slate-700">{l.conversation_summary}</p>
-            <p className="text-xs mt-2 text-amber-800"><span className="font-semibold">Next action:</span> {l.next_action}</p>
+            <p className="text-xs mt-2 text-indigo-800"><span className="font-semibold">Next action:</span> {l.next_action}</p>
           </Card>
         ))}
       </div>

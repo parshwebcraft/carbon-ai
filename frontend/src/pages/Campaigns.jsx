@@ -25,7 +25,7 @@ const SOURCES = ["Website", "WhatsApp", "Instagram", "Facebook", "Walk-In", "Ref
 const statusStyle = (s) => ({
   draft: "bg-slate-100 text-slate-700",
   running: "bg-emerald-100 text-emerald-800",
-  paused: "bg-amber-100 text-amber-800",
+  paused: "bg-indigo-100 text-indigo-800",
   completed: "bg-blue-100 text-blue-800",
   cancelled: "bg-rose-100 text-rose-800",
 }[s] || "bg-slate-100 text-slate-700");
@@ -55,12 +55,12 @@ export default function Campaigns() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-serif text-3xl flex items-center gap-2">
-            <Sparkles className="h-7 w-7 text-amber-700" /> AI Calling Campaigns
+            <Sparkles className="h-7 w-7 text-indigo-700" /> AI Calling Campaigns
           </h1>
           <div className="text-sm text-slate-600">
             Bulk outbound AI dialer — provider:&nbsp;
             <Badge variant="outline" data-testid="campaigns-provider-badge"
-                   className={provider === "vapi" ? "border-emerald-300 text-emerald-800" : "border-amber-300 text-amber-800"}>
+                   className={provider === "vapi" ? "border-emerald-300 text-emerald-800" : "border-indigo-300 text-indigo-800"}>
               {provider === "vapi" ? "Vapi.ai (live)" : "MOCK"}
             </Badge>
           </div>
@@ -76,7 +76,7 @@ export default function Campaigns() {
           </Dialog>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button data-testid="campaigns-new-btn" className="bg-amber-700 hover:bg-amber-800">
+              <Button data-testid="campaigns-new-btn" className="bg-indigo-700 hover:bg-indigo-800">
                 <Plus className="h-4 w-4 mr-1.5" /> New Campaign
               </Button>
             </DialogTrigger>
@@ -85,10 +85,10 @@ export default function Campaigns() {
         </div>
       </div>
 
-      <Card className="border-amber-100 bg-white overflow-hidden">
+      <Card className="border-indigo-100 bg-white overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm" data-testid="campaigns-table">
-            <thead className="bg-amber-50/60 text-slate-700">
+            <thead className="bg-indigo-50/60 text-slate-700">
               <tr>
                 <th className="text-left px-4 py-3 font-semibold">Campaign</th>
                 <th className="text-left px-4 py-3 font-semibold">Status</th>
@@ -109,10 +109,10 @@ export default function Campaigns() {
                   No campaigns yet. Click <b>New Campaign</b> to start your first bulk AI dialer.
                 </td></tr>
               ) : items.map((c) => (
-                <tr key={c.id} className="border-t border-amber-50 hover:bg-amber-50/30">
+                <tr key={c.id} className="border-t border-indigo-50 hover:bg-indigo-50/30">
                   <td className="px-4 py-3">
                     <Link to={`/campaigns/${c.id}`} data-testid={`campaign-row-${c.id}`}
-                          className="font-medium text-slate-900 hover:text-amber-800">
+                          className="font-medium text-slate-900 hover:text-indigo-800">
                       {c.name}
                     </Link>
                     <div className="text-xs text-slate-500">{c.description || "—"}</div>
@@ -179,7 +179,7 @@ function CallingSettingsDialog({ onClose }) {
           value={s.end_time}
           onChange={(v) => setS({ ...s, end_time: v })} />
 
-        <div className="col-span-2 border-t pt-3 mt-1 font-serif text-sm font-semibold text-amber-900">
+        <div className="col-span-2 border-t pt-3 mt-1 font-serif text-sm font-semibold text-indigo-900">
           Vapi.ai Integration
         </div>
         <div className="col-span-2">
@@ -200,7 +200,7 @@ function CallingSettingsDialog({ onClose }) {
       </div>
       <DialogFooter>
         <Button data-testid="settings-save"
-          className="bg-amber-700 hover:bg-amber-800"
+          className="bg-indigo-700 hover:bg-indigo-800"
           disabled={saving} onClick={save}>Save</Button>
       </DialogFooter>
     </DialogContent>
@@ -326,7 +326,7 @@ function NewCampaignDialog({ onSaved }) {
         </div>
 
         {form.source_type !== "csv" && (
-          <Card className="p-4 border-amber-100">
+          <Card className="p-4 border-indigo-100">
             <div className="font-semibold text-sm mb-2">Lead Filters</div>
             <FilterChips label="Status" options={STATUSES}
               selected={form.filters.status}
@@ -359,7 +359,7 @@ function NewCampaignDialog({ onSaved }) {
         )}
 
         {form.source_type !== "leads" && (
-          <Card className="p-4 border-amber-100">
+          <Card className="p-4 border-indigo-100">
             <div className="font-semibold text-sm mb-2">CSV Targets</div>
             <Textarea data-testid="new-campaign-csv"
               placeholder="name,phone,city,notes,source&#10;Aanya Rao,+919812345678,Mumbai,Bridal inquiry,Walk-In"
@@ -373,7 +373,7 @@ function NewCampaignDialog({ onSaved }) {
           </Card>
         )}
 
-        <Card className="p-4 border-amber-100">
+        <Card className="p-4 border-indigo-100">
           <div className="font-semibold text-sm mb-2">Pacing Overrides (optional)</div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <TextField label="Daily limit" testid="new-campaign-daily-limit"
@@ -394,7 +394,7 @@ function NewCampaignDialog({ onSaved }) {
 
       <DialogFooter>
         <Button data-testid="new-campaign-save" onClick={save} disabled={saving}
-          className="bg-amber-700 hover:bg-amber-800">
+          className="bg-indigo-700 hover:bg-indigo-800">
           {saving ? "Saving…" : "Create Campaign"}
         </Button>
       </DialogFooter>
@@ -421,8 +421,8 @@ function FilterChips({ label, options, selected, onToggle, valueKey, labelKey })
               onClick={() => onToggle(v)}
               className={`px-2.5 py-1 rounded-full text-xs border transition ${
                 active
-                  ? "bg-amber-700 border-amber-700 text-white"
-                  : "bg-white border-slate-200 text-slate-700 hover:border-amber-400"
+                  ? "bg-indigo-700 border-indigo-700 text-white"
+                  : "bg-white border-slate-200 text-slate-700 hover:border-indigo-400"
               }`}>
               {l}
             </button>

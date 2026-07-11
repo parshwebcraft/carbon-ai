@@ -55,7 +55,7 @@ export default function Tasks() {
           </Select>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button data-testid="new-task-btn" className="bg-amber-700 hover:bg-amber-800">
+              <Button data-testid="new-task-btn" className="bg-indigo-700 hover:bg-indigo-800">
                 <Plus className="h-4 w-4 mr-1.5" /> New Task
               </Button>
             </DialogTrigger>
@@ -64,10 +64,10 @@ export default function Tasks() {
         </div>
       </div>
 
-      <Card className="border-amber-100 bg-white overflow-hidden">
+      <Card className="border-indigo-100 bg-white overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm" data-testid="tasks-table">
-            <thead className="bg-amber-50/60 text-slate-700">
+            <thead className="bg-indigo-50/60 text-slate-700">
               <tr>
                 <th className="text-left px-4 py-3">Title</th>
                 <th className="text-left px-4 py-3">Priority</th>
@@ -78,7 +78,7 @@ export default function Tasks() {
             <tbody>
               {items.length === 0 ? <tr><td colSpan={4} className="p-6 text-center text-slate-500">No tasks.</td></tr> :
                 items.map(t => (
-                  <tr key={t.id} className="border-t border-amber-50">
+                  <tr key={t.id} className="border-t border-indigo-50">
                     <td className="px-4 py-3">
                       <div className="font-medium">{t.title}</div>
                       {t.description && <div className="text-xs text-slate-500 mt-0.5">{t.description}</div>}
@@ -160,7 +160,7 @@ function NewTaskDialog({ users, onSaved }) {
         </div>
       </div>
       <DialogFooter>
-        <Button data-testid="new-task-save" className="bg-amber-700 hover:bg-amber-800"
+        <Button data-testid="new-task-save" className="bg-indigo-700 hover:bg-indigo-800"
           disabled={saving || !form.title.trim()} onClick={save}>Save Task</Button>
       </DialogFooter>
     </DialogContent>

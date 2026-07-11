@@ -32,11 +32,11 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FBF8F3] to-[#F3E9D7] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#F8FAFC] to-[#EEF2F6] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-amber-100 border border-amber-200">
-            <Briefcase className="h-7 w-7 text-amber-700" />
+          <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-indigo-100 border border-indigo-200">
+            <Briefcase className="h-7 w-7 text-indigo-700" />
           </div>
           <h1 className="mt-4 font-serif text-3xl text-slate-900">ParshWebCraft CRM</h1>
           <p className="mt-1 text-sm text-slate-600">Sign in to your agency sales workspace</p>
@@ -44,7 +44,7 @@ export default function Login() {
         <form
           data-testid="login-form"
           onSubmit={onSubmit}
-          className="bg-white rounded-2xl border border-amber-100 shadow-sm p-6 sm:p-8"
+          className="bg-white rounded-2xl border border-indigo-100 shadow-sm p-6 sm:p-8"
         >
           <div className="space-y-4">
             <div>
@@ -74,7 +74,7 @@ export default function Login() {
               data-testid="login-submit"
               type="submit"
               disabled={loading}
-              className="w-full bg-amber-700 hover:bg-amber-800 h-11 text-base"
+              className="w-full bg-indigo-700 hover:bg-indigo-800 h-11 text-base"
             >
               {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Sign in

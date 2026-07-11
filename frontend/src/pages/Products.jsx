@@ -44,14 +44,14 @@ export default function Products() {
         {canCreate && (
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button data-testid="new-product-btn" className="bg-amber-700 hover:bg-amber-800"><Plus className="h-4 w-4 mr-1.5" />Add Product</Button>
+              <Button data-testid="new-product-btn" className="bg-indigo-700 hover:bg-indigo-800"><Plus className="h-4 w-4 mr-1.5" />Add Product</Button>
             </DialogTrigger>
             <NewProductDialog onSaved={() => { setOpen(false); load(); }} />
           </Dialog>
         )}
       </div>
 
-      <Card className="p-4 border-amber-100 bg-white">
+      <Card className="p-4 border-indigo-100 bg-white">
         <div className="grid sm:grid-cols-3 gap-3">
           <Input data-testid="products-search" placeholder="Search…" value={search}
             onChange={e => setSearch(e.target.value)}
@@ -69,12 +69,12 @@ export default function Products() {
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" data-testid="products-grid">
         {items.map(p => (
-          <Card key={p.id} className="border-amber-100 bg-white p-4 hover:shadow-md transition-shadow">
+          <Card key={p.id} className="border-indigo-100 bg-white p-4 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
-              <div className="h-10 w-10 rounded-lg bg-amber-50 grid place-items-center text-amber-700">
+              <div className="h-10 w-10 rounded-lg bg-indigo-50 grid place-items-center text-indigo-700">
                 <Gem className="h-5 w-5" />
               </div>
-              <span className="text-[10px] uppercase tracking-wider text-amber-700">{p.metal_type}</span>
+              <span className="text-[10px] uppercase tracking-wider text-indigo-700">{p.metal_type}</span>
             </div>
             <div className="mt-3 font-serif text-lg">{p.product_name}</div>
             <div className="text-xs text-slate-500">{p.category} • {p.purity}</div>
@@ -86,7 +86,7 @@ export default function Products() {
               </div>
               <div className="text-right">
                 <div className="text-[10px] uppercase text-slate-500">Price</div>
-                <div className="font-semibold text-amber-800">{inr(p.price)}</div>
+                <div className="font-semibold text-indigo-800">{inr(p.price)}</div>
               </div>
             </div>
           </Card>
@@ -146,7 +146,7 @@ function NewProductDialog({ onSaved }) {
         <div><Label className="text-xs text-slate-600">Price (₹)</Label><Input data-testid="new-product-price" type="number" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} /></div>
       </div>
       <DialogFooter>
-        <Button data-testid="new-product-save" className="bg-amber-700 hover:bg-amber-800" disabled={saving || !form.product_name.trim()} onClick={save}>Save</Button>
+        <Button data-testid="new-product-save" className="bg-indigo-700 hover:bg-indigo-800" disabled={saving || !form.product_name.trim()} onClick={save}>Save</Button>
       </DialogFooter>
     </DialogContent>
   );

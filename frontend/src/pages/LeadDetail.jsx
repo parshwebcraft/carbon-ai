@@ -165,7 +165,7 @@ export default function LeadDetail() {
 
   return (
     <div className="space-y-5" data-testid="lead-detail-page">
-      <Link to="/leads" data-testid="back-to-leads" className="inline-flex items-center text-sm text-slate-600 hover:text-amber-800">
+      <Link to="/leads" data-testid="back-to-leads" className="inline-flex items-center text-sm text-slate-600 hover:text-indigo-800">
         <ArrowLeft className="h-4 w-4 mr-1" /> Back to Leads
       </Link>
 
@@ -181,12 +181,12 @@ export default function LeadDetail() {
         </div>
         <div className="text-right">
           <div className="text-xs text-slate-500 uppercase tracking-wider">Budget</div>
-          <div className="font-serif text-2xl text-amber-800">{inr(lead.budget)}</div>
+          <div className="font-serif text-2xl text-indigo-800">{inr(lead.budget)}</div>
         </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-4">
-        <Card className="p-5 border-amber-100 bg-white lg:col-span-2 space-y-3">
+        <Card className="p-5 border-indigo-100 bg-white lg:col-span-2 space-y-3">
           <h2 className="font-serif text-lg">Lead Information</h2>
           <div className="grid sm:grid-cols-2 gap-3">
             <Field label="Phone" value={lead.phone} onChange={v => setLead({ ...lead, phone: v })} testid="lead-phone" />
@@ -209,22 +209,22 @@ export default function LeadDetail() {
             </div>
           </div>
           <div className="flex justify-end gap-2">
-            <Button data-testid="save-lead-btn" className="bg-amber-700 hover:bg-amber-800" disabled={saving} onClick={saveLead}>
+            <Button data-testid="save-lead-btn" className="bg-indigo-700 hover:bg-indigo-800" disabled={saving} onClick={saveLead}>
               <Save className="h-4 w-4 mr-1.5" /> Save Changes
             </Button>
           </div>
         </Card>
 
-        <Card className="p-5 border-amber-100 bg-white space-y-3">
+        <Card className="p-5 border-indigo-100 bg-white space-y-3">
           <h2 className="font-serif text-lg">Quick actions</h2>
           <Button data-testid="quick-log-call" variant="outline" className="w-full justify-start" onClick={logCall}>
             <Phone className="h-4 w-4 mr-2" /> Log a Call
           </Button>
           <Button data-testid="ai-call-script" variant="outline" className="w-full justify-start"
             disabled={aiBusy} onClick={generateScript}>
-            <Sparkles className="h-4 w-4 mr-2 text-amber-700" /> AI Call Script
+            <Sparkles className="h-4 w-4 mr-2 text-indigo-700" /> AI Call Script
           </Button>
-          <Button data-testid="ai-voice-call" className="w-full justify-start bg-amber-700 hover:bg-amber-800"
+          <Button data-testid="ai-voice-call" className="w-full justify-start bg-indigo-700 hover:bg-indigo-800"
             disabled={aiBusy} onClick={placeAiCall}>
             <PhoneCall className="h-4 w-4 mr-2" /> Place AI Voice Call
           </Button>
@@ -247,7 +247,7 @@ export default function LeadDetail() {
       </div>
 
       <Tabs defaultValue="activities">
-        <TabsList className="bg-amber-50">
+        <TabsList className="bg-indigo-50">
           <TabsTrigger value="activities" data-testid="tab-activities">Activities</TabsTrigger>
           <TabsTrigger value="calls" data-testid="tab-calls">Calls ({calls.length})</TabsTrigger>
           <TabsTrigger value="whatsapp" data-testid="tab-whatsapp">WhatsApp ({msgs.length})</TabsTrigger>
@@ -256,14 +256,14 @@ export default function LeadDetail() {
         </TabsList>
 
         <TabsContent value="activities">
-          <Card className="p-4 border-amber-100 bg-white">
+          <Card className="p-4 border-indigo-100 bg-white">
             {acts.length === 0 ? <div className="text-sm text-slate-500 p-4">No activities yet.</div> :
-              <ol className="relative border-l border-amber-200 ml-2">
+              <ol className="relative border-l border-indigo-200 ml-2">
                 {acts.map(a => (
                   <li key={a.id} className="ml-4 py-3" data-testid={`activity-${a.id}`}>
-                    <div className="absolute -left-1.5 mt-1.5 h-3 w-3 rounded-full bg-amber-600" />
+                    <div className="absolute -left-1.5 mt-1.5 h-3 w-3 rounded-full bg-indigo-600" />
                     <div className="flex items-center gap-2">
-                      <span className="text-xs uppercase tracking-wider text-amber-700">{a.activity_type}</span>
+                      <span className="text-xs uppercase tracking-wider text-indigo-700">{a.activity_type}</span>
                       <span className="text-xs text-slate-400">{relative(a.created_at)}</span>
                     </div>
                     <p className="text-sm text-slate-700 mt-0.5">{a.description}</p>
@@ -274,9 +274,9 @@ export default function LeadDetail() {
         </TabsContent>
 
         <TabsContent value="calls">
-          <Card className="border-amber-100 bg-white overflow-hidden">
+          <Card className="border-indigo-100 bg-white overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-amber-50/60 text-slate-700">
+              <thead className="bg-indigo-50/60 text-slate-700">
                 <tr>
                   <th className="text-left px-4 py-2">Status</th>
                   <th className="text-left px-4 py-2">Duration</th>
@@ -288,19 +288,19 @@ export default function LeadDetail() {
               <tbody>
                 {calls.length === 0 ? <tr><td colSpan={5} className="p-4 text-center text-slate-500">No calls.</td></tr> :
                   calls.map(c => (
-                    <tr key={c.id} className="border-t border-amber-50">
+                    <tr key={c.id} className="border-t border-indigo-50">
                       <td className="px-4 py-2"><StatusBadge value={c.call_status} /></td>
                       <td className="px-4 py-2">{Math.round(c.call_duration / 60)}m {c.call_duration % 60}s</td>
                       <td className="px-4 py-2 text-slate-700">
                         {c.call_summary || "—"}
                         {c.sentiment && <span className="ml-2"><StatusBadge value={c.sentiment} /></span>}
-                        {c.vapi_call_id && <div className="text-[10px] text-amber-700 mt-0.5">Vapi: {c.vapi_call_id}</div>}
+                        {c.vapi_call_id && <div className="text-[10px] text-indigo-700 mt-0.5">Vapi: {c.vapi_call_id}</div>}
                       </td>
                       <td className="px-4 py-2 text-slate-500">{dateTime(c.created_at)}</td>
                       <td className="px-4 py-2 text-right">
                         <Button data-testid={`ai-insights-${c.id}`} size="sm" variant="outline" disabled={aiBusy}
                           onClick={() => aiInsightsForCall(c.id)}>
-                          <Sparkles className="h-3 w-3 mr-1 text-amber-700" /> AI
+                          <Sparkles className="h-3 w-3 mr-1 text-indigo-700" /> AI
                         </Button>
                       </td>
                     </tr>
@@ -311,11 +311,11 @@ export default function LeadDetail() {
         </TabsContent>
 
         <TabsContent value="whatsapp">
-          <Card className="p-4 border-amber-100 bg-white">
+          <Card className="p-4 border-indigo-100 bg-white">
             <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
               {msgs.length === 0 ? <div className="text-sm text-slate-500">No messages yet.</div> :
                 msgs.map(m => (
-                  <div key={m.id} className={`max-w-[80%] rounded-2xl px-3 py-2 ${m.direction === "out" ? "bg-emerald-50 ml-auto" : "bg-amber-50"}`}>
+                  <div key={m.id} className={`max-w-[80%] rounded-2xl px-3 py-2 ${m.direction === "out" ? "bg-emerald-50 ml-auto" : "bg-indigo-50"}`}>
                     <div className="text-sm text-slate-800 whitespace-pre-wrap">{m.message}</div>
                     <div className="text-[10px] text-slate-500 mt-1 text-right">{dateTime(m.created_at)}</div>
                   </div>
@@ -324,7 +324,7 @@ export default function LeadDetail() {
             <div className="mt-3 flex flex-wrap gap-2">
               <Input data-testid="whatsapp-input" placeholder="Type a reply…" value={newMsg} onChange={e => setNewMsg(e.target.value)} className="flex-1 min-w-[200px]" />
               <Button data-testid="whatsapp-ai-draft" variant="outline" disabled={aiBusy} onClick={aiDraftReply}>
-                <Sparkles className="h-4 w-4 mr-1.5 text-amber-700" /> AI Draft
+                <Sparkles className="h-4 w-4 mr-1.5 text-indigo-700" /> AI Draft
               </Button>
               <Button data-testid="whatsapp-send" onClick={sendMsg} className="bg-emerald-600 hover:bg-emerald-700">
                 <MessageCircle className="h-4 w-4 mr-1.5" /> Save
@@ -337,15 +337,15 @@ export default function LeadDetail() {
         </TabsContent>
 
         <TabsContent value="quotations">
-          <Card className="border-amber-100 bg-white overflow-hidden">
+          <Card className="border-indigo-100 bg-white overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-amber-50/60 text-slate-700">
+              <thead className="bg-indigo-50/60 text-slate-700">
                 <tr><th className="text-left px-4 py-2">#</th><th className="text-right px-4 py-2">Amount</th><th className="text-left px-4 py-2">Status</th><th className="text-left px-4 py-2">Created</th></tr>
               </thead>
               <tbody>
                 {quotes.length === 0 ? <tr><td colSpan={4} className="p-4 text-center text-slate-500">No quotations.</td></tr> :
                   quotes.map(q => (
-                    <tr key={q.id} className="border-t border-amber-50">
+                    <tr key={q.id} className="border-t border-indigo-50">
                       <td className="px-4 py-2 font-mono text-xs">{q.quotation_number}</td>
                       <td className="px-4 py-2 text-right font-medium">{inr(q.amount)}</td>
                       <td className="px-4 py-2"><StatusBadge value={q.status} /></td>
@@ -358,17 +358,17 @@ export default function LeadDetail() {
         </TabsContent>
 
         <TabsContent value="ai">
-          <Card className="p-4 border-amber-100 bg-white space-y-3">
+          <Card className="p-4 border-indigo-100 bg-white space-y-3">
             {aiLogs.length === 0 ? <div className="text-sm text-slate-500">No AI agent activity for this lead.</div> :
               aiLogs.map(l => (
-                <div key={l.id} className="rounded-lg border border-amber-100 bg-amber-50/30 p-3">
+                <div key={l.id} className="rounded-lg border border-indigo-100 bg-indigo-50/30 p-3">
                   <div className="flex items-center gap-2 mb-1">
-                    <Bot className="h-4 w-4 text-amber-700" />
+                    <Bot className="h-4 w-4 text-indigo-700" />
                     <StatusBadge value={l.sentiment} />
                     <span className="text-xs text-slate-500">{relative(l.created_at)}</span>
                   </div>
                   <p className="text-sm text-slate-700">{l.conversation_summary}</p>
-                  <p className="text-xs mt-1 text-amber-800"><span className="font-semibold">Next action:</span> {l.next_action}</p>
+                  <p className="text-xs mt-1 text-indigo-800"><span className="font-semibold">Next action:</span> {l.next_action}</p>
                 </div>
               ))}
           </Card>
@@ -379,15 +379,15 @@ export default function LeadDetail() {
         <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle className="font-serif flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-amber-700" /> AI Call Script (DeepSeek)
+              <Sparkles className="h-5 w-5 text-indigo-700" /> AI Call Script (DeepSeek)
             </DialogTitle>
           </DialogHeader>
-          <pre data-testid="ai-script-output" className="whitespace-pre-wrap text-sm bg-amber-50/40 border border-amber-100 rounded-lg p-4 max-h-[55vh] overflow-y-auto font-sans">
+          <pre data-testid="ai-script-output" className="whitespace-pre-wrap text-sm bg-indigo-50/40 border border-indigo-100 rounded-lg p-4 max-h-[55vh] overflow-y-auto font-sans">
 {script}
           </pre>
           <DialogFooter>
             <Button variant="outline" onClick={() => { navigator.clipboard?.writeText(script); toast.success("Copied"); }}>Copy</Button>
-            <Button className="bg-amber-700 hover:bg-amber-800" onClick={() => setScriptOpen(false)}>Close</Button>
+            <Button className="bg-indigo-700 hover:bg-indigo-800" onClick={() => setScriptOpen(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

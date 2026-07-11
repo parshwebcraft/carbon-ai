@@ -31,9 +31,9 @@ export default function Layout({ children }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#FBF8F3] text-slate-900">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900">
       {/* Mobile topbar */}
-      <header className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 h-14 bg-white border-b border-amber-100">
+      <header className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 h-14 bg-white border-b border-indigo-100">
         <button
           data-testid="mobile-menu-toggle"
           aria-label="Toggle menu"
@@ -43,7 +43,7 @@ export default function Layout({ children }) {
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
         <Link to="/" className="flex items-center gap-2 font-serif font-semibold text-lg">
-          <Briefcase className="h-5 w-5 text-amber-700" /> ParshWebCraft CRM
+          <Briefcase className="h-5 w-5 text-indigo-700" /> ParshWebCraft CRM
         </Link>
         <div className="w-9" />
       </header>
@@ -53,16 +53,16 @@ export default function Layout({ children }) {
         <aside
           data-testid="sidebar"
           className={cn(
-            "fixed md:sticky md:top-0 z-40 md:z-auto h-screen w-64 shrink-0 bg-white border-r border-amber-100 flex-col",
+            "fixed md:sticky md:top-0 z-40 md:z-auto h-screen w-64 shrink-0 bg-white border-r border-indigo-100 flex-col",
             "transition-transform duration-200",
             open ? "translate-x-0 flex" : "-translate-x-full md:translate-x-0 md:flex hidden md:flex"
           )}
         >
-          <div className="px-5 h-16 flex items-center gap-2 border-b border-amber-100">
-            <Briefcase className="h-6 w-6 text-amber-700" />
+          <div className="px-5 h-16 flex items-center gap-2 border-b border-indigo-100">
+            <Briefcase className="h-6 w-6 text-indigo-700" />
             <div className="leading-tight">
               <div className="font-serif font-semibold text-lg">ParshWebCraft CRM</div>
-              <div className="text-[11px] uppercase tracking-wider text-amber-700">Web Agency</div>
+              <div className="text-[11px] uppercase tracking-wider text-indigo-700">Web Agency</div>
             </div>
           </div>
           <nav className="flex-1 overflow-y-auto py-3">
@@ -77,8 +77,8 @@ export default function Layout({ children }) {
                   cn(
                     "flex items-center gap-3 px-5 py-2.5 text-sm font-medium",
                     isActive
-                      ? "bg-amber-50 text-amber-900 border-r-2 border-amber-700"
-                      : "text-slate-700 hover:bg-amber-50/60"
+                      ? "bg-indigo-50 text-indigo-900 border-r-2 border-indigo-700"
+                      : "text-slate-700 hover:bg-indigo-50/60"
                   )
                 }
               >
@@ -94,8 +94,8 @@ export default function Layout({ children }) {
                   cn(
                     "flex items-center gap-3 px-5 py-2.5 text-sm font-medium",
                     isActive
-                      ? "bg-amber-50 text-amber-900 border-r-2 border-amber-700"
-                      : "text-slate-700 hover:bg-amber-50/60"
+                      ? "bg-indigo-50 text-indigo-900 border-r-2 border-indigo-700"
+                      : "text-slate-700 hover:bg-indigo-50/60"
                   )
                 }
               >
@@ -103,10 +103,10 @@ export default function Layout({ children }) {
               </NavLink>
             )}
           </nav>
-          <div className="border-t border-amber-100 p-4">
+          <div className="border-t border-indigo-100 p-4">
             <div className="text-sm font-medium">{user?.name}</div>
             <div className="text-xs text-slate-500 truncate">{user?.email}</div>
-            <div className="mt-1 text-[11px] uppercase tracking-wider text-amber-700">{user?.role}</div>
+            <div className="mt-1 text-[11px] uppercase tracking-wider text-indigo-700">{user?.role}</div>
             <Button
               data-testid="logout-btn"
               variant="ghost"
@@ -130,7 +130,7 @@ export default function Layout({ children }) {
 
         {/* Main */}
         <main className="flex-1 min-w-0">
-          <div className="hidden md:flex items-center justify-end gap-3 h-14 px-6 bg-white border-b border-amber-100">
+          <div className="hidden md:flex items-center justify-end gap-3 h-14 px-6 bg-white border-b border-indigo-100">
             <Bell className="h-4 w-4 text-slate-500" />
             <span className="text-sm text-slate-700">
               Welcome, <span className="font-semibold">{user?.name?.split(" ")[0]}</span>

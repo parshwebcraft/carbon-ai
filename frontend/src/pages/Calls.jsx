@@ -20,7 +20,7 @@ const SENTIMENT_COLOR = {
 function ScoreBadge({ score }) {
   if (score == null) return null;
   const color = score >= 75 ? "text-emerald-600 bg-emerald-50 border-emerald-200"
-              : score >= 50 ? "text-amber-600 bg-amber-50 border-amber-200"
+              : score >= 50 ? "text-indigo-600 bg-indigo-50 border-indigo-200"
               : "text-rose-500 bg-rose-50 border-rose-200";
   return (
     <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${color}`}>
@@ -69,14 +69,14 @@ export default function Calls() {
 
       <div className="space-y-3">
         {loading && (
-          <Card className="border-amber-100 p-8 text-center text-slate-400">
-            <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-amber-400" />
+          <Card className="border-indigo-100 p-8 text-center text-slate-400">
+            <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-indigo-400" />
             Loading calls…
           </Card>
         )}
 
         {!loading && items.length === 0 && (
-          <Card className="border-amber-100 p-10 text-center text-slate-400">
+          <Card className="border-indigo-100 p-10 text-center text-slate-400">
             <Phone className="h-10 w-10 mx-auto mb-3 text-slate-200" />
             <p className="text-sm">No calls yet.</p>
           </Card>
@@ -87,12 +87,12 @@ export default function Calls() {
           const insight = insights[c.id];
 
           return (
-            <Card key={c.id} className="border-amber-100 bg-white overflow-hidden">
+            <Card key={c.id} className="border-indigo-100 bg-white overflow-hidden">
               {/* Main row */}
               <div className="flex items-start gap-4 p-4">
                 {/* Left: icon + status */}
-                <div className="h-10 w-10 rounded-xl bg-amber-50 flex items-center justify-center shrink-0 border border-amber-100">
-                  <Phone className="h-4.5 w-4.5 text-amber-700" />
+                <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0 border border-indigo-100">
+                  <Phone className="h-4.5 w-4.5 text-indigo-700" />
                 </div>
 
                 {/* Center: info */}
@@ -100,7 +100,7 @@ export default function Calls() {
                   <div className="flex flex-wrap items-center gap-2 mb-1">
                     {/* Lead name */}
                     <Link to={`/leads/${c.lead_id}`}
-                      className="font-semibold text-slate-800 hover:text-amber-700 transition-colors text-sm">
+                      className="font-semibold text-slate-800 hover:text-indigo-700 transition-colors text-sm">
                       {c.lead_name}
                     </Link>
                     <StatusBadge value={c.call_status} />
@@ -127,8 +127,8 @@ export default function Calls() {
 
                   {/* AI insight (if fetched) */}
                   {insight && (
-                    <div className="mt-3 rounded-xl bg-amber-50 border border-amber-100 p-3 space-y-1">
-                      <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide">AI Analysis</p>
+                    <div className="mt-3 rounded-xl bg-indigo-50 border border-indigo-100 p-3 space-y-1">
+                      <p className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">AI Analysis</p>
                       <p className="text-xs text-slate-700">{insight.summary}</p>
                       <p className="text-xs text-slate-500">
                         <span className="font-medium">Next action:</span> {insight.next_action}
@@ -140,7 +140,7 @@ export default function Calls() {
                 {/* Right: action buttons */}
                 <div className="flex flex-col gap-1.5 shrink-0">
                   <Button size="sm" variant="outline"
-                    className="h-8 text-xs border-amber-200 text-amber-700 hover:bg-amber-50 gap-1"
+                    className="h-8 text-xs border-indigo-200 text-indigo-700 hover:bg-indigo-50 gap-1"
                     onClick={() => analyseCall(c.id)}
                     disabled={analysing === c.id}
                     data-testid={`ai-analyse-call-${c.id}`}
@@ -166,7 +166,7 @@ export default function Calls() {
 
               {/* Expandable transcript */}
               {isExpanded && c.transcript && (
-                <div className="border-t border-amber-50 bg-slate-50 px-4 py-3">
+                <div className="border-t border-indigo-50 bg-slate-50 px-4 py-3">
                   <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Transcript</p>
                   <pre className="text-xs text-slate-700 whitespace-pre-wrap font-sans leading-relaxed max-h-60 overflow-y-auto">
                     {c.transcript}

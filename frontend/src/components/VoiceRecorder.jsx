@@ -308,7 +308,7 @@ export default function VoiceRecorder({
 
       {state === "requesting" && (
         <div className="flex items-center gap-2">
-          <Loader2 className="h-3.5 w-3.5 animate-spin text-amber-600" />
+          <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-600" />
           <span className="text-xs text-slate-500">Connecting…</span>
           <button
             onClick={() => { stopAll("user cancel"); setStateBoth("idle"); }}
@@ -343,7 +343,7 @@ export default function VoiceRecorder({
 
       {state === "stopping" && (
         <div className="flex items-center gap-2">
-          <Loader2 className="h-3.5 w-3.5 animate-spin text-amber-600" />
+          <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-600" />
           <span className="text-xs text-slate-500">Saving session…</span>
         </div>
       )}

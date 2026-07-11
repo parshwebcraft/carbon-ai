@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 
 const PALETTE = {
   // lead status
-  "New": "bg-amber-50 text-amber-800 border-amber-200",
+  "New": "bg-indigo-50 text-indigo-800 border-indigo-200",
   "Contacted": "bg-sky-50 text-sky-800 border-sky-200",
   "Follow Up": "bg-indigo-50 text-indigo-800 border-indigo-200",
   "Interested": "bg-violet-50 text-violet-800 border-violet-200",
@@ -17,11 +17,11 @@ const PALETTE = {
   "Completed": "bg-emerald-50 text-emerald-800 border-emerald-200",
   "Cancelled": "bg-zinc-100 text-zinc-700 border-zinc-200",
   "Missed": "bg-rose-50 text-rose-800 border-rose-200",
-  "No Answer": "bg-amber-50 text-amber-800 border-amber-200",
+  "No Answer": "bg-indigo-50 text-indigo-800 border-indigo-200",
   "Voicemail": "bg-cyan-50 text-cyan-800 border-cyan-200",
   // priority
   "High": "bg-rose-50 text-rose-800 border-rose-200",
-  "Medium": "bg-amber-50 text-amber-800 border-amber-200",
+  "Medium": "bg-indigo-50 text-indigo-800 border-indigo-200",
   "Low": "bg-slate-100 text-slate-700 border-slate-200",
   // quotation
   "Draft": "bg-zinc-100 text-zinc-700 border-zinc-200",

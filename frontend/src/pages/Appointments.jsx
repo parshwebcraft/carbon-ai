@@ -32,7 +32,7 @@ export default function Appointments() {
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button data-testid="new-appt-btn" className="bg-amber-700 hover:bg-amber-800"><Plus className="h-4 w-4 mr-1.5" />New Appointment</Button>
+            <Button data-testid="new-appt-btn" className="bg-indigo-700 hover:bg-indigo-800"><Plus className="h-4 w-4 mr-1.5" />New Appointment</Button>
           </DialogTrigger>
           <NewApptDialog onSaved={() => { setOpen(false); load(); }} />
         </Dialog>
@@ -40,15 +40,15 @@ export default function Appointments() {
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4" data-testid="appointments-grid">
         {items.map(a => (
-          <Card key={a.id} className="p-4 border-amber-100 bg-white">
+          <Card key={a.id} className="p-4 border-indigo-100 bg-white">
             <div className="flex items-start gap-3">
-              <div className="h-10 w-10 rounded-lg bg-amber-50 text-amber-700 grid place-items-center">
+              <div className="h-10 w-10 rounded-lg bg-indigo-50 text-indigo-700 grid place-items-center">
                 <CalendarCheck2 className="h-5 w-5" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-medium truncate">{a.customer_name}</div>
                 <div className="text-xs text-slate-500">{dateTime(a.appointment_date)}</div>
-                <div className="text-xs text-amber-700 mt-0.5">{a.showroom_visit ? "Showroom visit" : "Virtual consultation"}</div>
+                <div className="text-xs text-indigo-700 mt-0.5">{a.showroom_visit ? "Showroom visit" : "Virtual consultation"}</div>
                 {a.notes && <div className="text-sm text-slate-600 mt-2 line-clamp-3">{a.notes}</div>}
               </div>
             </div>
@@ -91,7 +91,7 @@ function NewApptDialog({ onSaved }) {
           <Input data-testid="new-appt-notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
       </div>
       <DialogFooter>
-        <Button data-testid="new-appt-save" className="bg-amber-700 hover:bg-amber-800" disabled={saving} onClick={save}>Save</Button>
+        <Button data-testid="new-appt-save" className="bg-indigo-700 hover:bg-indigo-800" disabled={saving} onClick={save}>Save</Button>
       </DialogFooter>
     </DialogContent>
   );

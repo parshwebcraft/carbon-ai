@@ -21,25 +21,25 @@ import VoiceRecorder from "@/components/VoiceRecorder";
 
 function scoreColor(score) {
   if (score >= 75) return "text-emerald-600";
-  if (score >= 50) return "text-amber-600";
+  if (score >= 50) return "text-indigo-600";
   return "text-rose-500";
 }
 
 function scoreBg(score) {
   if (score >= 75) return "bg-emerald-50 border-emerald-200";
-  if (score >= 50) return "bg-amber-50 border-amber-200";
+  if (score >= 50) return "bg-indigo-50 border-indigo-200";
   return "bg-rose-50 border-rose-200";
 }
 
 function scoreBarColor(score) {
   if (score >= 75) return "bg-emerald-500";
-  if (score >= 50) return "bg-amber-500";
+  if (score >= 50) return "bg-indigo-500";
   return "bg-rose-400";
 }
 
 const SUGGESTION_CONFIG = {
   next_question:      { icon: MessageSquare, label: "Next Question",          accent: "border-sky-200 bg-sky-50",      iconClass: "text-sky-600" },
-  product_suggestion: { icon: Package,       label: "Product Recommendation", accent: "border-amber-200 bg-amber-50",  iconClass: "text-amber-700" },
+  product_suggestion: { icon: Package,       label: "Product Recommendation", accent: "border-indigo-200 bg-indigo-50",  iconClass: "text-indigo-700" },
   offer_suggestion:   { icon: Tag,           label: "Offer Suggestion",       accent: "border-violet-200 bg-violet-50", iconClass: "text-violet-600" },
   objection_handling: { icon: ShieldAlert,   label: "Objection Handling",     accent: "border-rose-200 bg-rose-50",    iconClass: "text-rose-600" },
   closing_suggestion: { icon: Handshake,     label: "Deal Closing",           accent: "border-emerald-200 bg-emerald-50", iconClass: "text-emerald-600" },
@@ -98,7 +98,7 @@ function SuggestionCard({ type, content, confidence, onAction }) {
 
 function QualificationRow({ icon: Icon, label, value, highlight }) {
   return (
-    <div className="flex items-start gap-3 py-2 border-b border-amber-50 last:border-0">
+    <div className="flex items-start gap-3 py-2 border-b border-indigo-50 last:border-0">
       <div className={`mt-0.5 h-7 w-7 rounded-lg flex items-center justify-center shrink-0 ${highlight || "bg-slate-100"}`}>
         <Icon className="h-3.5 w-3.5 text-slate-600" />
       </div>
@@ -115,8 +115,8 @@ function TranscriptBubble({ id, speaker, content, createdAt, onToggleSpeaker }) 
   return (
     <div className={`flex gap-2 ${isCustomer ? "justify-start" : "justify-end"} mb-3 group`}>
       {isCustomer && (
-        <div className="h-7 w-7 rounded-full bg-amber-100 flex items-center justify-center shrink-0 mt-1">
-          <User className="h-3.5 w-3.5 text-amber-700" />
+        <div className="h-7 w-7 rounded-full bg-indigo-100 flex items-center justify-center shrink-0 mt-1">
+          <User className="h-3.5 w-3.5 text-indigo-700" />
         </div>
       )}
       <div className={`max-w-[80%] ${isCustomer ? "" : "order-first"}`}>
@@ -127,7 +127,7 @@ function TranscriptBubble({ id, speaker, content, createdAt, onToggleSpeaker }) 
           {onToggleSpeaker && id && (
             <button
               onClick={() => onToggleSpeaker(id)}
-              className="opacity-0 group-hover:opacity-100 text-amber-700 hover:text-amber-800 hover:underline cursor-pointer ml-2 transition-opacity font-semibold"
+              className="opacity-0 group-hover:opacity-100 text-indigo-700 hover:text-indigo-800 hover:underline cursor-pointer ml-2 transition-opacity font-semibold"
               title="Change speaker role (Customer <-> Salesperson)"
             >
               • Toggle Role
@@ -136,14 +136,14 @@ function TranscriptBubble({ id, speaker, content, createdAt, onToggleSpeaker }) 
         </div>
         <div className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm ${
           isCustomer
-            ? "bg-white border border-amber-100 text-slate-800 rounded-tl-sm"
-            : "bg-amber-700 text-white rounded-tr-sm"
+            ? "bg-white border border-indigo-100 text-slate-800 rounded-tl-sm"
+            : "bg-indigo-700 text-white rounded-tr-sm"
         }`}>
           {content}
         </div>
       </div>
       {!isCustomer && (
-        <div className="h-7 w-7 rounded-full bg-amber-700 flex items-center justify-center shrink-0 mt-1">
+        <div className="h-7 w-7 rounded-full bg-indigo-700 flex items-center justify-center shrink-0 mt-1">
           <Gem className="h-3.5 w-3.5 text-white" />
         </div>
       )}
@@ -153,14 +153,14 @@ function TranscriptBubble({ id, speaker, content, createdAt, onToggleSpeaker }) 
 
 function ProductCard({ product }) {
   return (
-    <div className="flex items-center gap-3 p-3 rounded-xl border border-amber-100 bg-white hover:border-amber-300 transition-colors">
-      <div className="h-9 w-9 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
-        <Gem className="h-4 w-4 text-amber-700" />
+    <div className="flex items-center gap-3 p-3 rounded-xl border border-indigo-100 bg-white hover:border-indigo-300 transition-colors">
+      <div className="h-9 w-9 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0">
+        <Gem className="h-4 w-4 text-indigo-700" />
       </div>
       <div className="min-w-0 flex-1">
         <div className="text-sm font-medium text-slate-800 truncate">{product.product_name}</div>
         <div className="text-xs text-slate-500">{product.metal_type} · {product.category}</div>
-        <div className="text-xs text-amber-700 font-semibold mt-0.5">{inr(product.price)}</div>
+        <div className="text-xs text-indigo-700 font-semibold mt-0.5">{inr(product.price)}</div>
       </div>
       <div className="text-[10px] text-slate-400 max-w-[90px] text-right leading-tight">{product.reason}</div>
     </div>
@@ -592,14 +592,14 @@ export default function Copilot() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-serif text-3xl text-slate-900 flex items-center gap-2">
-            <Bot className="h-7 w-7 text-amber-700" />
+            <Bot className="h-7 w-7 text-indigo-700" />
             AI Sales Copilot
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">
             Real-time AI assistance · Pipeline Intelligence · Follow-up Engine
           </p>
         </div>
-        <div className="flex gap-1 bg-amber-50 border border-amber-100 rounded-xl p-1">
+        <div className="flex gap-1 bg-indigo-50 border border-indigo-100 rounded-xl p-1">
           {[
             { id: "session",  Icon: MessageSquare, label: "Live Session" },
             { id: "pipeline", Icon: BarChart2,      label: "Pipeline" },
@@ -608,7 +608,7 @@ export default function Copilot() {
               key={id}
               onClick={() => { setPageTab(id); if (id === "pipeline" && pipeline.length === 0) loadPipeline(); }}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                pageTab === id ? "bg-amber-700 text-white shadow-sm" : "text-slate-600 hover:text-amber-700"
+                pageTab === id ? "bg-indigo-700 text-white shadow-sm" : "text-slate-600 hover:text-indigo-700"
               }`}
             >
               <Icon className="h-4 w-4" />
@@ -633,7 +633,7 @@ export default function Copilot() {
                 wsRef.current?.close();
               }}
             >
-              <SelectTrigger className="w-52 border-amber-200 bg-white" data-testid="lead-select">
+              <SelectTrigger className="w-52 border-indigo-200 bg-white" data-testid="lead-select">
                 <SelectValue placeholder="Select a lead…" />
               </SelectTrigger>
               <SelectContent>
@@ -645,7 +645,7 @@ export default function Copilot() {
 
             {!session || session.status === "ended" ? (
               <Button onClick={startSession} disabled={!selectedLead || sessionLoading}
-                className="bg-amber-700 hover:bg-amber-800 gap-1.5" data-testid="start-session-btn">
+                className="bg-indigo-700 hover:bg-indigo-800 gap-1.5" data-testid="start-session-btn">
                 {sessionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
                 Start Session
               </Button>
@@ -675,8 +675,8 @@ export default function Copilot() {
           </div>
 
           {!session && (
-            <Card className="p-10 border-amber-100 bg-white text-center">
-              <Bot className="h-12 w-12 text-amber-200 mx-auto mb-4" />
+            <Card className="p-10 border-indigo-100 bg-white text-center">
+              <Bot className="h-12 w-12 text-indigo-200 mx-auto mb-4" />
               <h2 className="font-serif text-xl text-slate-700 mb-2">Ready to assist your sales team</h2>
               <p className="text-sm text-slate-500 max-w-md mx-auto">
                 Select a lead and start a session. The AI will analyse the conversation in real-time
@@ -689,10 +689,10 @@ export default function Copilot() {
             <div className="grid grid-cols-1 xl:grid-cols-[1fr_1.1fr_340px] gap-4 items-start">
 
               {/* LEFT: Transcript */}
-              <Card className="border-amber-100 bg-white flex flex-col" style={{ height: "calc(100vh - 240px)", minHeight: 500 }}>
-                <div className="flex items-center justify-between px-5 py-3 border-b border-amber-100">
+              <Card className="border-indigo-100 bg-white flex flex-col" style={{ height: "calc(100vh - 240px)", minHeight: 500 }}>
+                <div className="flex items-center justify-between px-5 py-3 border-b border-indigo-100">
                   <h2 className="font-semibold text-slate-800 flex items-center gap-2 text-sm">
-                    <MessageSquare className="h-4 w-4 text-amber-700" /> Conversation Transcript
+                    <MessageSquare className="h-4 w-4 text-indigo-700" /> Conversation Transcript
                   </h2>
                   <span className="text-xs text-slate-400">{messages.length} messages</span>
                 </div>
@@ -718,7 +718,7 @@ export default function Copilot() {
                         </div>
                         <button
                           onClick={() => setSpeakerFlip(f => !f)}
-                          className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-amber-700 border border-slate-200 hover:border-amber-300 rounded-full px-2 py-0.5 transition-colors"
+                          className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-indigo-700 border border-slate-200 hover:border-indigo-300 rounded-full px-2 py-0.5 transition-colors"
                           title="Swap Customer / Salesperson if AI got them backwards"
                         >
                           🔄 Swap speakers
@@ -728,11 +728,11 @@ export default function Copilot() {
                       {/* Speaker legend */}
                       <div className="flex gap-3 mb-3 px-1">
                         <div className="flex items-center gap-1.5">
-                          <div className="h-2 w-2 rounded-full bg-amber-200" />
+                          <div className="h-2 w-2 rounded-full bg-indigo-200" />
                           <span className="text-[10px] text-slate-500">Customer</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <div className="h-2 w-2 rounded-full bg-amber-700" />
+                          <div className="h-2 w-2 rounded-full bg-indigo-700" />
                           <span className="text-[10px] text-slate-500">Salesperson</span>
                         </div>
                         <span className="text-[10px] text-slate-400 ml-auto italic">Deepgram auto-detect</span>
@@ -746,15 +746,15 @@ export default function Copilot() {
                           return (
                             <div key={i} className={`flex gap-2 ${isCustomer ? "justify-start" : "justify-end"}`}>
                               {isCustomer && (
-                                <div className="h-6 w-6 rounded-full bg-amber-100 flex items-center justify-center shrink-0 mt-1">
-                                  <User className="h-3 w-3 text-amber-700" />
+                                <div className="h-6 w-6 rounded-full bg-indigo-100 flex items-center justify-center shrink-0 mt-1">
+                                  <User className="h-3 w-3 text-indigo-700" />
                                 </div>
                               )}
                               <div className="max-w-[78%]">
                                 {/* Show speaker name only on first or after speaker change */}
                                 {(i === 0 || resolveLabel(voiceTranscript[i-1]?.speaker, speakerFlip) !== label) && (
                                   <div className={`text-[10px] font-semibold mb-0.5 ${
-                                    isCustomer ? "text-amber-700 ml-1" : "text-slate-500 mr-1 text-right"
+                                    isCustomer ? "text-indigo-700 ml-1" : "text-slate-500 mr-1 text-right"
                                   }`}>
                                     {label || "Unknown"}
                                   </div>
@@ -763,8 +763,8 @@ export default function Copilot() {
                                   !line.isFinal ? "opacity-50" : "opacity-100"
                                 } ${
                                   isCustomer
-                                    ? "bg-white border border-amber-100 text-slate-800 rounded-tl-sm"
-                                    : "bg-amber-700 text-white rounded-tr-sm"
+                                    ? "bg-white border border-indigo-100 text-slate-800 rounded-tl-sm"
+                                    : "bg-indigo-700 text-white rounded-tr-sm"
                                 }`}>
                                   {line.text}
                                   {!line.isFinal && (
@@ -773,7 +773,7 @@ export default function Copilot() {
                                 </div>
                               </div>
                               {!isCustomer && (
-                                <div className="h-6 w-6 rounded-full bg-amber-700 flex items-center justify-center shrink-0 mt-1">
+                                <div className="h-6 w-6 rounded-full bg-indigo-700 flex items-center justify-center shrink-0 mt-1">
                                   <Gem className="h-3 w-3 text-white" />
                                 </div>
                               )}
@@ -796,16 +796,16 @@ export default function Copilot() {
                     />
                   ))}
                   {aiLoading && (
-                    <div className="flex items-center gap-2 text-xs text-amber-600 pl-2">
+                    <div className="flex items-center gap-2 text-xs text-indigo-600 pl-2">
                       <Loader2 className="h-3.5 w-3.5 animate-spin" /> AI is analysing…
                     </div>
                   )}
                   <div ref={transcriptEndRef} />
                 </div>
-                <div className="border-t border-amber-100 p-3 space-y-2">
+                <div className="border-t border-indigo-100 p-3 space-y-2">
                   <div className="flex gap-2">
                     <Select value={speaker} onValueChange={setSpeaker}>
-                      <SelectTrigger className="w-36 h-9 text-xs border-amber-200" data-testid="speaker-select">
+                      <SelectTrigger className="w-36 h-9 text-xs border-indigo-200" data-testid="speaker-select">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -815,10 +815,10 @@ export default function Copilot() {
                     </Select>
                     <Input ref={inputRef} value={msgInput} onChange={(e) => setMsgInput(e.target.value)}
                       onKeyDown={handleKeyDown} placeholder="Type message and press Enter…"
-                      className="flex-1 h-9 text-sm border-amber-200 focus:border-amber-400"
+                      className="flex-1 h-9 text-sm border-indigo-200 focus:border-indigo-400"
                       disabled={session.status === "ended"} data-testid="message-input" />
                     <Button onClick={sendMessage} disabled={!msgInput.trim() || session.status === "ended"}
-                      className="h-9 w-9 p-0 bg-amber-700 hover:bg-amber-800 shrink-0" data-testid="send-message-btn">
+                      className="h-9 w-9 p-0 bg-indigo-700 hover:bg-indigo-800 shrink-0" data-testid="send-message-btn">
                       <Send className="h-4 w-4" />
                     </Button>
                   </div>
@@ -827,8 +827,8 @@ export default function Copilot() {
               </Card>
 
               {/* CENTER: AI Suggestions */}
-              <Card className="border-amber-100 bg-white flex flex-col" style={{ height: "calc(100vh - 240px)", minHeight: 500 }}>
-                <div className="flex border-b border-amber-100">
+              <Card className="border-indigo-100 bg-white flex flex-col" style={{ height: "calc(100vh - 240px)", minHeight: 500 }}>
+                <div className="flex border-b border-indigo-100">
                   {[
                     { id: "suggestions", Icon: Sparkles, label: "AI Suggestions" },
                     { id: "products",    Icon: Package,  label: "Products" },
@@ -843,7 +843,7 @@ export default function Copilot() {
                         if (id === "analytics") loadAnalytics();
                       }}
                       className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-medium transition-colors ${
-                        activeTab === id ? "text-amber-700 border-b-2 border-amber-700 bg-amber-50/50" : "text-slate-500 hover:text-slate-700"
+                        activeTab === id ? "text-indigo-700 border-b-2 border-indigo-700 bg-indigo-50/50" : "text-slate-500 hover:text-slate-700"
                       }`}>
                       <Icon className="h-3.5 w-3.5" />{label}
                     </button>
@@ -856,7 +856,7 @@ export default function Copilot() {
                         <span className="text-xs text-slate-400">
                           {hasSuggestions ? "AI suggestions based on transcript" : "Send a message to generate suggestions"}
                         </span>
-                        <Button variant="ghost" size="sm" className="h-7 text-xs text-amber-700 hover:bg-amber-50"
+                        <Button variant="ghost" size="sm" className="h-7 text-xs text-indigo-700 hover:bg-indigo-50"
                           onClick={triggerAnalysis} disabled={aiLoading || messages.length === 0}
                           data-testid="refresh-suggestions-btn">
                           <RefreshCw className={`h-3 w-3 mr-1 ${aiLoading ? "animate-spin" : ""}`} /> Refresh
@@ -870,7 +870,7 @@ export default function Copilot() {
                       )}
                       {aiLoading && !hasSuggestions && (
                         <div className="py-12 text-center">
-                          <Loader2 className="h-8 w-8 mx-auto mb-3 text-amber-400 animate-spin" />
+                          <Loader2 className="h-8 w-8 mx-auto mb-3 text-indigo-400 animate-spin" />
                           <p className="text-sm text-slate-400">Generating suggestions…</p>
                         </div>
                       )}
@@ -896,7 +896,7 @@ export default function Copilot() {
                         <div className="py-12 text-center text-slate-400">
                           <Package className="h-8 w-8 mx-auto mb-3 text-slate-200" />
                           <p className="text-sm">No products matched yet</p>
-                          <Button variant="outline" size="sm" className="mt-3 border-amber-200 text-amber-700" onClick={loadProducts}>
+                          <Button variant="outline" size="sm" className="mt-3 border-indigo-200 text-indigo-700" onClick={loadProducts}>
                             Load Recommendations
                           </Button>
                         </div>
@@ -907,18 +907,18 @@ export default function Copilot() {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-slate-400">AI summary of past interactions</span>
-                        <Button variant="ghost" size="sm" className="h-7 text-xs text-amber-700 hover:bg-amber-50"
+                        <Button variant="ghost" size="sm" className="h-7 text-xs text-indigo-700 hover:bg-indigo-50"
                           onClick={loadHistorySummary} disabled={historyLoading}>
                           <RefreshCw className={`h-3 w-3 mr-1 ${historyLoading ? "animate-spin" : ""}`} /> Refresh
                         </Button>
                       </div>
                       {historyLoading ? (
-                        <div className="py-10 text-center"><Loader2 className="h-7 w-7 mx-auto animate-spin text-amber-400" /></div>
+                        <div className="py-10 text-center"><Loader2 className="h-7 w-7 mx-auto animate-spin text-indigo-400" /></div>
                       ) : historySummary ? (
-                        <div className="rounded-xl border border-amber-100 bg-amber-50 p-4">
+                        <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-4">
                           <div className="flex items-center gap-2 mb-3">
-                            <Star className="h-4 w-4 text-amber-700" />
-                            <span className="text-xs font-semibold uppercase tracking-wide text-amber-700">AI Summary</span>
+                            <Star className="h-4 w-4 text-indigo-700" />
+                            <span className="text-xs font-semibold uppercase tracking-wide text-indigo-700">AI Summary</span>
                           </div>
                           <div className="text-sm text-slate-700 whitespace-pre-line leading-relaxed">{historySummary}</div>
                         </div>
@@ -931,7 +931,7 @@ export default function Copilot() {
                       {selectedLead && (
                         <div className="mt-4 space-y-2">
                           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Lead Profile</div>
-                          <div className="rounded-xl border border-amber-100 bg-white p-4 space-y-2">
+                          <div className="rounded-xl border border-indigo-100 bg-white p-4 space-y-2">
                             {[["Name", selectedLead.name], ["Status", selectedLead.status],
                               ["Budget", selectedLead.budget ? inr(selectedLead.budget) : "Unknown"],
                               ["Interest", selectedLead.customer_type || "Unknown"],
@@ -950,7 +950,7 @@ export default function Copilot() {
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-slate-400">Copilot Telemetry &amp; Performance</span>
-                        <Button variant="ghost" size="sm" className="h-7 text-xs text-amber-700 hover:bg-amber-50"
+                        <Button variant="ghost" size="sm" className="h-7 text-xs text-indigo-700 hover:bg-indigo-50"
                           onClick={loadAnalytics} disabled={analyticsLoading}>
                           <RefreshCw className={`h-3 w-3 mr-1 ${analyticsLoading ? "animate-spin" : ""}`} /> Refresh
                         </Button>
@@ -958,7 +958,7 @@ export default function Copilot() {
 
                       {analyticsLoading ? (
                         <div className="py-12 text-center">
-                          <Loader2 className="h-7 w-7 mx-auto animate-spin text-amber-400" />
+                          <Loader2 className="h-7 w-7 mx-auto animate-spin text-indigo-400" />
                         </div>
                       ) : analytics ? (
                         <div className="space-y-4">
@@ -969,19 +969,19 @@ export default function Copilot() {
                               <div className="text-2xl font-serif font-bold text-emerald-700 mt-1">{analytics.acceptance_rate}%</div>
                               <div className="text-[10px] text-slate-400 mt-1">Accept vs Reject</div>
                             </div>
-                            <div className="rounded-xl border border-amber-100 bg-amber-50/20 p-4 text-center">
-                              <div className="text-[10px] uppercase font-bold text-amber-800 tracking-wider">Total Sessions</div>
-                              <div className="text-2xl font-serif font-bold text-amber-700 mt-1">{analytics.total_sessions}</div>
+                            <div className="rounded-xl border border-indigo-100 bg-indigo-50/20 p-4 text-center">
+                              <div className="text-[10px] uppercase font-bold text-indigo-800 tracking-wider">Total Sessions</div>
+                              <div className="text-2xl font-serif font-bold text-indigo-700 mt-1">{analytics.total_sessions}</div>
                               <div className="text-[10px] text-slate-400 mt-1">Logged telemetry</div>
                             </div>
                           </div>
 
                           {/* Feedback Breakdown */}
-                          <div className="rounded-xl border border-amber-100 bg-white p-4 space-y-2">
+                          <div className="rounded-xl border border-indigo-100 bg-white p-4 space-y-2">
                             <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Feedback Logs</div>
                             {[
                               { label: "Accepted Suggestions", count: analytics.feedback_breakdown?.accepted, color: "bg-emerald-500" },
-                              { label: "Edited Suggestions", count: analytics.feedback_breakdown?.edited, color: "bg-amber-500" },
+                              { label: "Edited Suggestions", count: analytics.feedback_breakdown?.edited, color: "bg-indigo-500" },
                               { label: "Rejected Suggestions", count: analytics.feedback_breakdown?.rejected, color: "bg-rose-400" }
                             ].map((item) => {
                               const total = Object.values(analytics.feedback_breakdown || {}).reduce((a, b) => a + b, 0) || 1;
@@ -1001,15 +1001,15 @@ export default function Copilot() {
                           </div>
 
                           {/* Common Intents */}
-                          <div className="rounded-xl border border-amber-100 bg-white p-4 space-y-3">
+                          <div className="rounded-xl border border-indigo-100 bg-white p-4 space-y-3">
                             <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Top Classified Intents</div>
                             {analytics.common_intents?.length === 0 ? (
                               <div className="text-xs text-slate-400 text-center py-2">No classified intents yet.</div>
                             ) : (
                               analytics.common_intents?.map((item, i) => (
-                                <div key={i} className="flex justify-between items-center text-xs text-slate-600 border-b border-amber-50 pb-1.5 last:border-0">
+                                <div key={i} className="flex justify-between items-center text-xs text-slate-600 border-b border-indigo-50 pb-1.5 last:border-0">
                                   <span className="font-medium text-slate-800">{item.intent}</span>
-                                  <span className="bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-bold">{item.count} times</span>
+                                  <span className="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full font-bold">{item.count} times</span>
                                 </div>
                               ))
                             )}
@@ -1027,9 +1027,9 @@ export default function Copilot() {
               </Card>
 
               {/* RIGHT: Lead Qualification */}
-              <Card className="border-amber-100 bg-white" style={{ height: "calc(100vh - 240px)", minHeight: 500 }}>
-                <div className="flex items-center gap-2 px-5 py-3 border-b border-amber-100">
-                  <Target className="h-4 w-4 text-amber-700" />
+              <Card className="border-indigo-100 bg-white" style={{ height: "calc(100vh - 240px)", minHeight: 500 }}>
+                <div className="flex items-center gap-2 px-5 py-3 border-b border-indigo-100">
+                  <Target className="h-4 w-4 text-indigo-700" />
                   <h2 className="font-semibold text-slate-800 text-sm">Lead Qualification</h2>
                 </div>
                 <div className="p-4 overflow-y-auto h-[calc(100%-52px)]">
@@ -1054,11 +1054,11 @@ export default function Copilot() {
                         : "Start conversation to score lead"}
                     </p>
                   </div>
-                  <div className="space-y-0 divide-y divide-amber-50">
+                  <div className="space-y-0 divide-y divide-indigo-50">
                     <QualificationRow icon={Lightbulb} label="Intent"           value={insight?.intent}         highlight="bg-sky-50" />
                     <QualificationRow icon={Wallet}    label="Budget"           value={insight?.budget}         highlight="bg-emerald-50" />
                     <QualificationRow icon={Clock}     label="Purchase Timeline" value={insight?.timeline}     highlight="bg-violet-50" />
-                    <QualificationRow icon={User}      label="Decision Maker"   value={insight?.decision_maker} highlight="bg-amber-50" />
+                    <QualificationRow icon={User}      label="Decision Maker"   value={insight?.decision_maker} highlight="bg-indigo-50" />
                   </div>
                   <div className="mt-5">
                     <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">BANT Qualification</div>
@@ -1109,16 +1109,16 @@ export default function Copilot() {
               <span className="text-rose-500 font-medium flex items-center gap-1">
                 <Flame className="h-3.5 w-3.5" /> {pipeline.filter((l) => l.is_hot).length} hot
               </span>
-              <span className="text-amber-600 font-medium">
+              <span className="text-indigo-600 font-medium">
                 {pipeline.filter((l) => l.lead_score >= 50 && l.lead_score < 75).length} warm
               </span>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="border-amber-200 text-amber-700 hover:bg-amber-50"
+              <Button variant="outline" size="sm" className="border-indigo-200 text-indigo-700 hover:bg-indigo-50"
                 onClick={loadPipeline} disabled={pipelineLoading}>
                 <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${pipelineLoading ? "animate-spin" : ""}`} /> Refresh
               </Button>
-              <Button size="sm" className="bg-amber-700 hover:bg-amber-800 gap-1.5"
+              <Button size="sm" className="bg-indigo-700 hover:bg-indigo-800 gap-1.5"
                 onClick={runBatchScore} disabled={batchScoring} data-testid="batch-score-btn">
                 {batchScoring ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />}
                 Batch Score All
@@ -1127,10 +1127,10 @@ export default function Copilot() {
           </div>
 
           {/* Ranked leads table */}
-          <Card className="border-amber-100 bg-white overflow-hidden">
+          <Card className="border-indigo-100 bg-white overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm" data-testid="pipeline-table">
-                <thead className="bg-amber-50/60 text-slate-600 text-xs uppercase tracking-wide">
+                <thead className="bg-indigo-50/60 text-slate-600 text-xs uppercase tracking-wide">
                   <tr>
                     <th className="text-left px-4 py-3">Lead</th>
                     <th className="text-left px-4 py-3">Status</th>
@@ -1144,7 +1144,7 @@ export default function Copilot() {
                 <tbody>
                   {pipelineLoading ? (
                     <tr><td colSpan={7} className="p-8 text-center text-slate-400">
-                      <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-amber-400" />
+                      <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-indigo-400" />
                       Loading pipeline…
                     </td></tr>
                   ) : pipeline.length === 0 ? (
@@ -1153,7 +1153,7 @@ export default function Copilot() {
                       Click Refresh to load pipeline
                     </td></tr>
                   ) : pipeline.map((lead) => (
-                    <tr key={lead.lead_id} className="border-t border-amber-50 hover:bg-amber-50/30 transition-colors">
+                    <tr key={lead.lead_id} className="border-t border-indigo-50 hover:bg-indigo-50/30 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           {lead.is_hot && <Flame className="h-3.5 w-3.5 text-rose-500 shrink-0" />}
@@ -1164,7 +1164,7 @@ export default function Copilot() {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 font-medium">
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 font-medium">
                           {lead.status}
                         </span>
                       </td>
@@ -1173,12 +1173,12 @@ export default function Copilot() {
                           <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
                             <div className={`h-full rounded-full transition-all ${
                               lead.lead_score >= 75 ? "bg-emerald-500" :
-                              lead.lead_score >= 50 ? "bg-amber-500" : "bg-rose-400"
+                              lead.lead_score >= 50 ? "bg-indigo-500" : "bg-rose-400"
                             }`} style={{ width: `${lead.lead_score}%` }} />
                           </div>
                           <span className={`text-xs font-bold w-8 ${
                             lead.lead_score >= 75 ? "text-emerald-600" :
-                            lead.lead_score >= 50 ? "text-amber-600" : "text-rose-500"
+                            lead.lead_score >= 50 ? "text-indigo-600" : "text-rose-500"
                           }`}>{lead.lead_score}%</span>
                         </div>
                         {!lead.has_insight && <div className="text-[10px] text-slate-400 mt-0.5">Not scored yet</div>}
@@ -1187,7 +1187,7 @@ export default function Copilot() {
                       <td className="px-4 py-3 text-xs text-slate-600">{lead.budget ? inr(lead.budget) : "—"}</td>
                       <td className="px-4 py-3 text-xs text-slate-600">{lead.timeline}</td>
                       <td className="px-4 py-3">
-                        <Button size="sm" variant="ghost" className="h-7 text-xs text-amber-700 hover:bg-amber-50"
+                        <Button size="sm" variant="ghost" className="h-7 text-xs text-indigo-700 hover:bg-indigo-50"
                           onClick={() => {
                             setSelectedLead({ id: lead.lead_id, name: lead.name, status: lead.status,
                               customer_type: lead.customer_type, budget: lead.budget, city: lead.city });
@@ -1207,11 +1207,11 @@ export default function Copilot() {
           <div>
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-semibold text-slate-800 flex items-center gap-2">
-                <ListChecks className="h-4 w-4 text-amber-700" />
+                <ListChecks className="h-4 w-4 text-indigo-700" />
                 AI Follow-Up Engine
                 <span className="text-xs font-normal text-slate-400">(no activity in 7+ days)</span>
               </h2>
-              <Button size="sm" variant="outline" className="border-amber-200 text-amber-700 hover:bg-amber-50"
+              <Button size="sm" variant="outline" className="border-indigo-200 text-indigo-700 hover:bg-indigo-50"
                 onClick={loadFollowUps} disabled={followUpsLoading} data-testid="load-followups-btn">
                 <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${followUpsLoading ? "animate-spin" : ""}`} />
                 Generate Follow-Ups
@@ -1220,13 +1220,13 @@ export default function Copilot() {
 
             {followUpsLoading && (
               <div className="py-10 text-center">
-                <Loader2 className="h-7 w-7 mx-auto animate-spin text-amber-400" />
+                <Loader2 className="h-7 w-7 mx-auto animate-spin text-indigo-400" />
                 <p className="text-sm text-slate-400 mt-2">AI is generating personalised follow-ups…</p>
               </div>
             )}
 
             {!followUpsLoading && followUps.length === 0 && (
-              <Card className="border-amber-100 bg-white p-8 text-center text-slate-400">
+              <Card className="border-indigo-100 bg-white p-8 text-center text-slate-400">
                 <ListChecks className="h-8 w-8 mx-auto mb-2 text-slate-200" />
                 <p className="text-sm">Click Generate Follow-Ups to get AI-suggested actions for stale leads</p>
               </Card>
@@ -1237,7 +1237,7 @@ export default function Copilot() {
                 {followUps.map((fu, i) => (
                   <Card key={i} className={`p-4 border ${
                     fu.priority === "High"   ? "border-rose-200 bg-rose-50/40" :
-                    fu.priority === "Medium" ? "border-amber-200 bg-amber-50/40" :
+                    fu.priority === "Medium" ? "border-indigo-200 bg-indigo-50/40" :
                     "border-slate-200 bg-white"
                   }`}>
                     <div className="flex items-start justify-between gap-3">
@@ -1246,7 +1246,7 @@ export default function Copilot() {
                           <span className="font-semibold text-slate-800 text-sm">{fu.lead_name}</span>
                           <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
                             fu.priority === "High"   ? "bg-rose-100 text-rose-600" :
-                            fu.priority === "Medium" ? "bg-amber-100 text-amber-700" :
+                            fu.priority === "Medium" ? "bg-indigo-100 text-indigo-700" :
                             "bg-slate-100 text-slate-500"
                           }`}>{fu.priority}</span>
                           <span className="text-[10px] text-slate-400">{fu.days_stale}d silent</span>
@@ -1259,7 +1259,7 @@ export default function Copilot() {
                           {fu.customer_type} · {fu.budget ? inr(fu.budget) : "—"} · {fu.status}
                         </div>
                       </div>
-                      <Button size="sm" className="bg-amber-700 hover:bg-amber-800 shrink-0 h-8 text-xs"
+                      <Button size="sm" className="bg-indigo-700 hover:bg-indigo-800 shrink-0 h-8 text-xs"
                         onClick={() => createTaskFromFollowUp(fu)} disabled={creatingTask === fu.lead_id}>
                         {creatingTask === fu.lead_id
                           ? <Loader2 className="h-3 w-3 animate-spin" />

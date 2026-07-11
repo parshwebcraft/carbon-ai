@@ -63,10 +63,10 @@ export default function Quotations() {
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-5 items-start">
 
         {/* ── Quotations Table ── */}
-        <Card className="border-amber-100 bg-white overflow-hidden">
+        <Card className="border-indigo-100 bg-white overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm" data-testid="quotations-table">
-              <thead className="bg-amber-50/60 text-slate-700">
+              <thead className="bg-indigo-50/60 text-slate-700">
                 <tr>
                   <th className="text-left px-4 py-3">#</th>
                   <th className="text-left px-4 py-3">Lead</th>
@@ -80,7 +80,7 @@ export default function Quotations() {
                 {loading ? (
                   <tr><td colSpan={6} className="p-6 text-center text-slate-500">Loading…</td></tr>
                 ) : items.map(q => (
-                  <tr key={q.id} className={`border-t border-amber-50 transition-colors ${aiPanel?.id === q.id ? "bg-amber-50/40" : ""}`}>
+                  <tr key={q.id} className={`border-t border-indigo-50 transition-colors ${aiPanel?.id === q.id ? "bg-indigo-50/40" : ""}`}>
                     <td className="px-4 py-3 font-mono text-xs">{q.quotation_number}</td>
                     <td className="px-4 py-3 text-slate-700">Lead #{q.lead_id}</td>
                     <td className="px-4 py-3 text-right font-medium">{inr(q.amount)}</td>
@@ -99,7 +99,7 @@ export default function Quotations() {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-7 text-xs border-amber-200 text-amber-700 hover:bg-amber-50 gap-1"
+                        className="h-7 text-xs border-indigo-200 text-indigo-700 hover:bg-indigo-50 gap-1"
                         onClick={() => openAiSuggest(q)}
                         data-testid={`ai-suggest-${q.id}`}
                       >
@@ -115,10 +115,10 @@ export default function Quotations() {
 
         {/* ── AI Suggest Panel ── */}
         {aiPanel ? (
-          <Card className="border-amber-200 bg-white sticky top-4">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-amber-100">
+          <Card className="border-indigo-200 bg-white sticky top-4">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-indigo-100">
               <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-lg bg-amber-700 flex items-center justify-center">
+                <div className="h-8 w-8 rounded-lg bg-indigo-700 flex items-center justify-center">
                   <Sparkles className="h-4 w-4 text-white" />
                 </div>
                 <div>
@@ -135,7 +135,7 @@ export default function Quotations() {
             <div className="p-5">
               {aiLoading && (
                 <div className="py-12 text-center">
-                  <Loader2 className="h-8 w-8 mx-auto animate-spin text-amber-500 mb-3" />
+                  <Loader2 className="h-8 w-8 mx-auto animate-spin text-indigo-500 mb-3" />
                   <p className="text-sm text-slate-500">AI is analysing lead profile…</p>
                 </div>
               )}
@@ -143,8 +143,8 @@ export default function Quotations() {
               {!aiLoading && aiResult && (
                 <div className="space-y-4">
                   {/* Summary */}
-                  <div className="rounded-xl border border-amber-100 bg-amber-50 p-3">
-                    <div className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-1">
+                  <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-3">
+                    <div className="text-xs font-semibold text-indigo-700 uppercase tracking-wide mb-1">
                       AI Recommendation
                     </div>
                     <p className="text-sm text-slate-700">{aiResult.summary}</p>
@@ -153,13 +153,13 @@ export default function Quotations() {
                   {/* Products */}
                   <div className="space-y-2">
                     {(aiResult.recommendations || []).map((rec, i) => (
-                      <div key={i} className="flex items-start gap-3 p-3 rounded-xl border border-amber-100 hover:border-amber-300 bg-white transition-colors">
-                        <div className="h-9 w-9 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
-                          <Gem className="h-4 w-4 text-amber-700" />
+                      <div key={i} className="flex items-start gap-3 p-3 rounded-xl border border-indigo-100 hover:border-indigo-300 bg-white transition-colors">
+                        <div className="h-9 w-9 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0">
+                          <Gem className="h-4 w-4 text-indigo-700" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-medium text-slate-800 truncate">{rec.product_name}</div>
-                          <div className="text-xs font-semibold text-amber-700">{inr(rec.price)}</div>
+                          <div className="text-xs font-semibold text-indigo-700">{inr(rec.price)}</div>
                           <div className="text-xs text-slate-500 mt-0.5 leading-snug">{rec.reason}</div>
                         </div>
                         <button
@@ -167,7 +167,7 @@ export default function Quotations() {
                             navigator.clipboard.writeText(`${rec.product_name} — ${inr(rec.price)}`);
                             toast.success("Product details copied!");
                           }}
-                          className="text-xs text-slate-400 hover:text-amber-700 shrink-0 mt-1"
+                          className="text-xs text-slate-400 hover:text-indigo-700 shrink-0 mt-1"
                           title="Copy to clipboard"
                         >
                           <CheckCircle2 className="h-4 w-4" />
@@ -180,8 +180,8 @@ export default function Quotations() {
             </div>
           </Card>
         ) : (
-          <Card className="border-dashed border-amber-200 bg-amber-50/20 p-8 text-center">
-            <Sparkles className="h-8 w-8 mx-auto mb-3 text-amber-300" />
+          <Card className="border-dashed border-indigo-200 bg-indigo-50/20 p-8 text-center">
+            <Sparkles className="h-8 w-8 mx-auto mb-3 text-indigo-300" />
             <p className="text-sm text-slate-500 font-medium">AI Product Suggestions</p>
             <p className="text-xs text-slate-400 mt-1">
               Click the ✨ Suggest button on any quotation to get AI-powered product recommendations tailored to that lead.

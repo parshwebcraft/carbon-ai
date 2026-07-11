@@ -52,7 +52,7 @@ export default function Leads() {
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button data-testid="new-lead-btn" className="bg-amber-700 hover:bg-amber-800">
+            <Button data-testid="new-lead-btn" className="bg-indigo-700 hover:bg-indigo-800">
               <Plus className="h-4 w-4 mr-1.5" /> New Lead
             </Button>
           </DialogTrigger>
@@ -60,7 +60,7 @@ export default function Leads() {
         </Dialog>
       </div>
 
-      <Card className="p-4 border-amber-100 bg-white">
+      <Card className="p-4 border-indigo-100 bg-white">
         <div className="grid sm:grid-cols-4 gap-3">
           <div className="sm:col-span-2 relative">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
@@ -96,10 +96,10 @@ export default function Leads() {
         </div>
       </Card>
 
-      <Card className="border-amber-100 bg-white overflow-hidden">
+      <Card className="border-indigo-100 bg-white overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm" data-testid="leads-table">
-            <thead className="bg-amber-50/60 text-slate-700">
+            <thead className="bg-indigo-50/60 text-slate-700">
               <tr>
                 <th className="text-left px-4 py-3 font-semibold">Name</th>
                 <th className="text-left px-4 py-3 font-semibold">City</th>
@@ -108,7 +108,7 @@ export default function Leads() {
                 <th className="text-right px-4 py-3 font-semibold">Budget</th>
                 <th className="text-left px-4 py-3 font-semibold">Status</th>
                 <th className="text-left px-4 py-3 font-semibold flex items-center gap-1">
-                  <TrendingUp className="h-3.5 w-3.5 text-amber-600" /> AI Score
+                  <TrendingUp className="h-3.5 w-3.5 text-indigo-600" /> AI Score
                 </th>
                 <th className="text-left px-4 py-3 font-semibold">Created</th>
               </tr>
@@ -119,9 +119,9 @@ export default function Leads() {
               ) : data.items.length === 0 ? (
                 <tr><td colSpan={7} className="p-6 text-center text-slate-500">No leads</td></tr>
               ) : data.items.map((l) => (
-                <tr key={l.id} className="border-t border-amber-50 hover:bg-amber-50/30">
+                <tr key={l.id} className="border-t border-indigo-50 hover:bg-indigo-50/30">
                   <td className="px-4 py-3">
-                    <Link to={`/leads/${l.id}`} data-testid={`lead-row-${l.id}`} className="font-medium text-slate-900 hover:text-amber-800">
+                    <Link to={`/leads/${l.id}`} data-testid={`lead-row-${l.id}`} className="font-medium text-slate-900 hover:text-indigo-800">
                       {l.name}
                     </Link>
                     <div className="text-xs text-slate-500">{l.phone}</div>
@@ -136,7 +136,7 @@ export default function Leads() {
                       <div className="flex flex-col gap-0.5">
                         <span className={`inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-full border w-fit ${
                           l.lead_score >= 75 ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                          l.lead_score >= 50 ? "bg-amber-50 text-amber-700 border-amber-200" :
+                          l.lead_score >= 50 ? "bg-indigo-50 text-indigo-700 border-indigo-200" :
                           "bg-rose-50 text-rose-600 border-rose-200"
                         }`}>{l.lead_score}%</span>
                         {l.intent && <span className="text-[10px] text-slate-400 truncate max-w-[100px]">{l.intent}</span>}
@@ -151,7 +151,7 @@ export default function Leads() {
             </tbody>
           </table>
         </div>
-        <div className="flex items-center justify-between p-3 border-t border-amber-100 bg-amber-50/30 text-sm">
+        <div className="flex items-center justify-between p-3 border-t border-indigo-100 bg-indigo-50/30 text-sm">
           <div>Page {data.page} of {totalPages}</div>
           <div className="flex gap-2">
             <Button data-testid="leads-prev" size="sm" variant="outline" disabled={page <= 1}
@@ -212,7 +212,7 @@ function NewLeadDialog({ onSaved }) {
           options={CUSTOMER_TYPES} onChange={(v) => setForm({ ...form, customer_type: v })} />
       </div>
       <DialogFooter>
-        <Button data-testid="new-lead-save" className="bg-amber-700 hover:bg-amber-800"
+        <Button data-testid="new-lead-save" className="bg-indigo-700 hover:bg-indigo-800"
           disabled={saving || !form.name.trim()} onClick={save}>Save Lead</Button>
       </DialogFooter>
     </DialogContent>
