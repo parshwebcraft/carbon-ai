@@ -32,49 +32,47 @@ INDIAN_CITIES = [
     "Chandigarh", "Visakhapatnam", "Kochi",
 ]
 
-JEWELLERY_BRANDS = [
-    "Tanishq Jewels", "Kalyan Heritage", "Malabar Treasures", "PC Jeweller House",
-    "GRT Family Jewels", "Joyalukkas Boutique", "Senco Bridal", "Bhima Diamonds",
-    "Tribhovandas Bhimji Zaveri", "Waman Hari Pethe", "CaratLane Studio",
-    "Mehrasons Jewellers", "Khazana Bridal", "Jos Alukkas", "Damas Couture",
+AGENCY_BRANDS = [
+    "ParshWebCraft", "Wipro Digital", "Infosys Interactive", "Cognizant Studio", "TCS Digital Experience"
 ]
 
-LEAD_SOURCES = ["Website", "WhatsApp", "Instagram", "Facebook", "Walk-In", "Referral", "Google Ads"]
-LEAD_STATUSES = ["New", "Contacted", "Follow Up", "Interested", "Visit Scheduled",
-                 "Quotation Sent", "Negotiation", "Won", "Lost"]
-CUSTOMER_TYPES = ["Gold Buyer", "Diamond Buyer", "Bridal Enquiry", "Existing Customer", "High Value"]
+LEAD_SOURCES = ["Website", "WhatsApp", "LinkedIn", "Facebook", "Walk-In", "Referral", "Google Ads"]
+LEAD_STATUSES = ["New", "Contacted", "Follow Up", "Interested", "Meeting Scheduled",
+                 "Proposal Sent", "Negotiation", "Won", "Lost"]
+CUSTOMER_TYPES = ["Startup Website", "E-commerce Business", "Mobile App Client", "Local SEO Audit", "SaaS Software Partner"]
 
-PRODUCT_CATEGORIES = ["Necklace", "Ring", "Earring", "Bangle", "Bridal Set", "Pendant", "Chain", "Bracelet"]
-METAL_TYPES = ["Gold", "Diamond", "Platinum", "Silver"]
+PRODUCT_CATEGORIES = ["Website Design", "Custom E-commerce", "Mobile App Development", "SEO & Marketing", "Custom CRM/SaaS", "WordPress Blog", "Landing Page", "Cloud Hosting"]
+METAL_TYPES = ["React/Node", "WordPress", "Flutter/React Native", "Python/Django", "Shopify/PHP"]
 PURITY_BY_METAL = {
-    "Gold": ["22K", "18K", "14K"],
-    "Diamond": ["VVS1", "VVS2", "VS1", "VS2", "SI1"],
-    "Platinum": ["PT950", "PT900"],
-    "Silver": ["925", "999"],
+    "React/Node": ["Tier 1 (Enterprise)", "Tier 2 (Mid-size)", "Tier 3 (Basic)"],
+    "WordPress": ["Premium Theme", "Custom Theme", "Basic Site"],
+    "Flutter/React Native": ["iOS & Android", "iOS Only", "Android Only"],
+    "Python/Django": ["Enterprise Integration", "API Backend Only", "MVP Portal"],
+    "Shopify/PHP": ["Custom Theme", "Standard Template", "Migration Services"],
 }
 
 SENTIMENTS = ["Positive", "Neutral", "Negative"]
 NEXT_ACTIONS = [
-    "Schedule showroom visit",
-    "Send detailed quotation",
-    "Share bridal collection catalogue",
+    "Schedule Zoom discovery call",
+    "Send detailed proposal estimate",
+    "Share agency portfolio and case studies",
     "Follow up in 2 days",
-    "Connect on WhatsApp video call",
-    "Send GST and making charge breakdown",
-    "Offer festive discount voucher",
+    "Schedule technical consultation",
+    "Send contract agreement details",
+    "Offer complimentary speed audit",
 ]
 
 WHATSAPP_TEMPLATES = [
-    ("in", "Hi, I'm interested in your bridal collection. Could you share the catalogue?"),
-    ("out", "Hello! Thanks for reaching out to {brand}. I've shared our latest bridal catalogue on email. Would you like to visit our showroom this weekend?"),
-    ("in", "What is today's 22K gold rate per gram?"),
-    ("out", "Today's 22K rate is ₹{rate}/gram inclusive of GST. We can lock in this price for 24 hours."),
-    ("in", "Can you send the diamond solitaire ring designs in 1 carat?"),
-    ("out", "Sure! Sharing 6 designs now. All come with IGI / GIA certification. Budget range starts ₹{budget}."),
-    ("in", "Booking a showroom visit on Saturday 5pm with my family."),
-    ("out", "Wonderful! Appointment confirmed for Saturday 5pm at our flagship store. Our senior consultant will assist you."),
-    ("in", "Need a quotation for the necklace set we saw last week."),
-    ("out", "Drafting quotation #{qt} with the discount we discussed. You'll receive it within an hour."),
+    ("in", "Hi, I'm interested in your website design services. Could you share your portfolio?"),
+    ("out", "Hello! Thanks for reaching out to {brand}. I've shared our latest agency portfolio via email. Would you like to schedule a discovery call this week?"),
+    ("in", "What is your hourly or package rate for e-commerce website development?"),
+    ("out", "Our custom Shopify stores start from ₹{rate} inclusive of support. We can schedule a call to give you a customized estimate."),
+    ("in", "Can you send pricing options for custom React app development?"),
+    ("out", "Sure! Sharing our pricing packages now. All come with 3 months free maintenance. Budget range starts at ₹{budget}."),
+    ("in", "Booking a discovery call on Saturday 5pm to discuss our portal project."),
+    ("out", "Wonderful! Call scheduled for Saturday 5pm. Our lead architect will join the meeting."),
+    ("in", "Need a proposal and estimate for the website features we discussed last week."),
+    ("out", "Drafting proposal #{qt} with the hosting discount we discussed. You'll receive it within an hour."),
 ]
 
 
@@ -85,21 +83,21 @@ def reset_database() -> None:
 
 def seed_users(db):
     admin = User(
-        name="Facets Admin",
-        email=os.environ.get("ADMIN_EMAIL", "admin@facetscrm.com").lower(),
+        name="ParshWebCraft Admin",
+        email=os.environ.get("ADMIN_EMAIL", "admin@parshwebcraft.com").lower(),
         password_hash=hash_password(os.environ.get("ADMIN_PASSWORD", "password123")),
         role="Admin", is_active=True,
     )
     db.add(admin)
 
     managers = [
-        ("Priya Sharma", "priya.sharma@facetscrm.com"),
-        ("Rohan Mehta", "rohan.mehta@facetscrm.com"),
+        ("Priya Sharma", "priya.sharma@parshwebcraft.com"),
+        ("Rohan Mehta", "rohan.mehta@parshwebcraft.com"),
     ]
     sales = [
-        ("Aditi Kapoor", "aditi.kapoor@facetscrm.com"),
-        ("Vikram Iyer", "vikram.iyer@facetscrm.com"),
-        ("Neha Reddy", "neha.reddy@facetscrm.com"),
+        ("Aditi Kapoor", "aditi.kapoor@parshwebcraft.com"),
+        ("Vikram Iyer", "vikram.iyer@parshwebcraft.com"),
+        ("Neha Reddy", "neha.reddy@parshwebcraft.com"),
     ]
 
     user_objs = [admin]
@@ -124,18 +122,20 @@ def seed_products(db, n=40):
     for _ in range(n):
         metal = random.choice(METAL_TYPES)
         cat = random.choice(PRODUCT_CATEGORIES)
-        weight = round(random.uniform(2.0, 60.0), 2)
-        making = round(random.uniform(2000, 25000), 0)
-        if metal == "Gold":
-            price = round(weight * random.uniform(6200, 6800) + making, 0)
-        elif metal == "Diamond":
-            price = round(weight * random.uniform(45000, 90000) + making, 0)
-        elif metal == "Platinum":
-            price = round(weight * random.uniform(3200, 4200) + making, 0)
+        weight = round(random.uniform(10.0, 100.0), 2)
+        making = round(random.uniform(5000, 40000), 0)
+        if metal == "React/Node":
+            price = round(random.uniform(1_50_000, 5_00_000), 0)
+        elif metal == "WordPress":
+            price = round(random.uniform(25_000, 80_000), 0)
+        elif metal == "Flutter/React Native":
+            price = round(random.uniform(2_00_000, 8_00_000), 0)
+        elif metal == "Python/Django":
+            price = round(random.uniform(2_50_000, 10_00_000), 0)
         else:
-            price = round(weight * random.uniform(85, 120) + making, 0)
+            price = round(random.uniform(40_000, 1_50_000), 0)
         p = Product(
-            product_name=f"{random.choice(['Royal','Heritage','Celestial','Aurora','Maharani','Nakshatra','Pearl','Eternal'])} {cat}",
+            product_name=f"{random.choice(['Premium','Custom','Enterprise','Sleek','Modern','Dynamic','Agile','Tailored'])} {cat}",
             category=cat,
             metal_type=metal,
             purity=random.choice(PURITY_BY_METAL[metal]),
@@ -159,17 +159,17 @@ def seed_leads(db, sales_users, n=100):
         )[0]
         cust_type = random.choice(CUSTOMER_TYPES)
         budget_band = {
-            "Gold Buyer": (50_000, 5_00_000),
-            "Diamond Buyer": (1_50_000, 15_00_000),
-            "Bridal Enquiry": (5_00_000, 30_00_000),
-            "Existing Customer": (75_000, 8_00_000),
-            "High Value": (10_00_000, 75_00_000),
+            "Startup Website": (20_000, 80_000),
+            "E-commerce Business": (50_000, 5_00_000),
+            "Mobile App Client": (1_50_000, 8_00_000),
+            "Local SEO Audit": (10_000, 50_000),
+            "SaaS Software Partner": (2_00_000, 15_00_000),
         }[cust_type]
         lead = Lead(
             name=fake.name(),
             phone=f"+91{random.randint(7000000000, 9999999999)}",
             email=fake.email(),
-            company=random.choice(JEWELLERY_BRANDS) if random.random() < 0.45 else None,
+            company=random.choice(AGENCY_BRANDS) if random.random() < 0.45 else None,
             city=random.choice(INDIAN_CITIES),
             source=random.choice(LEAD_SOURCES),
             status=status,
@@ -249,9 +249,9 @@ def seed_whatsapp(db, leads, n_conversations=20):
         for i in range(msg_count):
             direction, template = random.choice(WHATSAPP_TEMPLATES)
             text = template.format(
-                brand=random.choice(JEWELLERY_BRANDS),
-                rate=random.randint(6200, 6800),
-                budget=f"{random.randint(80_000, 4_00_000):,}",
+                brand=random.choice(AGENCY_BRANDS),
+                rate=random.randint(25000, 50000),
+                budget=f"{random.randint(40_000, 2_00_000):,}",
                 qt=f"QT-{datetime.now().year}-{random.randint(10000, 99999)}",
             )
             db.add(WhatsappMessage(
@@ -371,7 +371,7 @@ def main():
         print(">> Seeding notifications...")
         seed_notifications(db, users=users)
 
-        print("Done. Login: admin@facetscrm.com / password123")
+        print("Done. Login: admin@parshwebcraft.com / password123")
     finally:
         db.close()
 

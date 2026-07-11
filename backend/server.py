@@ -46,13 +46,13 @@ logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("facets")
 
-app = FastAPI(title="Facets Jewellery CRM", version="1.1.0")
+app = FastAPI(title="ParshWebCraft CRM", version="1.2.0")
 api = APIRouter(prefix="/api")
 
 
 @api.get("/")
 def root():
-    return {"app": "Facets Jewellery CRM", "status": "ok"}
+    return {"app": "ParshWebCraft CRM", "status": "ok"}
 
 
 @api.get("/health")
@@ -148,14 +148,14 @@ def _ensure_call_columns() -> None:
 
 
 def _ensure_admin_seed() -> None:
-    admin_email = os.environ.get("ADMIN_EMAIL", "admin@facetscrm.com").lower()
+    admin_email = os.environ.get("ADMIN_EMAIL", "admin@parshwebcraft.com").lower()
     admin_password = os.environ.get("ADMIN_PASSWORD", "password123")
     db = SessionLocal()
     try:
         existing = db.query(models.User).filter(models.User.email == admin_email).first()
         if existing is None:
             db.add(models.User(
-                name="Facets Admin", email=admin_email,
+                name="ParshWebCraft Admin", email=admin_email,
                 password_hash=hash_password(admin_password),
                 role="Admin", is_active=True,
             ))

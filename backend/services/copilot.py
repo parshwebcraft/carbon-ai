@@ -12,17 +12,17 @@ DB_PATH = "backend/facets.db"
 
 # ── System prompt ────────────────────────────────────────────────────────────
 COPILOT_SYSTEM = (
-    "You are an expert AI Sales Copilot for Facets Lifestyle, a premium Indian jewellery brand. "
+    "You are an expert AI Sales Copilot for ParshWebCraft, a premium Indian web design, "
+    "digital marketing, custom software development, and mobile app agency. "
     "Your job is to assist the salesperson in real-time during a customer conversation. "
-    "You are concise, actionable, and deeply familiar with gold (22K/18K), diamond, platinum, "
-    "bridal jewellery, and Indian customer psychology. Always respond in INR. "
-    "Keep every suggestion under 30 words unless instructed otherwise."
+    "You are concise, actionable, and familiar with web tech, e-commerce, SEO, and client psychology. "
+    "Respond in INR or USD. Keep every suggestion under 30 words unless instructed otherwise."
 )
 
 HISTORY_SYSTEM = (
-    "You are a CRM analyst for Facets Lifestyle jewellery. "
+    "You are a CRM analyst for ParshWebCraft digital agency. "
     "Summarise a customer's history in crisp bullet points. "
-    "Focus on: last interaction, stated interest, objections raised, conversion probability. "
+    "Focus on: last interaction, stated agency services interest, objections raised, conversion probability. "
     "Keep total response under 120 words."
 )
 
@@ -208,11 +208,11 @@ def recommend_products(transcript: list[dict], products: list[dict]) -> list[dic
     convo = " ".join(m["content"].lower() for m in transcript[-10:])
 
     KEYWORDS = {
-        "bridal": ["bridal", "wedding", "shaadi", "marriage"],
-        "ring": ["ring", "engagement", "solitaire"],
-        "necklace": ["necklace", "haar", "chain"],
-        "diamond": ["diamond", "hira"],
-        "gold": ["gold", "sone"],
+        "website": ["website", "web design", "site", "web development", "landing page", "wordpress", "react"],
+        "ecommerce": ["ecommerce", "e-commerce", "shopify", "store", "online shop", "cart"],
+        "mobile_app": ["app", "mobile app", "application", "flutter", "react native", "android", "ios"],
+        "seo": ["seo", "marketing", "google ranking", "ads", "seo audit", "traffic"],
+        "custom_software": ["custom software", "crm", "erp", "saas", "dashboard", "portal"],
         "budget_high": ["lakh", "2 lakh", "3 lakh", "50000", "100000"],
     }
 
@@ -228,16 +228,16 @@ def recommend_products(transcript: list[dict], products: list[dict]) -> list[dic
         cat_lower = (p.get("category") or "").lower()
         metal_lower = (p.get("metal_type") or "").lower()
 
-        if "bridal" in matched_categories and ("bridal" in name_lower or "bridal" in cat_lower):
+        if "website" in matched_categories and ("website" in name_lower or "web" in name_lower or "design" in name_lower):
             score += 3
-        if "ring" in matched_categories and "ring" in name_lower:
-            score += 2
-        if "necklace" in matched_categories and ("necklace" in name_lower or "chain" in name_lower):
-            score += 2
-        if "diamond" in matched_categories and "diamond" in metal_lower:
-            score += 2
-        if "gold" in matched_categories and "gold" in metal_lower:
-            score += 1
+        if "ecommerce" in matched_categories and ("ecommerce" in name_lower or "shopify" in name_lower or "store" in name_lower):
+            score += 3
+        if "mobile_app" in matched_categories and ("app" in name_lower or "mobile" in name_lower):
+            score += 3
+        if "seo" in matched_categories and ("seo" in name_lower or "marketing" in name_lower or "ads" in name_lower):
+            score += 3
+        if "custom_software" in matched_categories and ("software" in name_lower or "crm" in name_lower or "saas" in name_lower or "portal" in name_lower):
+            score += 3
         if score > 0:
             scored.append((score, p))
 
@@ -248,7 +248,7 @@ def recommend_products(transcript: list[dict], products: list[dict]) -> list[dic
 
     reasons = [
         "Matches customer's stated interest",
-        "Popular choice for this occasion",
+        "Popular choice for this project scope",
         "Excellent value in stated budget",
     ]
     for i, p in enumerate(top):
@@ -306,7 +306,7 @@ def generate_history_summary(
 # ── WhatsApp thread intelligence ─────────────────────────────────────────────
 
 WHATSAPP_SYSTEM = (
-    "You are a CRM analyst for Facets Lifestyle premium jewellery. "
+    "You are a CRM analyst for ParshWebCraft digital agency. "
     "Analyse WhatsApp conversations between the sales agent and customers. "
     "Be concise, data-driven, and focused on actionable sales intelligence."
 )
@@ -409,9 +409,9 @@ def score_lead_quick(lead: dict, activities: list[dict]) -> dict:
 # ── Follow-up suggestion engine ───────────────────────────────────────────────
 
 FOLLOWUP_SYSTEM = (
-    "You are a senior jewellery sales coach at Facets Lifestyle. "
+    "You are a senior business development coach at ParshWebCraft digital agency. "
     "Your job is to create specific, personalised follow-up action plans for sales reps. "
-    "Be direct, actionable, and specific to each customer's jewellery interests."
+    "Be direct, actionable, and specific to each customer's web design, software, or digital marketing interests."
 )
 
 

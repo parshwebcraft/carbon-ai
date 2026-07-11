@@ -10,7 +10,7 @@ import { Gem, Loader2 } from "lucide-react";
 export default function Login() {
   const { user, login } = useAuth();
   const nav = useNavigate();
-  const [email, setEmail] = useState("admin@facetscrm.com");
+  const [email, setEmail] = useState("admin@parshwebcraft.com");
   const [password, setPassword] = useState("password123");
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
@@ -81,7 +81,7 @@ export default function Login() {
             </Button>
           </div>
           <div className="mt-6 text-xs text-slate-500 text-center">
-            Demo admin: <code className="text-slate-700">admin@facetscrm.com</code> / <code className="text-slate-700">password123</code>
+            Demo admin: <code className="text-slate-700">admin@parshwebcraft.com</code> / <code className="text-slate-700">password123</code>
           </div>
         </form>
       </div>

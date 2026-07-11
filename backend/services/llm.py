@@ -83,15 +83,15 @@ def chat_json(messages: List[Dict[str, str]], **kw) -> dict:
         raise
 
 
-# ---- Domain helpers (Jewellery CRM) ----
+# ---- Domain helpers (Web & Digital Agency CRM) ----
 
-JEWELLERY_SYSTEM = (
-    "You are an experienced sales consultant for Facets Lifestyle, a premium Indian jewellery brand "
-    "selling gold (22K/18K), diamond, platinum and bridal pieces. "
-    "Be warm, concise, polite, and use polite Indian English. "
-    "Always speak in INR. Never make up product prices. "
+AGENCY_SYSTEM = (
+    "You are an experienced business development consultant for ParshWebCraft, a premium Indian web design, "
+    "digital marketing, custom software development, and mobile app agency. "
+    "Be warm, professional, polite, and use clear Indian English. "
+    "Keep replies concise and business-oriented. Speak in INR or USD as appropriate. "
     "Keep WhatsApp replies under 60 words and end with a clear next step "
-    "(showroom visit, video consultation, sharing catalogue, or sending quotation)."
+    "(scheduling a discovery call, booking a free website audit, sharing portfolio, or sending a proposal estimate)."
 )
 
 
@@ -116,7 +116,7 @@ def whatsapp_reply(lead: dict, history: list[dict]) -> str:
         "\n\nWrite ONLY the next agent reply, no preamble."
     )
     return chat([
-        {"role": "system", "content": JEWELLERY_SYSTEM},
+        {"role": "system", "content": AGENCY_SYSTEM},
         {"role": "user", "content": user_prompt},
     ], temperature=0.6, max_tokens=200).strip()
 
@@ -124,7 +124,7 @@ def whatsapp_reply(lead: dict, history: list[dict]) -> str:
 def call_insights(call: dict, lead: dict) -> dict:
     """Return {summary, sentiment, next_action} for a call log."""
     prompt = (
-        "Analyse this jewellery sales call and respond ONLY with JSON having keys "
+        "Analyse this web agency sales call and respond ONLY with JSON having keys "
         "summary (1-2 sentences), sentiment (Positive|Neutral|Negative), "
         "next_action (one specific concrete step).\n\n"
         f"Lead: {lead.get('name')} ({lead.get('customer_type')}) — "
@@ -134,7 +134,7 @@ def call_insights(call: dict, lead: dict) -> dict:
         f"Transcript: {call.get('transcript') or '(no transcript available)'}"
     )
     return chat_json([
-        {"role": "system", "content": JEWELLERY_SYSTEM},
+        {"role": "system", "content": AGENCY_SYSTEM},
         {"role": "user", "content": prompt},
     ], temperature=0.2, max_tokens=350)
 
@@ -143,7 +143,7 @@ def call_script(lead: dict, history: list[dict]) -> str:
     """Suggest a 90-second call script tailored to the lead."""
     activity_lines = [f"- [{a['activity_type']}] {a['description']}" for a in history[:8]]
     prompt = (
-        f"Draft a 90-second outbound call script for a Facets Lifestyle sales consultant calling:\n"
+        f"Draft a 90-second outbound call script for a ParshWebCraft business representative calling:\n"
         f"- Name: {lead.get('name')}\n- City: {lead.get('city')}\n"
         f"- Interest: {lead.get('customer_type')}\n- Budget: ₹{int(lead.get('budget') or 0):,}\n"
         f"- Status: {lead.get('status')}\n\nRecent activities:\n"
@@ -152,7 +152,7 @@ def call_script(lead: dict, history: list[dict]) -> str:
           "Keep total under 220 words."
     )
     return chat([
-        {"role": "system", "content": JEWELLERY_SYSTEM},
+        {"role": "system", "content": AGENCY_SYSTEM},
         {"role": "user", "content": prompt},
     ], temperature=0.5, max_tokens=500).strip()
 
@@ -167,7 +167,7 @@ def followup_message(lead: dict, history: list[dict]) -> str:
         f"Their last message: {last or '(none)'}"
     )
     return chat([
-        {"role": "system", "content": JEWELLERY_SYSTEM},
+        {"role": "system", "content": AGENCY_SYSTEM},
         {"role": "user", "content": prompt},
     ], temperature=0.6, max_tokens=120).strip()
 
@@ -175,7 +175,7 @@ def followup_message(lead: dict, history: list[dict]) -> str:
 def dashboard_briefing(stats: dict) -> str:
     """Generate a concise AI morning briefing for the sales manager dashboard."""
     prompt = (
-        "You are an AI sales coach for Facets Lifestyle jewellery. "
+        "You are an AI sales coach for ParshWebCraft web agency. "
         "Write a crisp 3-sentence morning briefing for the sales team based on these CRM stats. "
         "Be motivating, specific, and action-oriented. Mention key numbers.\n\n"
         f"Pipeline stats:\n"
@@ -190,7 +190,7 @@ def dashboard_briefing(stats: dict) -> str:
         "\nWrite ONLY the 3-sentence briefing, no headings or bullet points."
     )
     return chat([
-        {"role": "system", "content": JEWELLERY_SYSTEM},
+        {"role": "system", "content": AGENCY_SYSTEM},
         {"role": "user", "content": prompt},
     ], temperature=0.7, max_tokens=200).strip()
 
@@ -205,35 +205,35 @@ def campaign_draft(campaign_name: str, segment: str, tone: str, product_hint: st
     }.get(tone, "warm and professional")
 
     prompt = (
-        f"Draft a WhatsApp outreach message for a jewellery sales campaign.\n\n"
+        f"Draft a WhatsApp outreach message for a web development/SEO agency sales campaign.\n\n"
         f"Campaign: {campaign_name}\n"
         f"Target Segment: {segment}\n"
         f"Tone: {tone} ({tone_guide})\n"
-        f"Product Focus: {product_hint or 'General jewellery collection'}\n\n"
+        f"Product Focus: {product_hint or 'General web/app services'}\n\n"
         "Rules:\n"
         "- Keep under 60 words\n"
         "- Start with the customer's name placeholder: {{name}}\n"
-        "- End with a clear CTA (book appointment / reply / visit store)\n"
-        "- Use ₹ for prices, never make up specific prices\n"
-        "- Brand name: Facets Lifestyle\n\n"
+        "- End with a clear CTA (schedule a call / reply / get free audit)\n"
+        "- Use ₹ or $ for prices, never make up specific prices\n"
+        "- Brand name: ParshWebCraft\n\n"
         "Write ONLY the message text, no explanation."
     )
     return chat([
-        {"role": "system", "content": JEWELLERY_SYSTEM},
+        {"role": "system", "content": AGENCY_SYSTEM},
         {"role": "user", "content": prompt},
     ], temperature=0.7, max_tokens=250).strip()
 
 
 def quotation_suggest(lead: dict, products: list[dict]) -> dict:
-    """Suggest the best products for a lead and return JSON with recommendations."""
+    """Suggest the best services/packages for a lead and return JSON with recommendations."""
     products_text = "\n".join(
         f"- [{p.get('id')}] {p.get('product_name')} ({p.get('metal_type')}, "
         f"{p.get('category')}) — ₹{int(p.get('price', 0)):,} | {p.get('description', '')[:80]}"
         for p in products[:30]
     )
     prompt = (
-        "You are a jewellery sales expert at Facets Lifestyle. "
-        "Suggest the 3-5 most suitable products for this lead from the catalogue below.\n\n"
+        "You are a sales expert at ParshWebCraft digital agency. "
+        "Suggest the 3-5 most suitable services/packages for this lead from the catalogue below.\n\n"
         f"Lead Profile:\n"
         f"- Name: {lead.get('name')}\n"
         f"- Interest: {lead.get('customer_type') or 'General'}\n"
@@ -247,6 +247,6 @@ def quotation_suggest(lead: dict, products: list[dict]) -> dict:
         '"summary": "<1 sentence overall recommendation>"}'
     )
     return chat_json([
-        {"role": "system", "content": JEWELLERY_SYSTEM},
+        {"role": "system", "content": AGENCY_SYSTEM},
         {"role": "user", "content": prompt},
     ], temperature=0.3, max_tokens=600)

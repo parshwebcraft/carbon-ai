@@ -79,58 +79,58 @@ class CallResult:
 # Mocked dialer — deterministic-ish but jewellery-flavoured
 # ---------------------------------------------------------------------------
 
-JEWELLERY_TRANSCRIPT_TEMPLATES = {
-    "Bridal Inquiry": [
-        ("Agent", "Hello {name}, this is Aanya from Facets Lifestyle Jewellery. Is this a good time?"),
+AGENCY_TRANSCRIPT_TEMPLATES = {
+    "Website Design": [
+        ("Agent", "Hello {name}, this is Aanya from ParshWebCraft digital agency. Is this a good time?"),
         ("Customer", "Yes please."),
-        ("Agent", "Lovely — congratulations on the upcoming wedding! Are you exploring a complete bridal set or specific pieces?"),
-        ("Customer", "Looking for a full bridal set in 22K gold with diamond accents."),
-        ("Agent", "Wonderful. What's the wedding date and your tentative budget?"),
-        ("Customer", "Mid {month}. Budget is around eight to ten lakhs."),
-        ("Agent", "I'll have our bridal stylist call you and share the latest catalogue. Shall I book a private showroom appointment at {city}?"),
+        ("Agent", "Wonderful — I saw your inquiry about a website redesign. Are you looking for a custom React/Node site or WordPress?"),
+        ("Customer", "Looking for a modern corporate website built on React."),
+        ("Agent", "Great choice. What is your expected timeline and budget for this project?"),
+        ("Customer", "Within two months. Budget is around one to one point five lakhs."),
+        ("Agent", "Perfect. I'll have our lead architect call you to share our portfolio. Shall I schedule a 15-minute discovery call for {city}?"),
         ("Customer", "Yes, that works."),
     ],
-    "Gold Purchase": [
-        ("Agent", "Namaste {name}, Aanya from Facets Lifestyle here."),
+    "Custom E-commerce": [
+        ("Agent", "Namaste {name}, Aanya from ParshWebCraft here."),
         ("Customer", "Hi, go ahead."),
-        ("Agent", "We have new BIS-hallmarked 22K designs starting at low making charges this {month}. Are you considering chains, bangles, or a necklace?"),
-        ("Customer", "Two bangles for my mother."),
-        ("Agent", "Lovely gift. May I share a curated set of 5 designs on WhatsApp?"),
+        ("Agent", "We are helping local businesses set up Shopify or custom e-commerce stores to double sales. Are you looking to launch a new store or migrate?"),
+        ("Customer", "Launch a new online boutique."),
+        ("Agent", "Excellent. May I share a copy of our e-commerce case studies on WhatsApp?"),
         ("Customer", "Sure."),
     ],
-    "Diamond Purchase": [
-        ("Agent", "Hello {name}, this is Aanya from Facets Lifestyle."),
+    "Mobile App Development": [
+        ("Agent", "Hello {name}, this is Aanya from ParshWebCraft."),
         ("Customer", "Yes?"),
-        ("Agent", "We have a limited collection of VVS solitaires for {month}. Are you looking at a ring, pendant, or studs?"),
-        ("Customer", "A solitaire ring, IGI certified."),
-        ("Agent", "Got it. May I send a price+certificate comparison on WhatsApp and reserve a private viewing in {city}?"),
+        ("Agent", "We have specialized Flutter developers ready to launch iOS/Android apps. Are you looking for a cross-platform app or native?"),
+        ("Customer", "A cross-platform app for delivery service."),
+        ("Agent", "Got it. May I send our portfolio + timeline estimate on WhatsApp and schedule a call with our technical lead?"),
         ("Customer", "Yes please."),
     ],
-    "Exchange Inquiry": [
-        ("Agent", "Hi {name}, calling from Facets Lifestyle. We have an old-gold exchange drive running."),
-        ("Customer", "What's the rate?"),
-        ("Agent", "We're offering ₹95 over market for hallmarked 22K and ₹85 over for non-hallmarked. Shall I block a slot at our {city} showroom for valuation?"),
+    "SEO Audit": [
+        ("Agent", "Hi {name}, calling from ParshWebCraft. We are offering a free SEO audit for local businesses in {city}."),
+        ("Customer", "What does it include?"),
+        ("Agent", "It covers speed audit, search ranking analysis, and 3 competitor secrets. Shall I block a slot with our marketer to review it?"),
         ("Customer", "Sounds reasonable, let's do it."),
     ],
-    "Investment Gold": [
-        ("Agent", "Hello {name}, this is Aanya. Calling about our Digital Gold + 22K coin plan."),
+    "Custom Software": [
+        ("Agent", "Hello {name}, this is Aanya. Calling about custom CRM/ERP development to automate business workflows."),
         ("Customer", "Tell me more."),
-        ("Agent", "Lock current rate, monthly accumulation, and 11th month free. Most clients start at ₹5–10k/month. Comfortable?"),
+        ("Agent", "We build tailor-made dashboards, user portals, and API integrations. Most clients start with a basic MVP. What is your requirement?"),
         ("Customer", "Yes, send the details."),
     ],
     "Appointment Booked": [
-        ("Agent", "Hi {name}, would you like to see the new bridal collection in person?"),
-        ("Customer", "Yes, when can I come?"),
-        ("Agent", "We have a private styling slot this weekend in {city}. Saturday 12pm?"),
+        ("Agent", "Hi {name}, would you like to schedule a free 15-minute discovery Zoom call?"),
+        ("Customer", "Yes, when is a good time?"),
+        ("Agent", "We have slots open this weekend. Saturday 12pm?"),
         ("Customer", "Saturday 12pm works. Please book it."),
     ],
     "Quotation Requested": [
-        ("Agent", "Hi {name}, following up on your enquiry."),
-        ("Customer", "Yes, please send me a quotation for the necklace set we discussed."),
-        ("Agent", "Will share within the hour with making + GST breakdown."),
+        ("Agent", "Hi {name}, following up on your proposal request."),
+        ("Customer", "Yes, please send me a detailed estimate for the React website we discussed."),
+        ("Agent", "Will share the proposal document within the hour with scope and timeline breakdown."),
     ],
     "Not Interested": [
-        ("Agent", "Hello {name}, calling from Facets Lifestyle."),
+        ("Agent", "Hello {name}, calling from ParshWebCraft."),
         ("Customer", "Not interested at the moment, please remove my number."),
         ("Agent", "Understood, apologies for the disturbance. Have a lovely day."),
     ],
@@ -210,7 +210,7 @@ def _mock_outcome(target: dict) -> Optional[str]:
 
 
 def _build_transcript(outcome: str, target: dict) -> str:
-    lines = JEWELLERY_TRANSCRIPT_TEMPLATES.get(outcome, [])
+    lines = AGENCY_TRANSCRIPT_TEMPLATES.get(outcome, [])
     month = MONTH_NAMES[time.localtime().tm_mon - 1]
     city = target.get("city") or "your nearest showroom"
     name = target.get("name") or "ji"
@@ -262,7 +262,7 @@ def mock_dial(*, target: dict, campaign_prompt: Optional[str],
         summary += " | Personalised script used."
     elif campaign_prompt:
         summary += " | Campaign script used."
-    recording_url = f"https://mock.facetscrm.com/recordings/{int(time.time())}-{target.get('phone','x')[-4:]}.mp3"
+    recording_url = f"https://mock.parshwebcraft.com/recordings/{int(time.time())}-{target.get('phone','x')[-4:]}.mp3"
     return CallResult(
         final_status="completed",
         duration=duration,
@@ -330,9 +330,9 @@ def dial(*, target: dict, campaign_prompt: Optional[str],
 def make_local_script(target: dict, campaign_prompt: Optional[str]) -> str:
     """Best-effort personalised script when no LLM key is available."""
     base = (campaign_prompt or
-            "You are a warm Facets Lifestyle Jewellery sales consultant. "
-            "Qualify interest (gold/diamond/bridal), confirm city + budget, "
-            "and book a showroom visit or send a quotation.")
+            "You are a warm ParshWebCraft digital agency sales consultant. "
+            "Qualify interest (web design/mobile app/SEO), confirm city + budget, "
+            "and book a discovery call or send a proposal estimate.")
     extras = []
     if target.get("name"):
         extras.append(f"Greet {target['name'].split()[0]} by first name.")

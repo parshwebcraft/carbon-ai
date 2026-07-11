@@ -18,11 +18,12 @@ logger = logging.getLogger("facets.rag")
 # ── RAG System Prompt ─────────────────────────────────────────────────────────
 
 RAG_SYSTEM = (
-    "You are an expert AI Sales Copilot for Facets Lifestyle, a premium Indian jewellery brand. "
+    "You are an expert AI Sales Copilot for ParshWebCraft, a premium Indian web design, "
+    "digital marketing, custom software development, and mobile app agency. "
     "You have full access to the customer's CRM history, product catalogue, and live conversation. "
-    "Your suggestions are grounded in REAL data — never hallucinate prices or products. "
-    "Be concise, actionable, and culturally aware of Indian jewellery buying psychology. "
-    "Always respond in INR. Prioritise: Bridal > Diamond > Gold > General enquiry in urgency. "
+    "Your suggestions are grounded in REAL data — never hallucinate prices or services. "
+    "Be concise, actionable, and culturally aware of digital software buying psychology. "
+    "Always respond in INR or USD. Prioritise: E-commerce > Custom CRM/SaaS > Mobile App > General website audit in urgency. "
     "Every suggestion must be under 30 words unless instructed otherwise."
 )
 
@@ -193,9 +194,9 @@ def _format_context_prompt(context: dict, transcript_lines: list[str]) -> str:
     relevant_products = [
         p for p in products
         if any(kw in (p.get("product_name", "") + p.get("metal_type", "") + p.get("category", "")).lower()
-               for kw in (["bridal", "wedding"] if "bridal" in interest else
-                          ["diamond"] if "diamond" in interest else
-                          ["gold"] if "gold" in interest else ["gold", "diamond"]))
+               for kw in (["web", "design", "ecommerce", "website"] if "website" in interest or "web" in interest or "ecommerce" in interest else
+                          ["app", "mobile", "ios", "android"] if "app" in interest or "mobile" in interest else
+                          ["seo", "marketing", "ads", "seo audit"] if "seo" in interest or "marketing" in interest else ["web", "app", "seo"]))
     ][:8] or products[:8]
 
     product_lines = [
