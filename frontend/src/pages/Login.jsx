@@ -5,7 +5,7 @@ import { errMsg } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Gem, Loader2 } from "lucide-react";
+import { Briefcase, Loader2 } from "lucide-react";
 
 export default function Login() {
   const { user, login } = useAuth();
@@ -36,10 +36,10 @@ export default function Login() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-amber-100 border border-amber-200">
-            <Gem className="h-7 w-7 text-amber-700" />
+            <Briefcase className="h-7 w-7 text-amber-700" />
           </div>
-          <h1 className="mt-4 font-serif text-3xl text-slate-900">Facets Lifestyle CRM</h1>
-          <p className="mt-1 text-sm text-slate-600">Sign in to your jewellery sales workspace</p>
+          <h1 className="mt-4 font-serif text-3xl text-slate-900">ParshWebCraft CRM</h1>
+          <p className="mt-1 text-sm text-slate-600">Sign in to your agency sales workspace</p>
         </div>
         <form
           data-testid="login-form"

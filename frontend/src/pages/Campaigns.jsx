@@ -317,7 +317,7 @@ function NewCampaignDialog({ onSaved }) {
         <div>
           <Label className="text-xs text-slate-600">Campaign Script (static prompt for AI agent)</Label>
           <Textarea data-testid="new-campaign-prompt" value={form.campaign_prompt}
-            placeholder="e.g. You are calling on behalf of Facets Lifestyle for our Diwali bridal collection..."
+            placeholder="e.g. You are calling on behalf of ParshWebCraft to offer custom web design or SEO audits..."
             onChange={e => setForm({ ...form, campaign_prompt: e.target.value })}
             className="mt-1 min-h-[88px]" />
           <p className="text-xs text-slate-500 mt-1">

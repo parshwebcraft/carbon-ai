@@ -1,7 +1,7 @@
 {
-  "name": "Facets Lifestyle CRM",
-  "short_name": "Facets CRM",
-  "description": "Jewellery CRM for Facets Lifestyle Pvt Ltd.",
+  "name": "ParshWebCraft CRM",
+  "short_name": "ParshWebCraft CRM",
+  "description": "Web Agency CRM for ParshWebCraft.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

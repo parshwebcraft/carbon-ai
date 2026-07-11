@@ -23,7 +23,7 @@ export default function InstallPrompt() {
       className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 z-50 max-w-sm rounded-xl border border-amber-200 bg-white shadow-lg p-4 flex items-start gap-3"
     >
       <div className="flex-1">
-        <div className="font-semibold text-slate-900">Install Facets CRM</div>
+        <div className="font-semibold text-slate-900">Install ParshWebCraft CRM</div>
         <div className="text-sm text-slate-600 mt-0.5">
           Add to your home screen for a faster, app-like experience.
         </div>

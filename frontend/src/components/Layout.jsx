@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Users, ListTodo, Phone, MessageCircle,
-  Gem, CalendarCheck2, FileText, Bot, UserCog, LogOut, Menu, X, Bell, PhoneCall, Sparkles,
+  CalendarCheck2, FileText, Bot, UserCog, LogOut, Menu, X, Bell, PhoneCall, Sparkles, Briefcase,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import InstallPrompt from "@/components/InstallPrompt";
@@ -17,7 +17,7 @@ const NAV = [
   { to: "/campaigns", label: "AI Calling", icon: PhoneCall },
   { to: "/copilot",   label: "AI Copilot", icon: Sparkles },
   { to: "/whatsapp",  label: "WhatsApp",   icon: MessageCircle },
-  { to: "/products", label: "Products", icon: Gem },
+  { to: "/products", label: "Services", icon: Briefcase },
   { to: "/appointments", label: "Appointments", icon: CalendarCheck2 },
   { to: "/quotations", label: "Quotations", icon: FileText },
   { to: "/ai-logs", label: "AI Agent", icon: Bot },
@@ -43,7 +43,7 @@ export default function Layout({ children }) {
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
         <Link to="/" className="flex items-center gap-2 font-serif font-semibold text-lg">
-          <Gem className="h-5 w-5 text-amber-700" /> Facets CRM
+          <Briefcase className="h-5 w-5 text-amber-700" /> ParshWebCraft CRM
         </Link>
         <div className="w-9" />
       </header>
@@ -59,10 +59,10 @@ export default function Layout({ children }) {
           )}
         >
           <div className="px-5 h-16 flex items-center gap-2 border-b border-amber-100">
-            <Gem className="h-6 w-6 text-amber-700" />
+            <Briefcase className="h-6 w-6 text-amber-700" />
             <div className="leading-tight">
-              <div className="font-serif font-semibold text-lg">Facets CRM</div>
-              <div className="text-[11px] uppercase tracking-wider text-amber-700">Jewellery</div>
+              <div className="font-serif font-semibold text-lg">ParshWebCraft CRM</div>
+              <div className="text-[11px] uppercase tracking-wider text-amber-700">Web Agency</div>
             </div>
           </div>
           <nav className="flex-1 overflow-y-auto py-3">

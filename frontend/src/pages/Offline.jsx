@@ -9,7 +9,7 @@ export default function Offline() {
         </div>
         <h1 className="mt-4 font-serif text-3xl text-slate-900">You&apos;re offline</h1>
         <p className="mt-2 text-sm text-slate-600 max-w-sm mx-auto">
-          Facets CRM needs internet to sync your jewellery pipeline. Reconnect and try again.
+          ParshWebCraft CRM needs internet to sync your web agency pipeline. Reconnect and try again.
         </p>
       </div>
     </div>

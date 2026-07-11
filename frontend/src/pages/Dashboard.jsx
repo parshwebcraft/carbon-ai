@@ -77,7 +77,7 @@ export default function Dashboard() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-serif text-3xl text-slate-900">Dashboard</h1>
-          <p className="text-sm text-slate-600">Pipeline health for Facets Lifestyle</p>
+          <p className="text-sm text-slate-600">Pipeline health for ParshWebCraft</p>
         </div>
         <div className="flex items-center gap-2 text-xs text-slate-400">
           <Bot className="h-4 w-4 text-amber-700" />
