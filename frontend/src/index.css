@@ -7,6 +7,12 @@ body {
     font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    background-color: #F8FAFC;
+    color: #0f172a;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.dark-theme {
     background: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 50%),
                 radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.12) 0%, transparent 50%),
                 #070814;
@@ -25,6 +31,29 @@ code {
 
 @layer base {
     :root {
+        --background: 210 40% 98%;
+        --foreground: 222.2 47.4% 11.2%;
+        --card: 0 0% 100%;
+        --card-foreground: 222.2 47.4% 11.2%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 222.2 47.4% 11.2%;
+        --primary: 243.4 75.4% 58.6%;
+        --primary-foreground: 210 40% 98%;
+        --secondary: 210 40% 96.1%;
+        --secondary-foreground: 222.2 47.4% 11.2%;
+        --muted: 210 40% 96.1%;
+        --muted-foreground: 215.4 16.3% 46.9%;
+        --accent: 210 40% 96.1%;
+        --accent-foreground: 222.2 47.4% 11.2%;
+        --destructive: 0 72.2% 50.6%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 214.3 31.8% 91.4%;
+        --input: 214.3 31.8% 91.4%;
+        --ring: 243.4 75.4% 58.6%;
+        --radius: 0.6rem;
+    }
+
+    body.dark-theme {
         --background: 240 10% 4%;
         --foreground: 210 40% 98%;
         --card: 240 10% 4%;
@@ -44,32 +73,32 @@ code {
         --border: 240 5% 15%;
         --input: 240 5% 15%;
         --ring: 243.4 75.4% 58.6%;
-        --radius: 0.6rem;
     }
 }
 
-.glass-panel {
+/* Glass selectors scoped to dark-theme */
+body.dark-theme .glass-panel {
     background: rgba(15, 23, 42, 0.45) !important;
     backdrop-filter: blur(16px) saturate(180%) !important;
     -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
-.glass-card {
+body.dark-theme .glass-card {
     background: rgba(15, 23, 42, 0.35) !important;
     backdrop-filter: blur(12px) saturate(180%) !important;
     -webkit-backdrop-filter: blur(12px) saturate(180%) !important;
     border: 1px solid rgba(255, 255, 255, 0.06) !important;
 }
 
-.glass-sidebar {
+body.dark-theme .glass-sidebar {
     background: rgba(8, 10, 20, 0.6) !important;
     backdrop-filter: blur(20px) saturate(180%) !important;
     -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
     border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
-.glass-header {
+body.dark-theme .glass-header {
     background: rgba(8, 10, 20, 0.4) !important;
     backdrop-filter: blur(16px) saturate(180%) !important;
     -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
@@ -85,17 +114,19 @@ code {
     }
 }
 
-/* Scrollbar polish for premium dark feel */
+/* Scrollbar polish */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 999px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+body.dark-theme ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 999px; }
+body.dark-theme ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+body:not(.dark-theme) ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 999px; }
+body:not(.dark-theme) ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
 ::-webkit-scrollbar-track { background: transparent; }
 
-/* Global Glassmorphism Overrides */
-div.rounded-lg.border,
-div.border-indigo-100.bg-white,
-div.glass-card,
-[data-testid="sidebar"] + main div.border-indigo-100 {
+/* Global Glassmorphism Overrides scoped to dark-theme */
+body.dark-theme div.rounded-lg.border,
+body.dark-theme div.border-indigo-100.bg-white,
+body.dark-theme div.glass-card,
+body.dark-theme [data-testid="sidebar"] + main div.border-indigo-100 {
     background: rgba(15, 23, 42, 0.4) !important;
     backdrop-filter: blur(16px) saturate(180%) !important;
     -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
@@ -104,10 +135,10 @@ div.glass-card,
     box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5) !important;
 }
 
-/* Modals, Dialogs and Popovers */
-[role="dialog"],
-div.bg-popover,
-[data-radix-popper-content-wrapper] > div {
+/* Modals, Dialogs and Popovers scoped to dark-theme */
+body.dark-theme [role="dialog"],
+body.dark-theme div.bg-popover,
+body.dark-theme [data-radix-popper-content-wrapper] > div {
     background: rgba(10, 11, 22, 0.95) !important;
     backdrop-filter: blur(20px) saturate(180%) !important;
     -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
@@ -115,52 +146,60 @@ div.bg-popover,
     color: #f8fafc !important;
 }
 
-/* Inputs, Selects, Buttons, Comboboxes */
-input:not([type="checkbox"]),
-select,
-textarea,
-button[role="combobox"],
-button.bg-background {
+/* Inputs, Selects, Buttons, Comboboxes scoped to dark-theme */
+body.dark-theme input:not([type="checkbox"]),
+body.dark-theme select,
+body.dark-theme textarea,
+body.dark-theme button[role="combobox"],
+body.dark-theme button.bg-background {
     background-color: rgba(255, 255, 255, 0.04) !important;
     border-color: rgba(255, 255, 255, 0.08) !important;
     color: #f8fafc !important;
 }
-input:not([type="checkbox"]):focus,
-select:focus,
-button[role="combobox"]:focus {
+body.dark-theme input:not([type="checkbox"]):focus,
+body.dark-theme select:focus,
+body.dark-theme button[role="combobox"]:focus {
     border-color: rgba(129, 140, 248, 0.5) !important;
     box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.2) !important;
 }
-input::placeholder,
-textarea::placeholder {
+body.dark-theme input::placeholder,
+body.dark-theme textarea::placeholder {
     color: #64748b !important;
 }
 
-/* Typography contrast for premium dark theme */
-.text-slate-900,
-.text-slate-800,
-.text-slate-700,
-.text-slate-600 {
-    color: #e2e8f0 !important;
+/* Typography contrast scoped to dark-theme */
+body.dark-theme .text-slate-900,
+body.dark-theme .text-slate-800,
+body.dark-theme .text-slate-700 {
+    color: #ffffff !important;
 }
-.text-slate-500,
-.text-slate-400 {
+body.dark-theme .text-slate-600,
+body.dark-theme .text-slate-500 {
+    color: #cbd5e1 !important;
+}
+body.dark-theme .text-slate-400 {
     color: #94a3b8 !important;
 }
-h1, h2, h3, h4, h5, h6, .text-slate-950 {
+body.dark-theme h1, 
+body.dark-theme h2, 
+body.dark-theme h3, 
+body.dark-theme h4, 
+body.dark-theme h5, 
+body.dark-theme h6, 
+body.dark-theme .text-slate-950 {
     color: #ffffff !important;
 }
 
-/* Table styling for dark theme */
-table thead,
-tr.bg-indigo-50\/60,
-thead.bg-indigo-50\/60 {
+/* Table styling scoped to dark-theme */
+body.dark-theme table thead,
+body.dark-theme tr.bg-indigo-50\/60,
+body.dark-theme thead.bg-indigo-50\/60 {
     background-color: rgba(255, 255, 255, 0.03) !important;
     color: #e2e8f0 !important;
 }
-table tbody tr {
+body.dark-theme table tbody tr {
     border-bottom-color: rgba(255, 255, 255, 0.04) !important;
 }
-table tbody tr:hover {
+body.dark-theme table tbody tr:hover {
     background-color: rgba(255, 255, 255, 0.02) !important;
 }

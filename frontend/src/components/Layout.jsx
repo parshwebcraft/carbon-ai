@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Users, ListTodo, Phone, MessageCircle,
   CalendarCheck2, FileText, Bot, UserCog, LogOut, Menu, X, Bell, PhoneCall, Sparkles, Briefcase,
+  Sun, Moon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import InstallPrompt from "@/components/InstallPrompt";
@@ -102,14 +103,31 @@ export default function Layout({ children }) {
   const { user, logout } = useAuth();
   const nav = useNavigate();
   const [open, setOpen] = useState(false);
+  const [isDark, setIsDark] = useState(() => {
+    const saved = localStorage.getItem("theme");
+    return saved !== null ? saved === "dark" : true;
+  });
+
+  useEffect(() => {
+    if (isDark) {
+      document.body.classList.add("dark-theme");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.body.classList.remove("dark-theme");
+      localStorage.setItem("theme", "light");
+    }
+  }, [isDark]);
 
   return (
-    <div className="min-h-screen text-slate-100 relative overflow-x-hidden">
-      <StarryBackground />
+    <div className={cn("min-h-screen relative overflow-x-hidden transition-colors duration-300", isDark ? "text-slate-100" : "text-slate-900")}>
+      {isDark && <StarryBackground />}
 
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* Mobile topbar */}
-        <header className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 h-14 glass-header text-slate-100">
+        <header className={cn(
+          "md:hidden sticky top-0 z-30 flex items-center justify-between px-4 h-14 transition-colors duration-300",
+          isDark ? "glass-header text-slate-100" : "bg-white border-b border-indigo-100 text-slate-900"
+        )}>
           <button
             data-testid="mobile-menu-toggle"
             aria-label="Toggle menu"
@@ -119,9 +137,15 @@ export default function Layout({ children }) {
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
           <Link to="/" className="flex items-center gap-2 font-serif font-semibold text-lg">
-            <Briefcase className="h-5 w-5 text-indigo-400" /> ParshWebCraft CRM
+            <Briefcase className={cn("h-5 w-5", isDark ? "text-indigo-400" : "text-indigo-700")} /> ParshWebCraft CRM
           </Link>
-          <div className="w-9" />
+          <button
+            onClick={() => setIsDark(!isDark)}
+            className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+            aria-label="Toggle Theme"
+          >
+            {isDark ? <Sun className="h-5 w-5 text-amber-400" /> : <Moon className="h-5 w-5 text-slate-700" />}
+          </button>
         </header>
 
         <div className="flex flex-1">
@@ -129,16 +153,17 @@ export default function Layout({ children }) {
           <aside
             data-testid="sidebar"
             className={cn(
-              "fixed md:sticky md:top-0 z-40 md:z-auto h-screen w-64 shrink-0 glass-sidebar flex flex-col text-slate-100",
+              "fixed md:sticky md:top-0 z-40 md:z-auto h-screen w-64 shrink-0 flex flex-col transition-all duration-300",
+              isDark ? "glass-sidebar text-slate-100" : "bg-white border-r border-indigo-100 text-slate-900",
               "transition-transform duration-200",
               open ? "translate-x-0 flex" : "-translate-x-full md:translate-x-0 md:flex hidden md:flex"
             )}
           >
-            <div className="px-5 h-16 flex items-center gap-2 border-b border-white/10 shrink-0">
-              <Briefcase className="h-6 w-6 text-indigo-400" />
+            <div className={cn("px-5 h-16 flex items-center gap-2 shrink-0 border-b transition-colors duration-300", isDark ? "border-white/10" : "border-indigo-100")}>
+              <Briefcase className={cn("h-6 w-6", isDark ? "text-indigo-400" : "text-indigo-700")} />
               <div className="leading-tight">
-                <div className="font-serif font-semibold text-lg text-white">ParshWebCraft</div>
-                <div className="text-[11px] uppercase tracking-wider text-indigo-400">Web Agency</div>
+                <div className={cn("font-serif font-semibold text-lg", isDark ? "text-white" : "text-slate-900")}>ParshWebCraft</div>
+                <div className={cn("text-[11px] uppercase tracking-wider", isDark ? "text-indigo-400" : "text-indigo-700")}>Web Agency</div>
               </div>
             </div>
             <nav className="flex-1 overflow-y-auto py-3">
@@ -151,10 +176,14 @@ export default function Layout({ children }) {
                   onClick={() => setOpen(false)}
                   className={({ isActive }) =>
                     cn(
-                      "flex items-center gap-3 px-5 py-2.5 text-sm font-medium transition-colors",
+                      "flex items-center gap-3 px-5 py-2.5 text-sm font-medium transition-colors duration-200",
                       isActive
-                        ? "bg-white/10 text-white border-r-2 border-indigo-500"
-                        : "text-slate-400 hover:text-white hover:bg-white/5"
+                        ? isDark
+                          ? "bg-white/10 text-white border-r-2 border-indigo-500"
+                          : "bg-indigo-50 text-indigo-900 border-r-2 border-indigo-700"
+                        : isDark
+                          ? "text-slate-400 hover:text-white hover:bg-white/5"
+                          : "text-slate-700 hover:bg-indigo-50/60"
                     )
                   }
                 >
@@ -168,10 +197,14 @@ export default function Layout({ children }) {
                   onClick={() => setOpen(false)}
                   className={({ isActive }) =>
                     cn(
-                      "flex items-center gap-3 px-5 py-2.5 text-sm font-medium transition-colors",
+                      "flex items-center gap-3 px-5 py-2.5 text-sm font-medium transition-colors duration-200",
                       isActive
-                        ? "bg-white/10 text-white border-r-2 border-indigo-500"
-                        : "text-slate-400 hover:text-white hover:bg-white/5"
+                        ? isDark
+                          ? "bg-white/10 text-white border-r-2 border-indigo-500"
+                          : "bg-indigo-50 text-indigo-900 border-r-2 border-indigo-700"
+                        : isDark
+                          ? "text-slate-400 hover:text-white hover:bg-white/5"
+                          : "text-slate-700 hover:bg-indigo-50/60"
                     )
                   }
                 >
@@ -179,15 +212,20 @@ export default function Layout({ children }) {
                 </NavLink>
               )}
             </nav>
-            <div className="border-t border-white/10 p-4 shrink-0">
-              <div className="text-sm font-medium text-white">{user?.name}</div>
-              <div className="text-xs text-slate-400 truncate">{user?.email}</div>
-              <div className="mt-1 text-[11px] uppercase tracking-wider text-indigo-400">{user?.role}</div>
+            <div className={cn("p-4 shrink-0 border-t transition-colors duration-300", isDark ? "border-white/10" : "border-indigo-100")}>
+              <div className={cn("text-sm font-medium", isDark ? "text-white" : "text-slate-900")}>{user?.name}</div>
+              <div className={cn("text-xs truncate", isDark ? "text-slate-400" : "text-slate-500")}>{user?.email}</div>
+              <div className={cn("mt-1 text-[11px] uppercase tracking-wider", isDark ? "text-indigo-400" : "text-indigo-700")}>{user?.role}</div>
               <Button
                 data-testid="logout-btn"
                 variant="ghost"
                 size="sm"
-                className="mt-3 w-full justify-start text-slate-400 hover:text-rose-400 hover:bg-rose-950/20"
+                className={cn(
+                  "mt-3 w-full justify-start transition-colors duration-200",
+                  isDark
+                    ? "text-slate-400 hover:text-rose-400 hover:bg-rose-950/20"
+                    : "text-slate-700 hover:text-rose-700 hover:bg-rose-50"
+                )}
                 onClick={() => { logout(); nav("/login"); }}
               >
                 <LogOut className="h-4 w-4 mr-2" /> Sign out
@@ -206,10 +244,23 @@ export default function Layout({ children }) {
 
           {/* Main */}
           <main className="flex-1 min-w-0 flex flex-col">
-            <div className="hidden md:flex items-center justify-end gap-3 h-14 px-6 glass-header text-slate-200 shrink-0">
-              <Bell className="h-4 w-4 text-slate-400 hover:text-white cursor-pointer transition-colors" />
-              <span className="text-sm text-slate-300">
-                Welcome, <span className="font-semibold text-white">{user?.name?.split(" ")[0]}</span>
+            <div className={cn(
+              "hidden md:flex items-center justify-end gap-4 h-14 px-6 transition-colors duration-300 shrink-0",
+              isDark ? "glass-header text-slate-200" : "bg-white border-b border-indigo-100 text-slate-700"
+            )}>
+              <button
+                onClick={() => setIsDark(!isDark)}
+                className={cn(
+                  "p-2 rounded-full transition-colors",
+                  isDark ? "hover:bg-white/10 text-slate-400 hover:text-white" : "hover:bg-indigo-50 text-slate-500 hover:text-indigo-700"
+                )}
+                aria-label="Toggle Theme"
+              >
+                {isDark ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-slate-700" />}
+              </button>
+              <Bell className={cn("h-4 w-4 cursor-pointer transition-colors", isDark ? "text-slate-400 hover:text-white" : "text-slate-500 hover:text-indigo-700")} />
+              <span className="text-sm">
+                Welcome, <span className={cn("font-semibold", isDark ? "text-white" : "text-slate-900")}>{user?.name?.split(" ")[0]}</span>
               </span>
             </div>
             <div className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto flex-1 z-10">{children}</div>
