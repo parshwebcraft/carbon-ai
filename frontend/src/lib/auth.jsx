@@ -26,6 +26,15 @@ export function AuthProvider({ children }) {
     setUser(data.user);
   }
 
+  async function register(name, email, password) {
+    const { data } = await api.post("/auth/register", { name, email, password });
+    localStorage.setItem("facets_token", data.access_token);
+    localStorage.setItem("facets_refresh", data.refresh_token);
+    localStorage.setItem("facets_user", JSON.stringify(data.user));
+    setToken(data.access_token);
+    setUser(data.user);
+  }
+
   function logout() {
     localStorage.removeItem("facets_token");
     localStorage.removeItem("facets_refresh");
@@ -35,7 +44,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthCtx.Provider value={{ user, token, login, logout }}>
+    <AuthCtx.Provider value={{ user, token, login, logout, register }}>
       {children}
     </AuthCtx.Provider>
   );

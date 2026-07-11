@@ -4,7 +4,9 @@ import { AuthProvider } from "@/lib/auth";
 import RequireAuth from "@/components/RequireAuth";
 import Layout from "@/components/Layout";
 
+import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
+import Signup from "@/pages/Signup";
 import Dashboard from "@/pages/Dashboard";
 import Leads from "@/pages/Leads";
 import LeadDetail from "@/pages/LeadDetail";
@@ -36,9 +38,11 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
+          <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
           <Route path="/offline" element={<Offline />} />
-          <Route path="/" element={<Authed><Dashboard /></Authed>} />
+          <Route path="/dashboard" element={<Authed><Dashboard /></Authed>} />
           <Route path="/leads" element={<Authed><Leads /></Authed>} />
           <Route path="/leads/:id" element={<Authed><LeadDetail /></Authed>} />
           <Route path="/tasks" element={<Authed><Tasks /></Authed>} />

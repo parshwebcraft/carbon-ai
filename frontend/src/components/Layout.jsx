@@ -136,7 +136,7 @@ export default function Layout({ children }) {
           >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
-          <Link to="/" className="flex items-center gap-2 font-serif font-semibold text-lg">
+          <Link to="/dashboard" className="flex items-center gap-2 font-serif font-semibold text-lg">
             <Briefcase className={cn("h-5 w-5", isDark ? "text-indigo-400" : "text-indigo-700")} /> ParshWebCraft CRM
           </Link>
           <button

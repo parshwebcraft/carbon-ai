@@ -7,11 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Briefcase, Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
 
-export default function Login() {
-  const { user, login } = useAuth();
+export default function Signup() {
+  const { user, register } = useAuth();
   const nav = useNavigate();
-  const [email, setEmail] = useState("admin@parshwebcraft.com");
-  const [password, setPassword] = useState("password123");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [company, setCompany] = useState("");
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -22,10 +24,10 @@ export default function Login() {
     setErr("");
     setLoading(true);
     try {
-      await login(email, password);
+      await register(name, email, password);
       nav("/dashboard");
     } catch (e) {
-      setErr(errMsg(e, "Login failed"));
+      setErr(errMsg(e, "Registration failed"));
     } finally {
       setLoading(false);
     }
@@ -49,7 +51,7 @@ export default function Login() {
             Automate follow-ups, humanize interactions, close contracts.
           </h2>
           <p className="text-slate-400 leading-relaxed text-base">
-            Power your agency's sales team with autonomous callers, smart analytics, and interactive campaign pacing.
+            Create an Admin profile for your agency instance to test real-time outbound voice campaigns, automated templates, and AI pipelines.
           </p>
           <div className="space-y-3 pt-4">
             <div className="flex items-center gap-3 text-slate-300">
@@ -72,7 +74,7 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Right panel - Form */}
+      {/* Right panel - Registration Form */}
       <div className="flex-1 flex items-center justify-center p-6 sm:p-12 relative z-10">
         <div className="w-full max-w-md space-y-8">
           <div className="md:hidden flex items-center justify-between">
@@ -89,15 +91,31 @@ export default function Login() {
             <Link to="/" className="hidden md:inline-flex items-center gap-1 text-sm text-slate-400 hover:text-white transition-colors mb-6">
               <ArrowLeft className="h-4 w-4" /> Back to Home
             </Link>
-            <h1 className="text-3xl font-serif font-bold text-white">Sign In</h1>
-            <p className="text-sm text-slate-400 mt-2">Sign in to your agency sales workspace to access calling campaigns.</p>
+            <h1 className="text-3xl font-serif font-bold text-white">Create Admin Account</h1>
+            <p className="text-sm text-slate-400 mt-2">Get started with your digital agency CRM workspace today.</p>
           </div>
 
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="name">Full Name</Label>
               <Input
-                id="email" type="email" autoComplete="email" required
+                id="name" type="text" required placeholder="John Doe"
+                value={name} onChange={(e) => setName(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="company">Agency Name</Label>
+              <Input
+                id="company" type="text" required placeholder="XYZ Digital"
+                value={company} onChange={(e) => setCompany(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="email">Work Email</Label>
+              <Input
+                id="email" type="email" required placeholder="john@company.com"
                 value={email} onChange={(e) => setEmail(e.target.value)}
                 className="mt-1"
               />
@@ -105,7 +123,7 @@ export default function Login() {
             <div>
               <Label htmlFor="password">Password</Label>
               <Input
-                id="password" type="password" autoComplete="current-password" required
+                id="password" type="password" required placeholder="••••••••"
                 value={password} onChange={(e) => setPassword(e.target.value)}
                 className="mt-1"
               />
@@ -123,20 +141,14 @@ export default function Login() {
               className="w-full bg-indigo-600 hover:bg-indigo-700 text-white h-11 text-base mt-2"
             >
               {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Sign In
+              Create Account
             </Button>
           </form>
 
-          <div className="bg-slate-900/40 border border-white/5 rounded-xl p-4 text-xs text-slate-400 space-y-1">
-            <span className="font-semibold text-slate-300 block mb-1">Demo Access Credentials:</span>
-            <div>Email: <code className="text-indigo-300">admin@parshwebcraft.com</code></div>
-            <div>Password: <code className="text-indigo-300">password123</code></div>
-          </div>
-
           <p className="text-center text-sm text-slate-400">
-            Don't have an account?{" "}
-            <Link to="/signup" className="text-indigo-400 hover:text-indigo-300 font-semibold">
-              Sign Up
+            Already have an account?{" "}
+            <Link to="/login" className="text-indigo-400 hover:text-indigo-300 font-semibold">
+              Sign In
             </Link>
           </p>
         </div>

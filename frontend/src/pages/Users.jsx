@@ -26,7 +26,7 @@ export default function Users() {
   function load() { api.get("/users").then(r => setItems(r.data)).catch(e => toast.error(errMsg(e))); }
   useEffect(load, []);
 
-  if (user && user.role !== "Admin") return <Navigate to="/" replace />;
+  if (user && user.role !== "Admin") return <Navigate to="/dashboard" replace />;
 
   return (
     <div data-testid="users-page" className="space-y-5">

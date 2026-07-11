@@ -4,9 +4,9 @@ import jwt
 
 from database import get_db
 from models import User
-from schemas import LoginIn, TokenOut, UserOut, RefreshIn
+from schemas import LoginIn, TokenOut, UserOut, RefreshIn, UserCreate
 from auth_utils import (
-    verify_password, create_access_token, create_refresh_token, decode_token,
+    verify_password, create_access_token, create_refresh_token, decode_token, hash_password,
 )
 from deps import get_current_user
 
@@ -54,3 +54,27 @@ def me(current: User = Depends(get_current_user)):
 def logout(current: User = Depends(get_current_user)):
     # JWT is stateless; clients drop the token.
     return {"ok": True}
+
+
+@router.post("/register", response_model=TokenOut, status_code=201)
+def register(payload: UserCreate, db: Session = Depends(get_db)):
+    email = payload.email.lower().strip()
+    if db.query(User).filter(User.email == email).first():
+        raise HTTPException(status_code=400, detail="Email already exists")
+    
+    user = User(
+        name=payload.name,
+        email=email,
+        role="Admin",
+        is_active=True,
+        password_hash=hash_password(payload.password),
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    
+    return TokenOut(
+        access_token=create_access_token(user.id, user.email, user.role),
+        refresh_token=create_refresh_token(user.id),
+        user=UserOut.model_validate(user),
+    )
