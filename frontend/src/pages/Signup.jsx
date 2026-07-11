@@ -41,8 +41,8 @@ export default function Signup() {
 
       {/* Left panel - Motto & Branding (Desktop only) */}
       <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-indigo-950/40 to-slate-950/60 p-12 lg:p-20 flex-col justify-between border-r border-white/5 relative z-10">
-        <div className="flex items-center gap-2">
-          <Briefcase className="h-6 w-6 text-indigo-400" />
+        <div className="flex items-center gap-2.5">
+          <img src="/images/logo-navbar.png" alt="ParshWebCraft Logo" className="h-7 object-contain" />
           <span className="font-serif font-semibold text-xl tracking-tight text-white">ParshWebCraft</span>
         </div>
 
@@ -78,8 +78,8 @@ export default function Signup() {
       <div className="flex-1 flex items-center justify-center p-6 sm:p-12 relative z-10">
         <div className="w-full max-w-md space-y-8">
           <div className="md:hidden flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Briefcase className="h-5 w-5 text-indigo-400" />
+            <div className="flex items-center gap-2.5">
+              <img src="/images/logo-navbar.png" alt="ParshWebCraft Logo" className="h-6 object-contain" />
               <span className="font-serif font-semibold text-lg text-white">ParshWebCraft</span>
             </div>
             <Link to="/" className="text-sm text-indigo-400 flex items-center gap-1">

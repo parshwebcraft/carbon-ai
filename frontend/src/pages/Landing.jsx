@@ -34,8 +34,8 @@ export default function Landing() {
       {/* Header */}
       <header className="sticky top-0 z-50 backdrop-blur-md bg-[#070814]/70 border-b border-white/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Briefcase className="h-6 w-6 text-indigo-400" />
+          <div className="flex items-center gap-2.5">
+            <img src="/images/logo-navbar.png" alt="ParshWebCraft Logo" className="h-7 object-contain" />
             <span className="font-serif font-semibold text-xl tracking-tight text-white">ParshWebCraft</span>
           </div>
 
@@ -137,7 +137,7 @@ export default function Landing() {
               </div>
               <div className="bg-slate-950/50 aspect-[16/9] flex items-center justify-center p-8">
                 <div className="text-center space-y-4 max-w-md">
-                  <Bot className="h-16 w-16 text-indigo-400 mx-auto animate-pulse" />
+                  <img src="/images/logo-main.png" alt="ParshWebCraft Logo" className="h-16 object-contain mx-auto animate-pulse" />
                   <h3 className="text-xl font-semibold text-white">ParshWebCraft CRM Workspace</h3>
                   <p className="text-sm text-slate-400">
                     Real-time dashboard mapping lead generation, automated voice campaign logging, and AI sales pipelines.
@@ -335,14 +335,14 @@ export default function Landing() {
               </div>
             </div>
           </div>
-          <div className="flex-1 w-full rounded-2xl border border-white/10 overflow-hidden relative aspect-[4/3] bg-indigo-950/10 flex items-center justify-center p-8 text-center">
-            <div className="space-y-4">
-              <Zap className="h-16 w-16 text-indigo-400 mx-auto animate-bounce" />
-              <h3 className="text-xl font-semibold text-white">Ready to Transform Your Sales?</h3>
-              <p className="text-sm text-slate-400 max-w-sm mx-auto">Create a company owner profile inside our registration page and test the CRM dialer workspace.</p>
-              <Link to="/signup">
-                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-6 mt-4">Start Testing Now</Button>
-              </Link>
+          <div className="flex-1 w-full rounded-2xl border border-white/10 overflow-hidden relative aspect-[4/5] md:aspect-[4/3] bg-indigo-950/10 min-h-[350px]">
+            <img src="/images/gauransh-founder.png" alt="Gauransh - Founder" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-transparent flex flex-col justify-end p-6 text-left">
+              <h3 className="text-xl font-bold text-white">Gauransh</h3>
+              <p className="text-xs text-indigo-400 uppercase tracking-wider font-semibold">Founder, ParshWebCraft</p>
+              <p className="text-sm text-slate-300 mt-2 leading-relaxed">
+                "Our mission is to build highly conversational autonomous software products that accelerate sales for digital agencies worldwide."
+              </p>
             </div>
           </div>
         </div>
@@ -398,8 +398,8 @@ export default function Landing() {
       {/* Footer */}
       <footer className="py-12 border-t border-white/10 bg-slate-950/80 relative z-10 text-center text-sm text-slate-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
-          <div className="flex items-center justify-center gap-2">
-            <Briefcase className="h-5 w-5 text-indigo-400" />
+          <div className="flex items-center justify-center gap-2.5">
+            <img src="/images/logo-navbar.png" alt="ParshWebCraft Logo" className="h-6 object-contain" />
             <span className="font-serif font-semibold text-lg text-white">ParshWebCraft</span>
           </div>
           <p>© 2026 ParshWebCraft. All rights reserved. Powering agency sales autonomously.</p>

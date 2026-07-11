@@ -137,7 +137,7 @@ export default function Layout({ children }) {
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
           <Link to="/dashboard" className="flex items-center gap-2 font-serif font-semibold text-lg">
-            <Briefcase className={cn("h-5 w-5", isDark ? "text-indigo-400" : "text-indigo-700")} /> ParshWebCraft CRM
+            <img src="/images/logo-navbar.png" alt="ParshWebCraft Logo" className="h-6 object-contain mr-1" /> ParshWebCraft CRM
           </Link>
           <button
             onClick={() => setIsDark(!isDark)}
@@ -160,7 +160,7 @@ export default function Layout({ children }) {
             )}
           >
             <div className={cn("px-5 h-16 flex items-center gap-2 shrink-0 border-b transition-colors duration-300", isDark ? "border-white/10" : "border-indigo-100")}>
-              <Briefcase className={cn("h-6 w-6", isDark ? "text-indigo-400" : "text-indigo-700")} />
+              <img src="/images/logo-navbar.png" alt="ParshWebCraft Logo" className="h-7 object-contain mr-1" />
               <div className="leading-tight">
                 <div className={cn("font-serif font-semibold text-lg", isDark ? "text-white" : "text-slate-900")}>ParshWebCraft</div>
                 <div className={cn("text-[11px] uppercase tracking-wider", isDark ? "text-indigo-400" : "text-indigo-700")}>Web Agency</div>
