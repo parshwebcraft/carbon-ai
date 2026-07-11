@@ -149,36 +149,55 @@ def seed_products(db, n=40):
     return products
 
 
+REAL_LEADS_DATA = [
+    {"date": "26/12/2025", "source": "Self", "name": "Rahul Jain", "industry": "Blinkit MVP Clone", "value": 200000.0, "status": "Not Proceeded", "reason": "Budget", "converted": "No", "city": "Indore"},
+    {"date": "07/01/2026", "source": "Mahaveer Mama", "name": "Hemant Bhat", "industry": "Taxi Services", "value": 9000.0, "status": "Completed", "reason": "Deal Closed", "converted": "Yes", "city": "Surat"},
+    {"date": "21/02/2026", "source": "Self", "name": "Sip n Crunch Cafe", "industry": "Cafe", "value": 21000.0, "status": "May be Ongoing", "reason": "Deal in progress", "converted": "No", "city": "Indore"},
+    {"date": "22/02/2026", "source": "Self", "name": "Anand Goswani", "industry": "Clothing Brand", "value": 11000.0, "status": "Completed", "reason": "Deal Closed", "converted": "Yes", "city": "Jaipur"},
+    {"date": "08/03/2026", "source": "Instagram", "name": "Vishal Vairagi", "industry": "Paint Shop", "value": 22000.0, "status": "Ongoing", "reason": "Deal in progress", "converted": "Yes", "city": "Indore"},
+    {"date": "15/03/2026", "source": "Self", "name": "Akshay Mandot", "industry": "Real estate", "value": 300000.0, "status": "Not Proceeded", "reason": "Makha Kanjus hai", "converted": "No", "city": "Delhi"},
+    {"date": "17/03/2026", "source": "Self", "name": "Lalit Choudhary Him Cream Naturals", "industry": "Cafe", "value": 4000.0, "status": "Completed", "reason": "Deal Closed", "converted": "Yes", "city": "Mumbai"},
+    {"date": "19/03/2026", "source": "Self", "name": "Raj Thakur", "industry": "Musician", "value": 35000.0, "status": "Not Proceeded", "reason": "Time nahi unke paas", "converted": "No", "city": "Ahmedabad"},
+    {"date": "19/03/2026", "source": "Self", "name": "Manish Jain", "industry": "Retail Services", "value": 5000.0, "status": "Ongoing", "reason": "Deal in progress", "converted": "Yes", "city": "Chennai"},
+    {"date": "24/03/2026", "source": "Sajan Mandot", "name": "Manish Dodech", "industry": "Garment Factory", "value": 500000.0, "status": "Not Proceeded", "reason": "Kanjus", "converted": "No", "city": "Indore"},
+    {"date": "31/03/2026", "source": "Self", "name": "Saraswati Narayan Hospital", "industry": "Healthcare", "value": 50000.0, "status": "Not Proceeded", "reason": "Kanjus , Katha", "converted": "No", "city": "Mumbai"},
+    {"date": "31/03/2026", "source": "Self", "name": "Dr. Abhay Jain Clinic", "industry": "Healthcare", "value": 30000.0, "status": "Not Proceeded", "reason": "Not Required of setup", "converted": "No", "city": "Jaipur"},
+    {"date": "04/04/2026", "source": "Self", "name": "Nakoda Home Appliances Elica", "industry": "Home Appliances", "value": 25000.0, "status": "Not Proceeded", "reason": "Not Required", "converted": "No", "city": "Indore"},
+    {"date": "04/04/2026", "source": "Self", "name": "Palak Bokadia", "industry": "Clothing Brand", "value": 25000.0, "status": "Not Proceeded", "reason": "Khud Engineer h", "converted": "No", "city": "Delhi"},
+    {"date": "15/04/2026", "source": "Self", "name": "Parikshit Nagda", "industry": "Journal", "value": 8000.0, "status": "Ongoing", "reason": "Deal in progress", "converted": "Yes", "city": "Indore"},
+    {"date": "17/04/2026", "source": "Self", "name": "Oswal Sabha", "industry": "Community Website", "value": 8000.0, "status": "Completed", "reason": "Deal Closed", "converted": "Yes", "city": "Surat"},
+    {"date": "17/04/2026", "source": "Self", "name": "Manoj Lodha", "industry": "Jewellery Showroom", "value": 15000.0, "status": "Not Proceeded", "reason": "Time nahi unke paas", "converted": "No", "city": "Mumbai"},
+    {"date": "21/04/2025", "source": "Hiya Porwal", "name": "Hemant Ji Porwal", "industry": "Jewellery Showroom", "value": 15000.0, "status": "Not Proceeded", "reason": "Hiya Jane", "converted": "No", "city": "Jaipur"},
+    {"date": "03/04/2026", "source": "Self", "name": "Mahapragya Vihar", "industry": "Stay Management", "value": 10000.0, "status": "Completed", "reason": "Trust on my work", "converted": "Yes", "city": "Indore"},
+    {"date": "07/05/2026", "source": "Self", "name": "ATDC Udaipur", "industry": "Hospital Management", "value": 12500.0, "status": "Ongoing", "reason": "Trust on my work", "converted": "Yes", "city": "Udaipur"},
+    {"date": "08/05/2026", "source": "Self", "name": "Strong Fit Gym", "industry": "Fitness Gym", "value": 15000.0, "status": "Not Proceeded", "reason": "Budget", "converted": "No", "city": "Indore"},
+    {"date": "04/06/2026", "source": "Self", "name": "Yuvraj Pachori", "industry": "Digital News Media", "value": 6000.0, "status": "Ongoing", "reason": "Deal in progress", "converted": "Yes", "city": "Delhi"},
+    {"date": "25/06/2026", "source": "Instagram", "name": "Chintransh Rathore", "industry": "Restaurant", "value": 0.0, "status": "Not Proceeded", "reason": "Not responded", "converted": "No", "city": "Indore"},
+    {"date": "30/06/2026", "source": "Instagram", "name": "Shweta usa Client", "industry": "Chocolate Shop", "value": 0.0, "status": "Call is in process", "reason": "Deal in progress", "converted": "No", "city": "Jaipur"},
+    {"date": "07/07/2026", "source": "Thread", "name": "Richa Dave", "industry": "Jewellery Showroom", "value": 0.0, "status": "Call is in process", "reason": "Deal in progress", "converted": "No", "city": "Indore"},
+    {"date": "09/07/2026", "source": "Meta Ads", "name": "Sarthak Shirke", "industry": "Electrical contractor", "value": 10000.0, "status": "Call is in process", "reason": "Deal in progress", "converted": "No", "city": "Mumbai"},
+    {"date": "10/07/2026", "source": "Instagram", "name": "Arijit Singh", "industry": "Clothing Brand", "value": 0.0, "status": "Call is in process", "reason": "Not responded", "converted": "No", "city": "Delhi"}
+]
+
+
 def seed_leads(db, sales_users, n=100):
     leads = []
-    now = datetime.now(timezone.utc)
-    for _ in range(n):
-        status = random.choices(
-            LEAD_STATUSES,
-            weights=[18, 14, 14, 12, 10, 8, 8, 8, 8],
-        )[0]
-        cust_type = random.choice(CUSTOMER_TYPES)
-        budget_band = {
-            "Startup Website": (20_000, 80_000),
-            "E-commerce Business": (50_000, 5_00_000),
-            "Mobile App Client": (1_50_000, 8_00_000),
-            "Local SEO Audit": (10_000, 50_000),
-            "SaaS Software Partner": (2_00_000, 15_00_000),
-        }[cust_type]
+    for item in REAL_LEADS_DATA:
+        dt = datetime.strptime(item["date"], "%d/%m/%Y")
         lead = Lead(
-            name=fake.name(),
+            name=item["name"],
             phone=f"+91{random.randint(7000000000, 9999999999)}",
-            email=fake.email(),
-            company=random.choice(AGENCY_BRANDS) if random.random() < 0.45 else None,
-            city=random.choice(INDIAN_CITIES),
-            source=random.choice(LEAD_SOURCES),
-            status=status,
-            budget=float(random.randint(*budget_band)),
-            customer_type=cust_type,
-            notes=fake.sentence(nb_words=12),
+            email=f"{item['name'].lower().replace(' ', '')}@example.com",
+            company=item["industry"],
+            city=item["city"],
+            source=item["source"],
+            status=item["status"],
+            budget=item["value"],
+            customer_type=item["industry"],
+            notes=f"Reason: {item['reason']} | Converted: {item['converted']}",
             assigned_to=random.choice(sales_users).id,
-            created_at=now - timedelta(days=random.randint(0, 120)),
-            updated_at=now - timedelta(days=random.randint(0, 30)),
+            created_at=dt,
+            updated_at=dt,
         )
         db.add(lead)
         leads.append(lead)
