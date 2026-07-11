@@ -218,10 +218,10 @@ def seed_calls(db, leads, n=100):
 
 def seed_tasks(db, leads, users, n=50):
     titles = [
-        "Send bridal catalogue", "Call back for follow up", "Share gold rate update",
-        "Schedule showroom visit", "Send quotation document", "Confirm GST details",
-        "Arrange diamond viewing", "Negotiate making charges", "Send invoice",
-        "Festive offer follow up",
+        "Send proposal document", "Call back for follow up", "Send speed audit report",
+        "Schedule discovery meeting", "Confirm contract terms", "Confirm GST details",
+        "Arrange portfolio review", "Negotiate project timeline", "Send initial invoice",
+        "Follow up on proposal",
     ]
     statuses = ["Open", "In Progress", "Completed", "Cancelled"]
     priorities = ["Low", "Medium", "High"]
