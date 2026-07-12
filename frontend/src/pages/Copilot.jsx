@@ -429,6 +429,11 @@ export default function Copilot() {
     ws.onmessage = (e) => {
       try {
         const msg = JSON.parse(e.data);
+        if (msg.type === "error") {
+          toast.error(msg.message || "AI Analysis failed");
+          setAiLoading(false);
+          return;
+        }
         if (msg.type === "suggestions" && msg.data) {
           const ai = msg.data;
           const newSuggestions = {};
