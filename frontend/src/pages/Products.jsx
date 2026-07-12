@@ -27,12 +27,16 @@ export default function Products() {
   const [open, setOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
 
   function load() {
     const params = {};
     if (search) params.search = search;
     if (metal) params.metal_type = metal;
-    api.get("/products", { params }).then(r => setItems(r.data)).catch(e => toast.error(errMsg(e)));
+    api.get("/products", { params }).then(r => {
+      setItems(r.data);
+      setSelectedIds([]);
+    }).catch(e => toast.error(errMsg(e)));
   }
   useEffect(load, [metal]);
 
@@ -47,6 +51,40 @@ export default function Products() {
     }
   }
 
+  async function handleDeleteSelected() {
+    if (!window.confirm(`Are you sure you want to delete the ${selectedIds.length} selected services?`)) return;
+    try {
+      await api.post("/products/delete-multiple", selectedIds);
+      toast.success("Selected services deleted");
+      load();
+    } catch (e) {
+      toast.error(errMsg(e));
+    }
+  }
+
+  async function handleDeleteAll() {
+    if (!window.confirm("WARNING: Are you sure you want to delete ALL services/products from the database?")) return;
+    try {
+      await api.post("/products/delete-all");
+      toast.success("All services deleted");
+      load();
+    } catch (e) {
+      toast.error(errMsg(e));
+    }
+  }
+
+  function toggleSelect(id) {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.length === items.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(items.map(p => p.id));
+    }
+  }
+
   return (
     <div data-testid="products-page" className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -54,18 +92,38 @@ export default function Products() {
           <h1 className="font-serif text-3xl">Products Catalogue</h1>
           <p className="text-sm text-slate-600">{items.length} pieces</p>
         </div>
-        {canCreate && (
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button data-testid="new-product-btn" className="bg-indigo-700 hover:bg-indigo-800"><Plus className="h-4 w-4 mr-1.5" />Add Product</Button>
-            </DialogTrigger>
-            <NewProductDialog onSaved={() => { setOpen(false); load(); }} />
-          </Dialog>
-        )}
+        <div className="flex items-center gap-2">
+          {selectedIds.length > 0 && user?.role === "Admin" && (
+            <Button 
+              variant="destructive"
+              onClick={handleDeleteSelected}
+              className="bg-rose-600 hover:bg-rose-700"
+            >
+              Delete Selected ({selectedIds.length})
+            </Button>
+          )}
+          {items.length > 0 && user?.role === "Admin" && (
+            <Button 
+              variant="outline" 
+              onClick={handleDeleteAll}
+              className="border-rose-200 text-rose-700 hover:bg-rose-50"
+            >
+              Delete All
+            </Button>
+          )}
+          {canCreate && (
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button data-testid="new-product-btn" className="bg-indigo-700 hover:bg-indigo-800"><Plus className="h-4 w-4 mr-1.5" />Add Product</Button>
+              </DialogTrigger>
+              <NewProductDialog onSaved={() => { setOpen(false); load(); }} />
+            </Dialog>
+          )}
+        </div>
       </div>
 
       <Card className="p-4 border-indigo-100 bg-white">
-        <div className="grid sm:grid-cols-3 gap-3">
+        <div className="grid sm:grid-cols-4 gap-3">
           <Input data-testid="products-search" placeholder="Search…" value={search}
             onChange={e => setSearch(e.target.value)}
             onKeyDown={e => e.key === "Enter" && load()} />
@@ -77,6 +135,11 @@ export default function Products() {
             </SelectContent>
           </Select>
           <Button data-testid="products-apply" variant="outline" onClick={load}>Apply</Button>
+          {items.length > 0 && (
+            <Button variant="ghost" onClick={toggleSelectAll} className="text-indigo-700 hover:bg-indigo-50">
+              {selectedIds.length === items.length ? "Deselect All" : "Select All"}
+            </Button>
+          )}
         </div>
       </Card>
 
@@ -84,8 +147,16 @@ export default function Products() {
         {items.map(p => (
           <Card key={p.id} className="border-indigo-100 bg-white p-4 hover:shadow-md transition-shadow relative">
             <div className="flex items-center justify-between">
-              <div className="h-10 w-10 rounded-lg bg-indigo-50 grid place-items-center text-indigo-700">
-                <Gem className="h-5 w-5" />
+              <div className="flex items-center gap-2">
+                <input 
+                  type="checkbox" 
+                  checked={selectedIds.includes(p.id)}
+                  onChange={() => toggleSelect(p.id)}
+                  className="rounded border-indigo-300 text-indigo-700 focus:ring-indigo-500 h-4 w-4"
+                />
+                <div className="h-10 w-10 rounded-lg bg-indigo-50 grid place-items-center text-indigo-700">
+                  <Gem className="h-5 w-5" />
+                </div>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="text-[10px] uppercase tracking-wider text-indigo-700 mr-1.5">{p.metal_type}</span>

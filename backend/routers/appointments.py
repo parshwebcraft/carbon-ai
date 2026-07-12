@@ -49,3 +49,19 @@ def delete_appointment(aid: int, db: Session = Depends(get_db),
     db.delete(a)
     db.commit()
     return None
+
+
+@router.post("/delete-multiple", status_code=204)
+def delete_multiple_appointments(aid_list: list[int], db: Session = Depends(get_db),
+                                 _: User = Depends(get_current_user)):
+    db.query(Appointment).filter(Appointment.id.in_(aid_list)).delete(synchronize_session=False)
+    db.commit()
+    return None
+
+
+@router.post("/delete-all", status_code=204)
+def delete_all_appointments(db: Session = Depends(get_db),
+                            _: User = Depends(get_current_user)):
+    db.query(Appointment).delete(synchronize_session=False)
+    db.commit()
+    return None

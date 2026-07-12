@@ -58,3 +58,23 @@ def delete_user(uid: int, db: Session = Depends(get_db),
     db.delete(u)
     db.commit()
     return None
+
+
+@router.post("/delete-multiple", status_code=204)
+def delete_multiple_users(uid_list: list[int], db: Session = Depends(get_db),
+                          _: User = Depends(require_roles("Admin"))):
+    # Avoid deleting user ID 1 (default admin)
+    filtered_list = [uid for uid in uid_list if uid != 1]
+    if filtered_list:
+        db.query(User).filter(User.id.in_(filtered_list)).delete(synchronize_session=False)
+        db.commit()
+    return None
+
+
+@router.post("/delete-all", status_code=204)
+def delete_all_users(db: Session = Depends(get_db),
+                      _: User = Depends(require_roles("Admin"))):
+    # Delete all except default admin account (ID 1)
+    db.query(User).filter(User.id != 1).delete(synchronize_session=False)
+    db.commit()
+    return None

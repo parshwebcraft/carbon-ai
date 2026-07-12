@@ -68,3 +68,19 @@ def delete_product(pid: int, db: Session = Depends(get_db),
     db.delete(p)
     db.commit()
     return None
+
+
+@router.post("/delete-multiple", status_code=204)
+def delete_multiple_products(pid_list: list[int], db: Session = Depends(get_db),
+                             _: User = Depends(require_roles("Admin"))):
+    db.query(Product).filter(Product.id.in_(pid_list)).delete(synchronize_session=False)
+    db.commit()
+    return None
+
+
+@router.post("/delete-all", status_code=204)
+def delete_all_products(db: Session = Depends(get_db),
+                        _: User = Depends(require_roles("Admin"))):
+    db.query(Product).delete(synchronize_session=False)
+    db.commit()
+    return None

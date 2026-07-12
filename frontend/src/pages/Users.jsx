@@ -12,7 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Plus, UserCog } from "lucide-react";
+import { Plus, UserCog, Edit3, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Navigate } from "react-router-dom";
 
@@ -22,11 +22,74 @@ export default function Users() {
   const { user } = useAuth();
   const [items, setItems] = useState([]);
   const [open, setOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
 
-  function load() { api.get("/users").then(r => setItems(r.data)).catch(e => toast.error(errMsg(e))); }
+  function load() {
+    api.get("/users").then(r => {
+      setItems(r.data);
+      setSelectedIds([]);
+    }).catch(e => toast.error(errMsg(e)));
+  }
   useEffect(load, []);
 
   if (user && user.role !== "Admin") return <Navigate to="/dashboard" replace />;
+
+  async function handleDelete(uid) {
+    if (uid === 1) {
+      toast.error("Default primary admin account cannot be deleted.");
+      return;
+    }
+    if (!window.confirm("Are you sure you want to delete this user?")) return;
+    try {
+      await api.delete(`/users/${uid}`);
+      toast.success("User deleted");
+      load();
+    } catch (e) {
+      toast.error(errMsg(e));
+    }
+  }
+
+  async function handleDeleteSelected() {
+    // Filter out primary admin (ID 1)
+    const toDelete = selectedIds.filter(id => id !== 1);
+    if (toDelete.length === 0) {
+      toast.error("No deletable users selected.");
+      return;
+    }
+    if (!window.confirm(`Are you sure you want to delete the ${toDelete.length} selected users?`)) return;
+    try {
+      await api.post("/users/delete-multiple", toDelete);
+      toast.success("Selected users deleted");
+      load();
+    } catch (e) {
+      toast.error(errMsg(e));
+    }
+  }
+
+  async function handleDeleteAll() {
+    if (!window.confirm("WARNING: Are you sure you want to delete all team members (except the primary admin)?")) return;
+    try {
+      await api.post("/users/delete-all");
+      toast.success("All users deleted");
+      load();
+    } catch (e) {
+      toast.error(errMsg(e));
+    }
+  }
+
+  function toggleSelect(id) {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.length === items.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(items.map(u => u.id));
+    }
+  }
 
   return (
     <div data-testid="users-page" className="space-y-5">
@@ -35,21 +98,63 @@ export default function Users() {
           <h1 className="font-serif text-3xl">Team</h1>
           <p className="text-sm text-slate-600">{items.length} users</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button data-testid="new-user-btn" className="bg-indigo-700 hover:bg-indigo-800"><Plus className="h-4 w-4 mr-1.5" />Invite user</Button>
-          </DialogTrigger>
-          <NewUserDialog onSaved={() => { setOpen(false); load(); }} />
-        </Dialog>
+        <div className="flex items-center gap-2">
+          {selectedIds.length > 0 && (
+            <Button 
+              variant="destructive"
+              onClick={handleDeleteSelected}
+              className="bg-rose-600 hover:bg-rose-700 h-9"
+            >
+              Delete Selected ({selectedIds.length})
+            </Button>
+          )}
+          {items.length > 1 && (
+            <Button 
+              variant="outline" 
+              onClick={handleDeleteAll}
+              className="border-rose-200 text-rose-700 hover:bg-rose-50 h-9"
+            >
+              Delete All
+            </Button>
+          )}
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button data-testid="new-user-btn" className="bg-indigo-700 hover:bg-indigo-800"><Plus className="h-4 w-4 mr-1.5" />Invite user</Button>
+            </DialogTrigger>
+            <NewUserDialog onSaved={() => { setOpen(false); load(); }} />
+          </Dialog>
+        </div>
       </div>
       <Card className="border-indigo-100 bg-white overflow-hidden">
         <table className="w-full text-sm" data-testid="users-table">
           <thead className="bg-indigo-50/60 text-slate-700">
-            <tr><th className="text-left px-4 py-3">User</th><th className="text-left px-4 py-3">Role</th><th className="text-left px-4 py-3">Active</th><th className="text-left px-4 py-3">Created</th></tr>
+            <tr>
+              <th className="px-4 py-3 text-left w-10">
+                <input 
+                  type="checkbox"
+                  checked={selectedIds.length === items.length && items.length > 0}
+                  onChange={toggleSelectAll}
+                  className="rounded border-indigo-300 text-indigo-700 h-4 w-4"
+                />
+              </th>
+              <th className="text-left px-4 py-3">User</th>
+              <th className="text-left px-4 py-3">Role</th>
+              <th className="text-left px-4 py-3">Active</th>
+              <th className="text-left px-4 py-3">Created</th>
+              <th className="text-left px-4 py-3">Actions</th>
+            </tr>
           </thead>
           <tbody>
             {items.map(u => (
               <tr key={u.id} className="border-t border-indigo-50">
+                <td className="px-4 py-3">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedIds.includes(u.id)}
+                    onChange={() => toggleSelect(u.id)}
+                    className="rounded border-indigo-300 text-indigo-700 h-4 w-4"
+                  />
+                </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
                     <div className="h-9 w-9 rounded-full bg-indigo-50 text-indigo-700 grid place-items-center"><UserCog className="h-4 w-4" /></div>
@@ -62,11 +167,37 @@ export default function Users() {
                 <td className="px-4 py-3"><span className="text-xs uppercase tracking-wider text-indigo-800">{u.role}</span></td>
                 <td className="px-4 py-3">{u.is_active ? "Yes" : "No"}</td>
                 <td className="px-4 py-3 text-slate-500">{dateShort(u.created_at)}</td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => { setEditingUser(u); setEditOpen(true); }}
+                      className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-indigo-600 transition-colors"
+                      title="Edit Profile"
+                    >
+                      <Edit3 className="h-3.5 w-3.5" />
+                    </button>
+                    {u.id !== 1 && (
+                      <button 
+                        onClick={() => handleDelete(u.id)}
+                        className="p-1 hover:bg-rose-50 rounded text-slate-400 hover:text-rose-600 transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </Card>
+
+      {editingUser && (
+        <Dialog open={editOpen} onOpenChange={setEditOpen}>
+          <EditUserDialog uData={editingUser} onSaved={() => { setEditOpen(false); setEditingUser(null); load(); }} />
+        </Dialog>
+      )}
     </div>
   );
 }
@@ -98,11 +229,96 @@ function NewUserDialog({ onSaved }) {
             <SelectContent>{ROLES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
           </Select>
         </div>
+        <div className="pt-1">
+          <Label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
+            <input 
+              type="checkbox"
+              checked={form.is_active}
+              onChange={e => setForm({ ...form, is_active: e.target.checked })}
+              className="rounded border-indigo-300 text-indigo-700 focus:ring-indigo-500 h-4 w-4"
+            />
+            Active Account
+          </Label>
+        </div>
       </div>
       <DialogFooter>
         <Button data-testid="new-user-save" className="bg-indigo-700 hover:bg-indigo-800"
           disabled={saving || !form.name || !form.email || !form.password}
           onClick={save}>Save</Button>
+      </DialogFooter>
+    </DialogContent>
+  );
+}
+
+function EditUserDialog({ uData, onSaved }) {
+  const [form, setForm] = useState({
+    name: uData.name || "",
+    email: uData.email || "",
+    password: "",
+    role: uData.role || "Sales",
+    is_active: uData.is_active ?? true,
+  });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setForm({
+      name: uData.name || "",
+      email: uData.email || "",
+      password: "",
+      role: uData.role || "Sales",
+      is_active: uData.is_active ?? true,
+    });
+  }, [uData]);
+
+  async function save() {
+    setSaving(true);
+    const payload = { ...form };
+    if (!payload.password) delete payload.password; // Leave blank to preserve password
+    try {
+      await api.put(`/users/${uData.id}`, payload);
+      toast.success("User updated");
+      onSaved();
+    } catch (e) { toast.error(errMsg(e)); }
+    finally { setSaving(false); }
+  }
+
+  return (
+    <DialogContent>
+      <DialogHeader><DialogTitle className="font-serif">Edit User Details</DialogTitle></DialogHeader>
+      <div className="space-y-3">
+        <div>
+          <Label className="text-xs text-slate-600">Name</Label>
+          <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
+        </div>
+        <div>
+          <Label className="text-xs text-slate-600">Email</Label>
+          <Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+        </div>
+        <div>
+          <Label className="text-xs text-slate-600">New Password (leave blank to keep current)</Label>
+          <Input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} />
+        </div>
+        <div>
+          <Label className="text-xs text-slate-600">Role</Label>
+          <Select value={form.role} onValueChange={v => setForm({ ...form, role: v })}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>{ROLES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+        <div className="pt-1">
+          <Label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
+            <input 
+              type="checkbox"
+              checked={form.is_active}
+              onChange={e => setForm({ ...form, is_active: e.target.checked })}
+              className="rounded border-indigo-300 text-indigo-700 focus:ring-indigo-500 h-4 w-4"
+            />
+            Active Account
+          </Label>
+        </div>
+      </div>
+      <DialogFooter>
+        <Button className="bg-indigo-700 hover:bg-indigo-800" disabled={saving || !form.name || !form.email} onClick={save}>Save</Button>
       </DialogFooter>
     </DialogContent>
   );

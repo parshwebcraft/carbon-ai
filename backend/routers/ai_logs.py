@@ -37,3 +37,32 @@ def delete_log(lid: int, db: Session = Depends(get_db), _: User = Depends(get_cu
     db.delete(l_obj)
     db.commit()
     return None
+
+
+@router.put("/{lid}", response_model=AILogOut)
+def update_log(lid: int, payload: AILogCreate, db: Session = Depends(get_db),
+               _: User = Depends(get_current_user)):
+    l_obj = db.query(AIAgentLog).filter(AIAgentLog.id == lid).first()
+    if not l_obj:
+        raise HTTPException(404, "Log not found")
+    for k, v in payload.model_dump().items():
+        setattr(l_obj, k, v)
+    db.commit()
+    db.refresh(l_obj)
+    return AILogOut.model_validate(l_obj)
+
+
+@router.post("/delete-multiple", status_code=204)
+def delete_multiple_logs(lid_list: list[int], db: Session = Depends(get_db),
+                         _: User = Depends(get_current_user)):
+    db.query(AIAgentLog).filter(AIAgentLog.id.in_(lid_list)).delete(synchronize_session=False)
+    db.commit()
+    return None
+
+
+@router.post("/delete-all", status_code=204)
+def delete_all_logs(db: Session = Depends(get_db),
+                    _: User = Depends(get_current_user)):
+    db.query(AIAgentLog).delete(synchronize_session=False)
+    db.commit()
+    return None

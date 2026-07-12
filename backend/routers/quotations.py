@@ -63,3 +63,19 @@ def delete_quotation(qid: int, db: Session = Depends(get_db),
     db.delete(q)
     db.commit()
     return None
+
+
+@router.post("/delete-multiple", status_code=204)
+def delete_multiple_quotations(qid_list: list[int], db: Session = Depends(get_db),
+                               _: User = Depends(get_current_user)):
+    db.query(Quotation).filter(Quotation.id.in_(qid_list)).delete(synchronize_session=False)
+    db.commit()
+    return None
+
+
+@router.post("/delete-all", status_code=204)
+def delete_all_quotations(db: Session = Depends(get_db),
+                          _: User = Depends(get_current_user)):
+    db.query(Quotation).delete(synchronize_session=False)
+    db.commit()
+    return None
