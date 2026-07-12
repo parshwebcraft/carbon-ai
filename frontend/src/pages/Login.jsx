@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Navigate, Link } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { errMsg } from "@/lib/format";
@@ -13,6 +13,10 @@ export default function Login() {
   const [email, setEmail] = useState("admin@parshwebcraft.com");
   const [password, setPassword] = useState("password123");
   const [err, setErr] = useState("");
+
+  useEffect(() => {
+    document.body.classList.add("dark-theme");
+  }, []);
   const [loading, setLoading] = useState(false);
 
   if (user) return <Navigate to="/dashboard" replace />;

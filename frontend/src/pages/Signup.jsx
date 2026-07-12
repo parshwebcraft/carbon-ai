@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Navigate, Link } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { errMsg } from "@/lib/format";
@@ -13,6 +13,10 @@ export default function Signup() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  useEffect(() => {
+    document.body.classList.add("dark-theme");
+  }, []);
   const [company, setCompany] = useState("");
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);

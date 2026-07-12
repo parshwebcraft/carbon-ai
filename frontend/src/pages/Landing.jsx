@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   Briefcase, Sparkles, PhoneCall, Bot, MessageCircle, 
@@ -12,6 +12,10 @@ export default function Landing() {
   const [quoteForm, setQuoteForm] = useState({ name: "", email: "", company: "", requirements: "" });
   const [quoteSuccess, setQuoteSuccess] = useState(false);
   const nav = useNavigate();
+
+  useEffect(() => {
+    document.body.classList.add("dark-theme");
+  }, []);
 
   const handleQuoteSubmit = (e) => {
     e.preventDefault();
