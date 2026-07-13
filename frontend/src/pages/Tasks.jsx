@@ -232,7 +232,7 @@ function NewTaskDialog({ users, onSaved }) {
         </div>
         <div>
           <Label className="text-xs text-slate-600">Due Date</Label>
-          <Input data-testid="new-task-due" type="date" value={form.due_date}
+          <Input data-testid="new-task-due" type="date" value={form.due_date ? form.due_date.split("T")[0] : ""}
             onChange={e => setForm({ ...form, due_date: e.target.value ? `${e.target.value}T00:00:00` : "" })} />
         </div>
       </div>

@@ -103,12 +103,12 @@ def seed_users(db):
     user_objs = [admin]
     for name, email in managers:
         u = User(name=name, email=email, password_hash=hash_password("password123"),
-                 role="Manager", is_active=True)
+                 role="Admin", is_active=True)
         db.add(u)
         user_objs.append(u)
     for name, email in sales:
         u = User(name=name, email=email, password_hash=hash_password("password123"),
-                 role="Sales", is_active=True)
+                 role="Admin", is_active=True)
         db.add(u)
         user_objs.append(u)
     db.commit()
@@ -236,22 +236,71 @@ def seed_calls(db, leads, n=100):
 
 
 def seed_tasks(db, leads, users, n=50):
-    titles = [
-        "Send proposal document", "Call back for follow up", "Send speed audit report",
-        "Schedule discovery meeting", "Confirm contract terms", "Confirm GST details",
-        "Arrange portfolio review", "Negotiate project timeline", "Send initial invoice",
-        "Follow up on proposal",
-    ]
+    task_templates = {
+        "Send proposal document": [
+            "Prepare and send the comprehensive agency services proposal with custom scope of work.",
+            "Draft the custom software development proposal details and email to client for review.",
+            "Update the proposal with the revised budget and send via CRM link."
+        ],
+        "Call back for follow up": [
+            "Follow up on the pending WhatsApp proposal and discuss any scope adjustments.",
+            "Call the lead to answer their questions about our WordPress design package.",
+            "Follow up after their team discussion regarding mobile app timeline."
+        ],
+        "Send speed audit report": [
+            "Perform PageSpeed Insights audit and send a PDF listing critical LCP and rendering improvements.",
+            "Analyze current website load time and share suggestions for database indexing optimization.",
+            "Send the performance audit highlighting Shopify store speed fixes."
+        ],
+        "Schedule discovery meeting": [
+            "Coordinate with the stakeholder to schedule a 30-minute requirement gathering meeting.",
+            "Send calendar invite for the discovery call to discuss app architecture.",
+            "Schedule initial Zoom call to align on custom web development needs."
+        ],
+        "Confirm contract terms": [
+            "Confirm the SLA clauses and payment schedule before drafting the final contract.",
+            "Discuss the intellectual property rights ownership clause with the client.",
+            "Align on contract termination terms and project handoff guidelines."
+        ],
+        "Confirm GST details": [
+            "Request the corporate billing address and official GSTIN number for tax compliance.",
+            "Validate client's GST details on the portal for invoice generation.",
+            "Verify tax billing information with the accounts team."
+        ],
+        "Arrange portfolio review": [
+            "Share case studies of our past successful e-commerce projects and digital agency portfolios.",
+            "Arrange a video walk-through of the custom CRM portals we previously built.",
+            "Send dashboard mockup samples and SaaS layouts we designed."
+        ],
+        "Negotiate project timeline": [
+            "Discuss phase-wise milestones and agree on a realistic deadline for beta testing.",
+            "Negotiate UI/UX feedback cycles to shorten the app development timeline.",
+            "Align developer availability with the client's marketing launch schedule."
+        ],
+        "Send initial invoice": [
+            "Raise a 30% milestone advance invoice for custom software development kickoff.",
+            "Send the first monthly invoice for SEO & marketing services retention.",
+            "Generate invoice for the graphics design and wireframing completed phase."
+        ],
+        "Follow up on proposal": [
+            "Touch base to see if they had a chance to review the React app development cost estimate.",
+            "Follow up on the mobile app proposal sent last Thursday.",
+            "Send a message checking on proposal approval status."
+        ]
+    }
+    titles = list(task_templates.keys())
     statuses = ["Open", "In Progress", "Completed", "Cancelled"]
     priorities = ["Low", "Medium", "High"]
     now = datetime.now(timezone.utc)
     for _ in range(n):
         lead = random.choice(leads)
+        title = random.choice(titles)
+        description = random.choice(task_templates[title])
         db.add(Task(
             lead_id=lead.id,
             assigned_to=random.choice(users).id,
-            title=random.choice(titles),
-            description=fake.sentence(nb_words=10),
+            title=title,
+            description=description,
             priority=random.choice(priorities),
             status=random.choices(statuses, weights=[40, 25, 30, 5])[0],
             due_date=now + timedelta(days=random.randint(-5, 30)),
@@ -358,7 +407,7 @@ def main():
 
         print(">> Seeding users...")
         users = seed_users(db)
-        sales = [u for u in users if u.role in ("Sales", "Manager")]
+        sales = users
 
         print(">> Seeding products...")
         seed_products(db, n=40)
