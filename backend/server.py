@@ -112,6 +112,29 @@ app.add_middleware(
 )
 
 
+async def keep_alive_loop() -> None:
+    """Self-ping loop to prevent Render free tier instance from spinning down."""
+    import httpx
+    # Wait 30 seconds for server startup to complete
+    await asyncio.sleep(30)
+    
+    self_url = os.environ.get("SELF_PUBLIC_URL", "https://carbon-ai-dsom.onrender.com").strip()
+    if not self_url.endswith("/api/health"):
+        self_url = self_url.rstrip("/") + "/api/health"
+        
+    logger.info("Keep-alive loop running. Target URL: %s", self_url)
+    
+    while True:
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                res = await client.get(self_url)
+                logger.info("Keep-alive ping response: %s", res.status_code)
+        except Exception as e:
+            logger.warning("Keep-alive self-ping failed: %s", e)
+        # Sleep for 3 minutes (180 seconds)
+        await asyncio.sleep(180)
+
+
 @app.on_event("startup")
 def startup() -> None:
     Base.metadata.create_all(bind=engine)
@@ -123,6 +146,10 @@ def startup() -> None:
     # Campaign engine — always-on; idle when no campaigns are running
     loop = asyncio.get_event_loop()
     loop.create_task(campaign_engine.loop())
+    
+    # Launch Keep-alive self-pinger
+    loop.create_task(keep_alive_loop())
+    
     logger.info("Facets CRM ready")
 
 
