@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "@/lib/api";
 import { inr, dateShort, errMsg } from "@/lib/format";
 import { Button } from "@/components/ui/button";
@@ -12,8 +12,11 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import StatusBadge from "@/components/StatusBadge";
-import { Plus, Search, TrendingUp } from "lucide-react";
+import { Plus, Search, TrendingUp, Cpu } from "lucide-react";
 import { toast } from "sonner";
 
 const STATUSES = ["New", "Contacted", "Follow Up", "Interested", "Meeting Scheduled",
@@ -22,6 +25,7 @@ const SOURCES = ["Website", "WhatsApp", "LinkedIn", "Facebook", "Walk-In", "Refe
 const CUSTOMER_TYPES = ["Startup Website", "E-commerce Business", "Mobile App Client", "Local SEO Audit", "SaaS Software Partner"];
 
 export default function Leads() {
+  const navigate = useNavigate();
   const [data, setData] = useState({ items: [], total: 0, page: 1, page_size: 20 });
   const [filters, setFilters] = useState({ search: "", status: "", source: "" });
   const [page, setPage] = useState(1);
@@ -110,6 +114,30 @@ export default function Leads() {
           <Button variant="outline" className="text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700" onClick={deleteAll}>
             Delete All
           </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="border-indigo-200 text-indigo-700 hover:bg-indigo-50">
+                <Cpu className="h-4 w-4 mr-1.5" />
+                Automation
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-white">
+              <DropdownMenuItem onClick={() => navigate("/automation/builder?template=followup")}>
+                Create Follow-up Workflow
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/automation/builder?template=auto_assign")}>
+                Auto Assign Workflow
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/automation/builder?template=whatsapp")}>
+                Auto WhatsApp Workflow
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/automation/builder?template=reminder")}>
+                Auto Reminder Workflow
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button data-testid="new-lead-btn" className="bg-indigo-700 hover:bg-indigo-800">

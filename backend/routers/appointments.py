@@ -16,6 +16,12 @@ def list_appointments(db: Session = Depends(get_db), _: User = Depends(get_curre
     return [AppointmentOut.model_validate(a) for a in items]
 
 
+import logging
+from services.automation_engine import trigger_automation
+
+logger = logging.getLogger("facets.appointments")
+
+
 @router.post("", response_model=AppointmentOut, status_code=201)
 def create_appointment(payload: AppointmentCreate, db: Session = Depends(get_db),
                        _: User = Depends(get_current_user)):
@@ -23,6 +29,10 @@ def create_appointment(payload: AppointmentCreate, db: Session = Depends(get_db)
     db.add(a)
     db.commit()
     db.refresh(a)
+    try:
+        trigger_automation(db, "appointment_created", a.id)
+    except Exception as e:
+        logger.error("Failed to trigger appointment_created automation: %s", e)
     return AppointmentOut.model_validate(a)
 
 

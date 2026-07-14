@@ -23,7 +23,15 @@ import Campaigns from "@/pages/Campaigns";
 import CampaignDetail from "@/pages/CampaignDetail";
 import Copilot from "@/pages/Copilot";
 
+import AutomationDashboard from "@/pages/AutomationDashboard";
+import WorkflowBuilder from "@/pages/WorkflowBuilder";
+import WorkflowTemplates from "@/pages/WorkflowTemplates";
+import AutomationLogs from "@/pages/AutomationLogs";
+import ConnectedIntegrations from "@/pages/ConnectedIntegrations";
+import AutomationSettings from "@/pages/AutomationSettings";
+
 import "@/App.css";
+
 
 function Authed({ children }) {
   return (
@@ -56,6 +64,15 @@ function App() {
           <Route path="/campaigns/:id" element={<Authed><CampaignDetail /></Authed>} />
           <Route path="/copilot" element={<Authed><Copilot /></Authed>} />
           <Route path="/users" element={<Authed><Users /></Authed>} />
+          
+          {/* Automation Routes */}
+          <Route path="/automation" element={<Authed><AutomationDashboard /></Authed>} />
+          <Route path="/automation/builder" element={<Authed><WorkflowBuilder /></Authed>} />
+          <Route path="/automation/builder/:id" element={<Authed><WorkflowBuilder /></Authed>} />
+          <Route path="/automation/templates" element={<Authed><WorkflowTemplates /></Authed>} />
+          <Route path="/automation/logs" element={<Authed><AutomationLogs /></Authed>} />
+          <Route path="/automation/integrations" element={<Authed><ConnectedIntegrations /></Authed>} />
+          <Route path="/automation/settings" element={<Authed><AutomationSettings /></Authed>} />
         </Routes>
         <Toaster richColors position="top-right" />
       </AuthProvider>

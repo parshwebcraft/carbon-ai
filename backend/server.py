@@ -38,6 +38,7 @@ from routers import (
     copilot as copilot_router,
     voice_ai as voice_ai_router,
     voice_dialer as voice_dialer_router,
+    automation as automation_router,
 )
 from services import scheduler as scheduler_service
 from services import campaign_engine
@@ -88,6 +89,7 @@ api.include_router(campaigns_router.router)
 api.include_router(copilot_router.router)
 api.include_router(voice_ai_router.router)
 api.include_router(voice_dialer_router.router)
+api.include_router(automation_router.router)
 
 app.include_router(api)
 
@@ -135,6 +137,38 @@ async def keep_alive_loop() -> None:
         await asyncio.sleep(180)
 
 
+async def task_overdue_checker_loop() -> None:
+    """Periodically checks for overdue tasks and triggers automations."""
+    from datetime import datetime, timezone
+    from database import SessionLocal
+    from models import Task
+    from services.automation_engine import trigger_automation
+    
+    triggered_tasks = set()
+    await asyncio.sleep(60) # Wait 1 minute on boot
+    
+    while True:
+        db = SessionLocal()
+        try:
+            now = datetime.now(timezone.utc)
+            overdue = db.query(Task).filter(
+                Task.status.in_(["Open", "In Progress"]),
+                Task.due_date < now
+            ).all()
+            
+            for t in overdue:
+                if t.id not in triggered_tasks:
+                    logger.info("Task %s is overdue! Triggering automation...", t.id)
+                    trigger_automation(db, "task_overdue", t.id)
+                    triggered_tasks.add(t.id)
+        except Exception as e:
+            logger.exception("Error checking overdue tasks: %s", e)
+        finally:
+            db.close()
+        # Check every 5 minutes (300 seconds)
+        await asyncio.sleep(300)
+
+
 @app.on_event("startup")
 def startup() -> None:
     Base.metadata.create_all(bind=engine)
@@ -149,6 +183,9 @@ def startup() -> None:
     
     # Launch Keep-alive self-pinger
     loop.create_task(keep_alive_loop())
+    
+    # Launch Task overdue checker
+    loop.create_task(task_overdue_checker_loop())
     
     logger.info("Facets CRM ready")
 

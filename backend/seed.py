@@ -401,6 +401,7 @@ def main():
             reset_database()
         else:
             Base.metadata.create_all(bind=engine)
+            seed_automation(db)
             if db.query(User).count() > 0:
                 print(">> --keep set and DB already populated; skipping.")
                 return
@@ -439,9 +440,51 @@ def main():
         print(">> Seeding notifications...")
         seed_notifications(db, users=users)
 
+        print(">> Seeding automations...")
+        seed_automation(db)
+
         print("Done. Login: admin@parshwebcraft.com / password123")
     finally:
         db.close()
+
+
+def seed_automation(db):
+    from models import Integration, Workflow
+    import json
+    
+    # Seeding default integrations
+    if db.query(Integration).count() == 0:
+        default_apps = [
+            ("whatsapp", True, "", "", ""),
+            ("google_sheets", False, "", "", ""),
+            ("excel", False, "", "", ""),
+            ("smtp", True, json.dumps({"host": "smtp.gmail.com", "port": 587, "username": "noreply@parshwebcraft.com", "password": "password", "sender": "noreply@parshwebcraft.com"}), "", ""),
+            ("openai", True, "sk-proj-mockkey12345", "", ""),
+            ("deepseek", False, "", "", ""),
+            ("vapi", False, "", "", ""),
+            ("google_calendar", False, "", "", ""),
+            ("rest_api", False, "", "", ""),
+            ("webhook", False, "", "", "")
+        ]
+        for app, enabled, api_key, secret_key, webhook_url in default_apps:
+            db.add(Integration(app_name=app, enabled=enabled, api_key=api_key, secret_key=secret_key, webhook_url=webhook_url))
+            
+    # Seeding a few sample workflows
+    if db.query(Workflow).count() == 0:
+        workflows = [
+            ("Auto WhatsApp Followup", "lead_created", [
+                {"type": "send_whatsapp", "to_number": "{{phone}}", "message_body": "Hi {{name}}, thank you for reaching out to ParshWebCraft! We received your request and will contact you shortly."}
+            ], True),
+            ("High Priority Alert", "lead_created", [
+                {"type": "notify_manager", "title": "New Lead Alert", "message": "High budget lead {{name}} has contacted us from {{city}}."}
+            ], True),
+            ("Quotation Generated Dispatch", "quotation_generated", [
+                {"type": "send_email", "recipient": "{{lead_email}}", "subject": "Your Quote is Ready", "body": "Dear {{lead_name}},\n\nYour quotation for amount ₹{{amount}} has been generated successfully.\n\nWarm regards,\nFinance Team"}
+            ], False),
+        ]
+        for name, trigger_type, actions_list, enabled in workflows:
+            db.add(Workflow(name=name, trigger_type=trigger_type, actions=json.dumps(actions_list), enabled=enabled))
+    db.commit()
 
 
 if __name__ == "__main__":

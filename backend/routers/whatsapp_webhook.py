@@ -78,8 +78,16 @@ async def receive(request: Request, db: Session = Depends(get_db)):
             logger.info("Auto-created lead %s for inbound WhatsApp %s", lead.id, phone)
 
         # Persist inbound
-        db.add(WhatsappMessage(lead_id=lead.id, direction="in", message=it["message"]))
+        w_msg = WhatsappMessage(lead_id=lead.id, direction="in", message=it["message"])
+        db.add(w_msg)
         db.commit()
+        db.refresh(w_msg)
+
+        try:
+            from services.automation_engine import trigger_automation
+            trigger_automation(db, "whatsapp_inbound", w_msg.id)
+        except Exception as e:
+            logger.error("Failed to trigger whatsapp_inbound automation: %s", e)
 
         # Auto-reply
         if _auto_reply_enabled() and (os.environ.get("OPENAI_API_KEY") or os.environ.get("DEEPSEEK_API_KEY")):

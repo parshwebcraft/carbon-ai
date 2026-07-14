@@ -5,14 +5,14 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Users, ListTodo, Phone, MessageCircle,
   CalendarCheck2, FileText, Bot, UserCog, LogOut, Menu, X, Bell, PhoneCall, Sparkles, Briefcase,
-  Sun, Moon,
+  Sun, Moon, Cpu, GitBranch, Layers, History, Plug, Sliders,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import InstallPrompt from "@/components/InstallPrompt";
 import CrmDialer from "@/components/CrmDialer";
 
 const NAV = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/leads", label: "Leads", icon: Users },
   { to: "/tasks", label: "Tasks", icon: ListTodo },
   { to: "/calls", label: "Calls", icon: Phone },
@@ -23,6 +23,15 @@ const NAV = [
   { to: "/appointments", label: "Appointments", icon: CalendarCheck2 },
   { to: "/quotations", label: "Quotations", icon: FileText },
   { to: "/ai-logs", label: "AI Agent", icon: Bot },
+];
+
+const AUTOMATION_NAV = [
+  { to: "/automation", label: "Automation Dashboard", icon: Cpu, end: true },
+  { to: "/automation/builder", label: "Workflow Builder", icon: GitBranch },
+  { to: "/automation/templates", label: "Workflow Templates", icon: Layers },
+  { to: "/automation/logs", label: "Automation Logs", icon: History },
+  { to: "/automation/integrations", label: "Connected Integrations", icon: Plug },
+  { to: "/automation/settings", label: "Automation Settings", icon: Sliders },
 ];
 
 function StarryBackground() {
@@ -190,6 +199,35 @@ export default function Layout({ children }) {
                   <n.icon className="h-4 w-4" /> {n.label}
                 </NavLink>
               ))}
+              
+              {/* Automation Section */}
+              <div className={cn("px-5 py-2 text-[10px] font-bold uppercase tracking-wider mt-4", isDark ? "text-indigo-400/80" : "text-indigo-700/80")}>
+                Automation
+              </div>
+              {AUTOMATION_NAV.map((n) => (
+                <NavLink
+                  key={n.to}
+                  to={n.to}
+                  end={n.end}
+                  data-testid={`nav-${n.label.toLowerCase().replace(/\s+/g, "-")}`}
+                  onClick={() => setOpen(false)}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex items-center gap-3 px-5 py-2 text-sm font-medium transition-colors duration-200",
+                      isActive
+                        ? isDark
+                          ? "bg-white/10 text-white border-r-2 border-indigo-500"
+                          : "bg-indigo-50 text-indigo-900 border-r-2 border-indigo-700"
+                        : isDark
+                          ? "text-slate-400 hover:text-white hover:bg-white/5"
+                          : "text-slate-700 hover:bg-indigo-50/60"
+                    )
+                  }
+                >
+                  <n.icon className="h-4 w-4" /> {n.label}
+                </NavLink>
+              ))}
+
               {user?.role === "Admin" && (
                 <NavLink
                   to="/users"

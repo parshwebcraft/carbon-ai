@@ -358,3 +358,37 @@ class AiFeedback(Base):
     feedback_status = Column(String(20))  # 'accepted', 'edited', 'rejected'
     latency_ms = Column(Integer)
     created_at = Column(DateTime, default=utcnow, nullable=False)
+
+
+class Integration(Base):
+    __tablename__ = "integrations"
+    id = Column(Integer, primary_key=True, index=True)
+    app_name = Column(String(50), unique=True, index=True, nullable=False)
+    enabled = Column(Boolean, default=False, nullable=False)
+    api_key = Column(String(255), nullable=True)
+    secret_key = Column(String(255), nullable=True)
+    webhook_url = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+
+class Workflow(Base):
+    __tablename__ = "workflows"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    trigger_type = Column(String(50), nullable=False)  # lead_created, task_overdue, whatsapp_inbound, appointment_created, quotation_generated
+    actions = Column(Text, nullable=False)  # JSON serialized actions/steps array
+    enabled = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+    runs = relationship("WorkflowRun", back_populates="workflow", cascade="all, delete-orphan")
+
+
+class WorkflowRun(Base):
+    __tablename__ = "workflow_runs"
+    id = Column(Integer, primary_key=True, index=True)
+    workflow_id = Column(Integer, ForeignKey("workflows.id"), nullable=False)
+    status = Column(String(20), nullable=False, default="Success")  # Success | Failed | Pending
+    logs = Column(Text)
+    executed_at = Column(DateTime, default=utcnow, nullable=False)
+
+    workflow = relationship("Workflow", back_populates="runs")

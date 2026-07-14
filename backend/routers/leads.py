@@ -70,6 +70,12 @@ def get_lead(lead_id: int, db: Session = Depends(get_db), _: User = Depends(get_
     return out
 
 
+import logging
+from services.automation_engine import trigger_automation
+
+logger = logging.getLogger("facets.leads")
+
+
 @router.post("", response_model=LeadOut, status_code=201)
 def create_lead(payload: LeadCreate, db: Session = Depends(get_db),
                 _: User = Depends(get_current_user)):
@@ -77,6 +83,10 @@ def create_lead(payload: LeadCreate, db: Session = Depends(get_db),
     db.add(lead)
     db.commit()
     db.refresh(lead)
+    try:
+        trigger_automation(db, "lead_created", lead.id)
+    except Exception as e:
+        logger.error("Failed to trigger lead_created automation: %s", e)
     return LeadOut.model_validate(lead)
 
 

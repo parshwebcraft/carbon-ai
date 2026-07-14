@@ -11,7 +11,7 @@ import {
 import {
   Users, TrendingUp, Trophy, Phone, CheckCircle2, CalendarDays,
   Sparkles, RefreshCw, Loader2, Flame, AlertTriangle, Target,
-  ChevronRight, Bot,
+  ChevronRight, Bot, Cpu,
 } from "lucide-react";
 
 const STATUS_COLORS = ["#4F46E5", "#0EA5E9", "#6366F1", "#8B5CF6", "#0D9488",
@@ -34,11 +34,19 @@ export default function Dashboard() {
   const [err, setErr] = useState("");
   const [briefing, setBriefing] = useState("");
   const [briefingLoading, setBriefingLoading] = useState(false);
+  const [autoStats, setAutoStats] = useState(null);
+  const [recentRuns, setRecentRuns] = useState([]);
 
   useEffect(() => {
     api.get("/dashboard/stats")
       .then((r) => setStats(r.data))
       .catch((e) => setErr(e.message));
+    api.get("/automation/dashboard")
+      .then((r) => setAutoStats(r.data))
+      .catch(() => {});
+    api.get("/automation/logs")
+      .then((r) => setRecentRuns(r.data.slice(0, 5)))
+      .catch(() => {});
   }, []);
 
   async function loadBriefing() {
@@ -236,6 +244,52 @@ export default function Dashboard() {
             <div className="flex justify-between text-xs text-slate-400 mt-2">
               <span>{stats.completed_tasks} completed</span>
               <span>{stats.open_tasks} open</span>
+            </div>
+          </Card>
+
+          {/* Automation Pulse Widget */}
+          <Card className="border-indigo-100 bg-white p-5 sm:col-span-2">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Cpu className="h-4 w-4 text-indigo-700" />
+                <h2 className="font-semibold text-slate-800 text-sm">Automation Pulse</h2>
+              </div>
+              <Link to="/automation" className="text-xs text-indigo-700 font-semibold hover:underline">
+                Manage
+              </Link>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-2 text-center mb-4">
+              <div className="bg-indigo-50/50 p-2 rounded-lg border border-indigo-50">
+                <div className="text-[9px] text-slate-500 font-semibold uppercase">Runs Today</div>
+                <div className="text-base font-bold text-indigo-700">{autoStats?.total_runs || 0}</div>
+              </div>
+              <div className="bg-emerald-50/50 p-2 rounded-lg border border-emerald-50">
+                <div className="text-[9px] text-slate-500 font-semibold uppercase">Success Rate</div>
+                <div className="text-base font-bold text-emerald-600">{autoStats?.success_rate || 100}%</div>
+              </div>
+              <div className="bg-rose-50/50 p-2 rounded-lg border border-rose-50">
+                <div className="text-[9px] text-slate-500 font-semibold uppercase">Failed Runs</div>
+                <div className="text-base font-bold text-rose-600">{autoStats?.failed_runs || 0}</div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Recent Executions</div>
+              {recentRuns.length === 0 ? (
+                <div className="text-xs text-slate-500 italic py-2 text-center">No recent runs.</div>
+              ) : (
+                recentRuns.map(run => (
+                  <div key={run.id} className="flex items-center justify-between text-xs bg-slate-50 p-2 rounded border border-slate-100">
+                    <span className="font-medium truncate max-w-[180px]">{run.workflow_name}</span>
+                    <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-full ${
+                      run.status === "Success" ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-750"
+                    }`}>
+                      {run.status}
+                    </span>
+                  </div>
+                ))
+              )}
             </div>
           </Card>
         </div>

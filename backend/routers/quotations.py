@@ -26,6 +26,12 @@ def list_quotations(lead_id: Optional[int] = None, db: Session = Depends(get_db)
     return [QuotationOut.model_validate(i) for i in q.order_by(Quotation.created_at.desc()).all()]
 
 
+import logging
+from services.automation_engine import trigger_automation
+
+logger = logging.getLogger("facets.quotations")
+
+
 @router.post("", response_model=QuotationOut, status_code=201)
 def create_quotation(payload: QuotationCreate, db: Session = Depends(get_db),
                      _: User = Depends(get_current_user)):
@@ -38,6 +44,10 @@ def create_quotation(payload: QuotationCreate, db: Session = Depends(get_db),
     db.add(q)
     db.commit()
     db.refresh(q)
+    try:
+        trigger_automation(db, "quotation_generated", q.id)
+    except Exception as e:
+        logger.error("Failed to trigger quotation_generated automation: %s", e)
     return QuotationOut.model_validate(q)
 
 

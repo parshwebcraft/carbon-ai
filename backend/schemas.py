@@ -467,4 +467,57 @@ class CampaignPreviewOut(BaseModel):
     sample: List[dict]
 
 
+# ---------------- Automations ----------------
+class WorkflowCreate(BaseModel):
+    name: str
+    trigger_type: str
+    actions: str
+    enabled: Optional[bool] = True
+
+
+class WorkflowUpdate(BaseModel):
+    name: Optional[str] = None
+    trigger_type: Optional[str] = None
+    actions: Optional[str] = None
+    enabled: Optional[bool] = None
+
+
+class WorkflowOut(BaseModel):
+    id: int
+    name: str
+    trigger_type: str
+    actions: str
+    enabled: bool
+    created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+class IntegrationSave(BaseModel):
+    app_name: str
+    enabled: bool
+    api_key: Optional[str] = ""
+    secret_key: Optional[str] = ""
+    webhook_url: Optional[str] = ""
+
+
+class IntegrationOut(BaseModel):
+    id: int
+    app_name: str
+    enabled: bool
+    api_key: Optional[str]
+    secret_key: Optional[str]
+    webhook_url: Optional[str]
+    created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+class WorkflowRunOut(BaseModel):
+    id: int
+    workflow_id: int
+    status: str
+    logs: Optional[str]
+    executed_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
 TokenOut.model_rebuild()
