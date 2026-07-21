@@ -308,6 +308,8 @@ def run_tick_sync() -> dict:
         return {"placed": placed}
     finally:
         db.close()
+        import gc
+        gc.collect()
 
 
 async def loop():

@@ -126,19 +126,20 @@ async def keep_alive_loop() -> None:
         
     logger.info("Keep-alive loop running. Target URL: %s", self_url)
     
-    while True:
-        try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        while True:
+            try:
                 res = await client.get(self_url)
                 logger.info("Keep-alive ping response: %s", res.status_code)
-        except Exception as e:
-            logger.warning("Keep-alive self-ping failed: %s", e)
-        # Sleep for 3 minutes (180 seconds)
-        await asyncio.sleep(180)
+            except Exception as e:
+                logger.warning("Keep-alive self-ping failed: %s", e)
+            # Sleep for 3 minutes (180 seconds)
+            await asyncio.sleep(180)
 
 
 async def task_overdue_checker_loop() -> None:
     """Periodically checks for overdue tasks and triggers automations."""
+    import gc
     from datetime import datetime, timezone
     from database import SessionLocal
     from models import Task
@@ -165,6 +166,7 @@ async def task_overdue_checker_loop() -> None:
             logger.exception("Error checking overdue tasks: %s", e)
         finally:
             db.close()
+            gc.collect()
         # Check every 5 minutes (300 seconds)
         await asyncio.sleep(300)
 
