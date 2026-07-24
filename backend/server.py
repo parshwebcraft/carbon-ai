@@ -219,7 +219,7 @@ def _ensure_call_columns() -> None:
 
 
 def _ensure_admin_seed() -> None:
-    admin_email = os.environ.get("ADMIN_EMAIL", "admin@parshwebcraft.com").lower()
+    admin_email = os.environ.get("ADMIN_EMAIL", "admin@parshwebcraft.in").lower()
     admin_password = os.environ.get("ADMIN_PASSWORD", "password123")
     db = SessionLocal()
     try:
@@ -291,7 +291,7 @@ def _ensure_parshcall_foundation_seed() -> None:
                 support_hours="Business-hours support with priority support for active retainers.",
             ))
 
-        admin = db.query(models.User).filter(models.User.email == os.environ.get("ADMIN_EMAIL", "admin@parshwebcraft.com").lower()).first()
+        admin = db.query(models.User).filter(models.User.email == os.environ.get("ADMIN_EMAIL", "admin@parshwebcraft.in").lower()).first()
         if admin and not db.query(models.CompanyUser).filter(
             models.CompanyUser.company_id == company.id,
             models.CompanyUser.legacy_user_id == admin.id,

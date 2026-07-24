@@ -84,20 +84,20 @@ def reset_database() -> None:
 def seed_users(db):
     admin = User(
         name="ParshWebCraft Admin",
-        email=os.environ.get("ADMIN_EMAIL", "admin@parshwebcraft.com").lower(),
+        email=os.environ.get("ADMIN_EMAIL", "admin@parshwebcraft.in").lower(),
         password_hash=hash_password(os.environ.get("ADMIN_PASSWORD", "password123")),
         role="Admin", is_active=True,
     )
     db.add(admin)
 
     managers = [
-        ("Priya Sharma", "priya.sharma@parshwebcraft.com"),
-        ("Rohan Mehta", "rohan.mehta@parshwebcraft.com"),
+        ("Palak Rai", "palak.rai@parshwebcraft.in"),
+        ("Mritunjay Singh", "mritunjay.singh@parshwebcraft.in"),
     ]
     sales = [
-        ("Aditi Kapoor", "aditi.kapoor@parshwebcraft.com"),
-        ("Vikram Iyer", "vikram.iyer@parshwebcraft.com"),
-        ("Neha Reddy", "neha.reddy@parshwebcraft.com"),
+        ("Aditi Kapoor", "aditi.kapoor@parshwebcraft.in"),
+        ("Vikram Iyer", "vikram.iyer@parshwebcraft.in"),
+        ("Neha Reddy", "neha.reddy@parshwebcraft.in"),
     ]
 
     user_objs = [admin]
@@ -443,7 +443,7 @@ def main():
         print(">> Seeding automations...")
         seed_automation(db)
 
-        print("Done. Login: admin@parshwebcraft.com / password123")
+        print("Done. Login: admin@parshwebcraft.in / password123")
     finally:
         db.close()
 
@@ -458,7 +458,7 @@ def seed_automation(db):
             ("whatsapp", True, "", "", ""),
             ("google_sheets", False, "", "", ""),
             ("excel", False, "", "", ""),
-            ("smtp", True, json.dumps({"host": "smtp.gmail.com", "port": 587, "username": "noreply@parshwebcraft.com", "password": "password", "sender": "noreply@parshwebcraft.com"}), "", ""),
+            ("smtp", True, json.dumps({"host": "smtp.gmail.com", "port": 587, "username": "noreply@parshwebcraft.in", "password": "password", "sender": "noreply@parshwebcraft.in"}), "", ""),
             ("openai", True, "sk-proj-mockkey12345", "", ""),
             ("deepseek", False, "", "", ""),
             ("vapi", False, "", "", ""),

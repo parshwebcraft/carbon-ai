@@ -480,15 +480,15 @@ export default function Landing() {
               <div className="mt-8 space-y-4">
                 <div className="flex items-center gap-3 text-slate-300">
                   <Mail className="h-5 w-5 text-indigo-400" />
-                  <span>support@parshwebcraft.com</span>
+                  <span>support@parshwebcraft.in</span>
                 </div>
                 <div className="flex items-center gap-3 text-slate-300">
                   <Phone className="h-5 w-5 text-indigo-400" />
-                  <span>+91 98765 43210</span>
+                  <span>+91 95213 47419</span>
                 </div>
                 <div className="flex items-center gap-3 text-slate-300">
                   <MapPin className="h-5 w-5 text-indigo-400" />
-                  <span>Noida, Uttar Pradesh, India</span>
+                  <span>Ahmedabad, Gujarat, India</span>
                 </div>
               </div>
             </div>

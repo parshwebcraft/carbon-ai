@@ -16,7 +16,7 @@ from auth_utils import create_access_token
 
 async def test_local_voice_websocket():
     # 1. Create a valid access token
-    token = create_access_token(user_id=1, email="admin@parshwebcraft.com", role="Admin")
+    token = create_access_token(user_id=1, email="admin@parshwebcraft.in", role="Admin")
     print(f"Generated access token: {token[:30]}...")
 
     # 2. Connect to local backend websocket
