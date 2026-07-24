@@ -1,7 +1,8 @@
 """SQLAlchemy ORM models for Facets Jewellery CRM."""
 from datetime import datetime, timezone
+from uuid import uuid4
 from sqlalchemy import (
-    Column, Integer, String, Text, DateTime, Boolean, Float,
+    Column, Integer, String, Text, DateTime, Boolean, Float, JSON,
     ForeignKey,
 )
 from sqlalchemy.orm import relationship
@@ -10,6 +11,10 @@ from database import Base
 
 def utcnow():
     return datetime.now(timezone.utc)
+
+
+def uuid_str():
+    return str(uuid4())
 
 
 class User(Base):
@@ -392,3 +397,225 @@ class WorkflowRun(Base):
     executed_at = Column(DateTime, default=utcnow, nullable=False)
 
     workflow = relationship("Workflow", back_populates="runs")
+
+
+# ============================================================
+# ParshCall AI Foundation / Multi-company AI OS
+# ============================================================
+
+class Company(Base):
+    __tablename__ = "companies"
+    id = Column(String(36), primary_key=True, default=uuid_str)
+    name = Column(String(160), nullable=False)
+    slug = Column(String(120), unique=True, index=True, nullable=False)
+    brand_name = Column(String(160))
+    website = Column(String(255))
+    status = Column(String(30), default="active", nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+
+class CompanyUser(Base):
+    __tablename__ = "company_users"
+    id = Column(String(36), primary_key=True, default=uuid_str)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=False, index=True)
+    auth_user_id = Column(String(80), nullable=True, index=True)
+    legacy_user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    role = Column(String(20), default="Sales", nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+
+class BusinessProfile(Base):
+    __tablename__ = "business_profiles"
+    id = Column(String(36), primary_key=True, default=uuid_str)
+    company_id = Column(String(36), ForeignKey("companies.id"), unique=True, nullable=False, index=True)
+    about_company = Column(Text)
+    mission = Column(Text)
+    vision = Column(Text)
+    services = Column(JSON, default=list, nullable=False)
+    usp = Column(Text)
+    office_locations = Column(JSON, default=list, nullable=False)
+    business_hours = Column(JSON, default=dict, nullable=False)
+    phone_numbers = Column(JSON, default=list, nullable=False)
+    emails = Column(JSON, default=list, nullable=False)
+    website = Column(String(255))
+    social_links = Column(JSON, default=dict, nullable=False)
+    google_maps = Column(Text)
+    industries_served = Column(JSON, default=list, nullable=False)
+    languages = Column(JSON, default=list, nullable=False)
+    working_process = Column(Text)
+    payment_terms = Column(Text)
+    support_hours = Column(Text)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+
+class KnowledgeDocument(Base):
+    __tablename__ = "knowledge_documents"
+    id = Column(String(36), primary_key=True, default=uuid_str)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=False, index=True)
+    title = Column(String(240), nullable=False)
+    category = Column(String(80), nullable=False)
+    source_type = Column(String(40), nullable=False)
+    source_url = Column(Text)
+    storage_bucket = Column(String(120))
+    storage_path = Column(Text)
+    folder_path = Column(Text)
+    tags = Column(JSON, default=list, nullable=False)
+    status = Column(String(30), default="draft", nullable=False)
+    created_by = Column(String(80))
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+
+class KnowledgeDocumentVersion(Base):
+    __tablename__ = "knowledge_document_versions"
+    id = Column(String(36), primary_key=True, default=uuid_str)
+    document_id = Column(String(36), ForeignKey("knowledge_documents.id"), nullable=False, index=True)
+    version_number = Column(Integer, nullable=False)
+    content_text = Column(Text)
+    storage_path = Column(Text)
+    change_note = Column(Text)
+    created_by = Column(String(80))
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+
+class KnowledgeChunk(Base):
+    __tablename__ = "knowledge_chunks"
+    id = Column(String(36), primary_key=True, default=uuid_str)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=False, index=True)
+    document_id = Column(String(36), ForeignKey("knowledge_documents.id"), nullable=False, index=True)
+    version_id = Column(String(36), ForeignKey("knowledge_document_versions.id"), nullable=True, index=True)
+    chunk_index = Column(Integer, nullable=False)
+    chunk_text = Column(Text, nullable=False)
+    token_count = Column(Integer, default=0, nullable=False)
+    embedding_model = Column(String(120))
+    embedding = Column(JSON)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+
+class AITrainingJob(Base):
+    __tablename__ = "ai_training_jobs"
+    id = Column(String(36), primary_key=True, default=uuid_str)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=False, index=True)
+    status = Column(String(30), default="queued", nullable=False)
+    last_training_at = Column(DateTime)
+    documents_used = Column(Integer, default=0, nullable=False)
+    embeddings_count = Column(Integer, default=0, nullable=False)
+    tokens = Column(Integer, default=0, nullable=False)
+    progress = Column(Integer, default=0, nullable=False)
+    error_message = Column(Text)
+    created_by = Column(String(80))
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+
+class AITrainingSource(Base):
+    __tablename__ = "ai_training_sources"
+    id = Column(String(36), primary_key=True, default=uuid_str)
+    training_job_id = Column(String(36), ForeignKey("ai_training_jobs.id"), nullable=False, index=True)
+    source_type = Column(String(40), nullable=False)
+    source_id = Column(String(36))
+    status = Column(String(30), default="pending", nullable=False)
+    approved_by = Column(String(80))
+    approved_at = Column(DateTime)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+
+class SalesPlaybook(Base):
+    __tablename__ = "sales_playbooks"
+    id = Column(String(36), primary_key=True, default=uuid_str)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=False, index=True)
+    name = Column(String(200), nullable=False)
+    description = Column(Text)
+    is_default = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+
+class SalesPlaybookStage(Base):
+    __tablename__ = "sales_playbook_stages"
+    id = Column(String(36), primary_key=True, default=uuid_str)
+    playbook_id = Column(String(36), ForeignKey("sales_playbooks.id"), nullable=False, index=True)
+    stage_name = Column(String(80), nullable=False)
+    sort_order = Column(Integer, nullable=False)
+    goal = Column(Text)
+    prompt = Column(Text)
+    success_criteria = Column(Text)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+
+class Objection(Base):
+    __tablename__ = "objections"
+    id = Column(String(36), primary_key=True, default=uuid_str)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=False, index=True)
+    objection = Column(Text, nullable=False)
+    recommended_response = Column(Text, nullable=False)
+    alternative_response = Column(Text)
+    escalation_rule = Column(Text)
+    success_rate = Column(Float, default=0.0, nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+
+class AICallIntelligence(Base):
+    __tablename__ = "ai_call_intelligence"
+    id = Column(String(36), primary_key=True, default=uuid_str)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=False, index=True)
+    lead_id = Column(Integer, ForeignKey("leads.id"), nullable=True, index=True)
+    call_id = Column(Integer, ForeignKey("calls.id"), nullable=True, index=True)
+    vapi_call_id = Column(String(120), index=True)
+    transcript = Column(Text)
+    recording_bucket = Column(String(120))
+    recording_path = Column(Text)
+    summary = Column(Text)
+    customer_intent = Column(Text)
+    sentiment = Column(String(30))
+    budget = Column(String(120))
+    industry = Column(String(160))
+    timeline = Column(String(120))
+    decision_maker = Column(String(160))
+    interested_services = Column(JSON, default=list, nullable=False)
+    pain_points = Column(JSON, default=list, nullable=False)
+    competitor_mentioned = Column(String(160))
+    objections = Column(JSON, default=list, nullable=False)
+    meeting_booked = Column(Boolean, default=False, nullable=False)
+    lead_score = Column(Integer)
+    next_action = Column(Text)
+    crm_update = Column(JSON, default=dict, nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+
+class CustomerConversationMemory(Base):
+    __tablename__ = "conversation_memories"
+    id = Column(String(36), primary_key=True, default=uuid_str)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=False, index=True)
+    lead_id = Column(Integer, ForeignKey("leads.id"), nullable=True, index=True)
+    customer_key = Column(String(160), index=True)
+    last_call_at = Column(DateTime)
+    past_objections = Column(JSON, default=list, nullable=False)
+    budget = Column(String(120))
+    requirements = Column(Text)
+    meeting_history = Column(JSON, default=list, nullable=False)
+    proposal_sent = Column(Boolean, default=False, nullable=False)
+    notes = Column(Text)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+
+class TrainingExample(Base):
+    __tablename__ = "training_examples"
+    id = Column(String(36), primary_key=True, default=uuid_str)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=False, index=True)
+    call_intelligence_id = Column(String(36), ForeignKey("ai_call_intelligence.id"), nullable=True, index=True)
+    transcript = Column(Text)
+    ai_response = Column(Text)
+    human_correction = Column(Text)
+    outcome = Column(String(80))
+    customer_rating = Column(Integer)
+    meeting_success = Column(Boolean)
+    admin_feedback = Column(Text)
+    approval_status = Column(String(30), default="pending", nullable=False)
+    approved_by = Column(String(80))
+    approved_at = Column(DateTime)
+    created_at = Column(DateTime, default=utcnow, nullable=False)

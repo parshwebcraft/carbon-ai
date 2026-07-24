@@ -39,6 +39,8 @@ from routers import (
     voice_ai as voice_ai_router,
     voice_dialer as voice_dialer_router,
     automation as automation_router,
+    foundation as foundation_router,
+    payments as payments_router,
 )
 from services import scheduler as scheduler_service
 from services import campaign_engine
@@ -90,6 +92,8 @@ api.include_router(copilot_router.router)
 api.include_router(voice_ai_router.router)
 api.include_router(voice_dialer_router.router)
 api.include_router(automation_router.router)
+api.include_router(foundation_router.router)
+api.include_router(payments_router.router)
 
 app.include_router(api)
 
@@ -176,6 +180,7 @@ def startup() -> None:
     Base.metadata.create_all(bind=engine)
     _ensure_call_columns()
     _ensure_admin_seed()
+    _ensure_parshcall_foundation_seed()
     if scheduler_service.followups_enabled():
         loop = asyncio.get_event_loop()
         loop.create_task(scheduler_service.loop())
@@ -231,5 +236,75 @@ def _ensure_admin_seed() -> None:
             existing.password_hash = hash_password(admin_password)
             db.commit()
             logger.info("Refreshed admin password for %s", admin_email)
+    finally:
+        db.close()
+
+
+def _ensure_parshcall_foundation_seed() -> None:
+    """Seed the default tenant for local development without touching CRM data."""
+    default_slug = os.environ.get("DEFAULT_COMPANY_SLUG", "parshwebcraft").strip() or "parshwebcraft"
+    db = SessionLocal()
+    try:
+        company = db.query(models.Company).filter(models.Company.slug == default_slug).first()
+        if not company:
+            company = models.Company(
+                name="ParshWebCraft",
+                slug=default_slug,
+                brand_name="ParshWebCraft",
+                website="https://parshwebcraft.com",
+            )
+            db.add(company)
+            db.flush()
+
+        if not db.query(models.BusinessProfile).filter(models.BusinessProfile.company_id == company.id).first():
+            db.add(models.BusinessProfile(
+                company_id=company.id,
+                about_company=(
+                    "ParshWebCraft is a web and software digital agency focused on websites, "
+                    "ecommerce, SEO, digital marketing, hosting, branding, and business automation."
+                ),
+                mission="Help businesses grow with practical digital products and AI-enabled workflows.",
+                vision="Become a trusted digital transformation partner for service businesses and growing brands.",
+                services=[
+                    "Website Development",
+                    "Ecommerce",
+                    "SEO",
+                    "Digital Marketing",
+                    "Hosting",
+                    "Branding",
+                    "Automation",
+                ],
+                usp="Full-stack web, CRM, automation, and AI calling solutions from one partner.",
+                website="https://parshwebcraft.com",
+                industries_served=[
+                    "Local Businesses",
+                    "Service Companies",
+                    "Retail",
+                    "Education",
+                    "Healthcare",
+                    "Real Estate",
+                    "Agencies",
+                ],
+                languages=["English", "Hindi"],
+                working_process="Discovery, proposal, design, development, review, launch, and ongoing support.",
+                payment_terms="Project terms are confirmed in the proposal. Milestone payments may apply.",
+                support_hours="Business-hours support with priority support for active retainers.",
+            ))
+
+        admin = db.query(models.User).filter(models.User.email == os.environ.get("ADMIN_EMAIL", "admin@parshwebcraft.com").lower()).first()
+        if admin and not db.query(models.CompanyUser).filter(
+            models.CompanyUser.company_id == company.id,
+            models.CompanyUser.legacy_user_id == admin.id,
+        ).first():
+            db.add(models.CompanyUser(
+                company_id=company.id,
+                legacy_user_id=admin.id,
+                role="Admin",
+                is_active=True,
+            ))
+        db.commit()
+    except Exception as e:  # noqa: BLE001
+        db.rollback()
+        logger.warning("ParshCall foundation seed skipped: %s", e)
     finally:
         db.close()

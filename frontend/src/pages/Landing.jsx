@@ -5,10 +5,35 @@ import {
   CheckCircle2, ArrowRight, ShieldCheck, Zap, Menu, X, Mail, Phone, MapPin
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import api from "@/lib/api";
+import PricingLeadCaptureModal from "@/components/PricingLeadCaptureModal";
+
+const checkoutPlans = {
+  starter: "Starter",
+  growth: "Growth",
+};
+
+function loadRazorpayCheckout() {
+  return new Promise((resolve, reject) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => reject(new Error("Could not load Razorpay Checkout"));
+    document.body.appendChild(script);
+  });
+}
 
 export default function Landing() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showQuoteModal, setShowQuoteModal] = useState(false);
+  const [showPricingLeadModal, setShowPricingLeadModal] = useState(false);
+  const [pricingLeadPlan, setPricingLeadPlan] = useState("custom");
+  const [paymentLoading, setPaymentLoading] = useState("");
+  const [paymentError, setPaymentError] = useState("");
   const [quoteForm, setQuoteForm] = useState({ name: "", email: "", company: "", requirements: "" });
   const [quoteSuccess, setQuoteSuccess] = useState(false);
   const nav = useNavigate();
@@ -26,6 +51,57 @@ export default function Landing() {
       setQuoteSuccess(false);
       setQuoteForm({ name: "", email: "", company: "", requirements: "" });
     }, 2000);
+  };
+
+  const openContactSales = (planId) => {
+    setPricingLeadPlan(planId);
+    setShowPricingLeadModal(true);
+  };
+
+  const startCheckout = async (planId) => {
+    setPaymentLoading(planId);
+    setPaymentError("");
+    try {
+      await loadRazorpayCheckout();
+      const { data } = await api.post("/payments/create-order", { plan_id: planId });
+      const razorpay = new window.Razorpay({
+        key: data.key_id,
+        amount: data.amount,
+        currency: data.currency,
+        name: "ParshCall AI",
+        description: data.description,
+        order_id: data.order_id,
+        theme: { color: "#4f46e5" },
+        handler: async (response) => {
+          try {
+            await api.post("/payments/verify", {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+            setPaymentLoading("");
+            nav(`/payment-success?plan=${encodeURIComponent(checkoutPlans[planId])}`);
+          } catch (err) {
+            setPaymentLoading("");
+            setPaymentError(err?.response?.data?.detail || "Payment verification failed. Please contact support.");
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setPaymentLoading("");
+            setPaymentError("Checkout was cancelled. You can try again whenever you are ready.");
+          },
+        },
+      });
+      razorpay.on("payment.failed", (response) => {
+        setPaymentLoading("");
+        setPaymentError(response?.error?.description || "Payment failed. Please try again.");
+      });
+      razorpay.open();
+    } catch (err) {
+      setPaymentLoading("");
+      setPaymentError(err?.response?.data?.detail || err.message || "Could not start checkout. Please try again.");
+    }
   };
 
   return (
@@ -257,58 +333,98 @@ export default function Landing() {
           <div className="text-center mb-16">
             <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-white">Simple, Transparent Pricing</h2>
             <p className="mt-4 text-slate-400 max-w-xl mx-auto">
-              Select a tier that scales with your lead volume and sales force.
+              Choose an AI calling plan built around monthly call volume, voice minutes, and support automation.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {paymentError && (
+            <div className="mb-6 rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+              {paymentError}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
             {/* Plan 1 */}
             <div className="rounded-2xl border border-white/5 bg-slate-900/20 p-8 backdrop-blur-md flex flex-col">
               <h3 className="text-lg font-semibold text-slate-300">Starter</h3>
               <div className="mt-4 flex items-baseline">
-                <span className="text-4xl font-bold text-white">$49</span>
-                <span className="ml-1 text-sm text-slate-400">/mo</span>
+                <span className="text-4xl font-bold text-white">₹9,999</span>
+                <span className="ml-1 text-sm text-slate-400">/month</span>
               </div>
-              <p className="mt-4 text-sm text-slate-400">Perfect for exploring AI campaigns.</p>
+              <p className="mt-4 text-sm text-slate-400">For businesses starting outbound & support calling</p>
               <ul className="mt-6 space-y-4 flex-1">
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400" /> Up to 500 leads</li>
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400" /> Vapi calling integration</li>
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400" /> Basic WhatsApp logs</li>
+                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> 300 AI calls/month (600 calling minutes)</li>
+                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Vapi voice calling integration</li>
+                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> WhatsApp business messaging (basic)</li>
+                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> AI chat replies included</li>
+                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Basic call logs & recordings</li>
               </ul>
-              <Button onClick={() => setShowQuoteModal(true)} className="mt-8 w-full bg-white/10 hover:bg-white/20 text-white">Get Started</Button>
+              <Button
+                onClick={() => startCheckout("starter")}
+                disabled={paymentLoading === "starter"}
+                className="mt-8 w-full bg-white/10 hover:bg-white/20 text-white disabled:opacity-60"
+              >
+                {paymentLoading === "starter" ? "Opening..." : "Get Started"}
+              </Button>
             </div>
 
             {/* Plan 2 */}
             <div className="rounded-2xl border border-indigo-500/50 bg-indigo-950/20 p-8 backdrop-blur-md flex flex-col relative">
               <div className="absolute top-0 right-8 -translate-y-1/2 bg-indigo-600 text-white text-xs px-3 py-1 rounded-full font-semibold uppercase tracking-wider">Most Popular</div>
-              <h3 className="text-lg font-semibold text-indigo-300">Agency Pro</h3>
+              <h3 className="text-lg font-semibold text-indigo-300">Growth</h3>
               <div className="mt-4 flex items-baseline">
-                <span className="text-4xl font-bold text-white">$149</span>
-                <span className="ml-1 text-sm text-slate-400">/mo</span>
+                <span className="text-4xl font-bold text-white">₹44,999</span>
+                <span className="ml-1 text-sm text-slate-400">/month</span>
               </div>
-              <p className="mt-4 text-sm text-slate-400">Complete AI workspace for high volume.</p>
+              <p className="mt-4 text-sm text-slate-400">For scaling businesses running active campaigns</p>
               <ul className="mt-6 space-y-4 flex-1">
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400" /> Unlimited CRM Leads</li>
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400" /> Advanced AI Copilot Assist</li>
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400" /> Bulk Deletion Actions</li>
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400" /> Multilingual Hinglish support</li>
+                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> 1,500 AI calls/month (3,000 calling minutes)</li>
+                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Everything in Starter</li>
+                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Advanced call analytics & lead scoring</li>
+                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Priority WhatsApp message credits</li>
+                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Multilingual Hinglish support</li>
               </ul>
-              <Button onClick={() => setShowQuoteModal(true)} className="mt-8 w-full bg-indigo-600 hover:bg-indigo-700 text-white">Upgrade Now</Button>
+              <Button
+                onClick={() => startCheckout("growth")}
+                disabled={paymentLoading === "growth"}
+                className="mt-8 w-full bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-60"
+              >
+                {paymentLoading === "growth" ? "Opening..." : "Upgrade Now"}
+              </Button>
             </div>
 
             {/* Plan 3 */}
             <div className="rounded-2xl border border-white/5 bg-slate-900/20 p-8 backdrop-blur-md flex flex-col">
               <h3 className="text-lg font-semibold text-slate-300">Enterprise</h3>
               <div className="mt-4 flex items-baseline">
-                <span className="text-4xl font-bold text-white">Custom</span>
+                <span className="text-4xl font-bold text-white">₹1,44,999</span>
+                <span className="ml-1 text-sm text-slate-400">/month</span>
               </div>
-              <p className="mt-4 text-sm text-slate-400">For custom integrations and agents.</p>
+              <p className="mt-4 text-sm text-slate-400">For high-volume 24x7 calling operations</p>
               <ul className="mt-6 space-y-4 flex-1">
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400" /> Custom LLM Accents training</li>
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400" /> High-frequency CRM APIs</li>
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400" /> Dedicated support team</li>
+                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> 5,000 AI calls/month (10,000 calling minutes)</li>
+                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Everything in Growth</li>
+                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Dedicated success manager</li>
+                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Full API access</li>
+                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Custom LLM voice/accent training</li>
               </ul>
-              <Button onClick={() => setShowQuoteModal(true)} className="mt-8 w-full bg-white/10 hover:bg-white/20 text-white">Contact Sales</Button>
+              <Button onClick={() => openContactSales("enterprise")} className="mt-8 w-full bg-white/10 hover:bg-white/20 text-white">Contact Sales</Button>
+            </div>
+
+            {/* Plan 4 */}
+            <div className="rounded-2xl border border-white/5 bg-slate-900/20 p-8 backdrop-blur-md flex flex-col">
+              <h3 className="text-lg font-semibold text-slate-300">Custom</h3>
+              <div className="mt-4 flex items-baseline">
+                <span className="text-4xl font-bold text-white">Contact Sales</span>
+              </div>
+              <p className="mt-4 text-sm text-slate-400">For 20,000+ calls/month or custom infrastructure needs</p>
+              <ul className="mt-6 space-y-4 flex-1">
+                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Custom call volume and concurrency</li>
+                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Private infrastructure planning</li>
+                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Bespoke integrations and reporting</li>
+                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Enterprise onboarding support</li>
+              </ul>
+              <Button onClick={() => openContactSales("custom")} className="mt-8 w-full bg-white/10 hover:bg-white/20 text-white">Contact Sales</Button>
             </div>
           </div>
         </div>
@@ -461,6 +577,14 @@ export default function Landing() {
           </div>
         </div>
       )}
+      <PricingLeadCaptureModal
+        open={showPricingLeadModal}
+        planId={pricingLeadPlan}
+        onClose={() => {
+          setShowPricingLeadModal(false);
+          setPricingLeadPlan("custom");
+        }}
+      />
     </div>
   );
 }

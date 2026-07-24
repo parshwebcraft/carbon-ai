@@ -1,6 +1,6 @@
 """Pydantic schemas for API IO."""
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Literal
 from pydantic import BaseModel, EmailStr, ConfigDict
 
 
@@ -202,6 +202,50 @@ class NotificationOut(BaseModel):
     is_read: bool
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)
+
+
+# ---------------- Payments ----------------
+class PaymentCreateOrderIn(BaseModel):
+    plan_id: Literal["starter", "growth"]
+    customer: Optional[dict] = None
+
+
+class PaymentCreateOrderOut(BaseModel):
+    payment_id: str
+    key_id: str
+    order_id: str
+    amount: int
+    currency: str
+    plan_id: str
+    plan_name: str
+    description: str
+
+
+class PaymentVerifyIn(BaseModel):
+    razorpay_order_id: str
+    razorpay_payment_id: str
+    razorpay_signature: str
+
+
+class PaymentVerifyOut(BaseModel):
+    ok: bool
+    payment_id: str
+    plan_id: str
+    status: str
+
+
+class PricingLeadCaptureIn(BaseModel):
+    name: str
+    email: EmailStr
+    company: str
+    expected_call_volume: str
+    plan_id: str = "custom"
+
+
+class PricingLeadCaptureOut(BaseModel):
+    ok: bool
+    lead_id: str
+    status: str
 
 
 # ---------------- Products ----------------

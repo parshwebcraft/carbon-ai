@@ -7,6 +7,7 @@ import Layout from "@/components/Layout";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
+import PaymentSuccess from "@/pages/PaymentSuccess";
 import Dashboard from "@/pages/Dashboard";
 import Leads from "@/pages/Leads";
 import LeadDetail from "@/pages/LeadDetail";
@@ -49,6 +50,7 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/offline" element={<Offline />} />
           <Route path="/dashboard" element={<Authed><Dashboard /></Authed>} />
           <Route path="/leads" element={<Authed><Leads /></Authed>} />
