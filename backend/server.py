@@ -188,8 +188,8 @@ def startup() -> None:
     loop = asyncio.get_event_loop()
     loop.create_task(campaign_engine.loop())
     
-    # Launch Keep-alive self-pinger
-    loop.create_task(keep_alive_loop())
+    # Launch Keep-alive self-pinger (Disabled to conserve Render free tier instance hours)
+    # loop.create_task(keep_alive_loop())
     
     # Launch Task overdue checker
     loop.create_task(task_overdue_checker_loop())
