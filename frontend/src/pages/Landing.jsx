@@ -11,6 +11,7 @@ import PricingLeadCaptureModal from "@/components/PricingLeadCaptureModal";
 const checkoutPlans = {
   starter: "Starter",
   growth: "Growth",
+  business: "Business / Professional",
 };
 
 function loadRazorpayCheckout() {
@@ -333,7 +334,7 @@ export default function Landing() {
           <div className="text-center mb-16">
             <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-white">Simple, Transparent Pricing</h2>
             <p className="mt-4 text-slate-400 max-w-xl mx-auto">
-              Choose an AI calling plan built around monthly call volume, voice minutes, and support automation.
+              Choose an AI calling plan built around monthly voice minutes, workflow automations, and support channels.
             </p>
           </div>
 
@@ -343,89 +344,163 @@ export default function Landing() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
-            {/* Plan 1 */}
-            <div className="rounded-2xl border border-white/5 bg-slate-900/20 p-8 backdrop-blur-md flex flex-col">
-              <h3 className="text-lg font-semibold text-slate-300">Starter</h3>
-              <div className="mt-4 flex items-baseline">
-                <span className="text-4xl font-bold text-white">₹9,999</span>
-                <span className="ml-1 text-sm text-slate-400">/month</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8">
+            {/* Plan 1: Starter */}
+            <div className="rounded-2xl border border-white/5 bg-slate-900/20 p-6 backdrop-blur-md flex flex-col justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-300">Starter</h3>
+                <div className="mt-4 flex items-baseline">
+                  <span className="text-4xl font-bold text-white">₹9,999</span>
+                  <span className="ml-1 text-sm text-slate-400">/month</span>
+                </div>
+                <p className="mt-4 text-sm text-slate-400">Perfect for small businesses starting with AI voice automation.</p>
+                <ul className="mt-6 space-y-3">
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> 500 AI Voice Minutes</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> AI Voice Receptionist</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> AI Outbound Calling</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> CRM & Lead Management</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> WhatsApp Business Integration</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> AI Chat Assistant</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Call Recording</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Basic Analytics</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Email Support</li>
+                </ul>
               </div>
-              <p className="mt-4 text-sm text-slate-400">For businesses starting outbound & support calling</p>
-              <ul className="mt-6 space-y-4 flex-1">
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> 300 AI calls/month (600 calling minutes)</li>
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Vapi voice calling integration</li>
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> WhatsApp business messaging (basic)</li>
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> AI chat replies included</li>
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Basic call logs & recordings</li>
-              </ul>
-              <Button
-                onClick={() => startCheckout("starter")}
-                disabled={paymentLoading === "starter"}
-                className="mt-8 w-full bg-white/10 hover:bg-white/20 text-white disabled:opacity-60"
-              >
-                {paymentLoading === "starter" ? "Opening..." : "Get Started"}
-              </Button>
+              <div>
+                <p className="mt-4 text-xs text-slate-500 italic text-center">Additional AI Minutes billed separately.</p>
+                <Button
+                  onClick={() => startCheckout("starter")}
+                  disabled={paymentLoading === "starter"}
+                  className="mt-6 w-full bg-white/10 hover:bg-white/20 text-white disabled:opacity-60"
+                >
+                  {paymentLoading === "starter" ? "Opening..." : "Get Started"}
+                </Button>
+              </div>
             </div>
 
-            {/* Plan 2 */}
-            <div className="rounded-2xl border border-indigo-500/50 bg-indigo-950/20 p-8 backdrop-blur-md flex flex-col relative">
-              <div className="absolute top-0 right-8 -translate-y-1/2 bg-indigo-600 text-white text-xs px-3 py-1 rounded-full font-semibold uppercase tracking-wider">Most Popular</div>
-              <h3 className="text-lg font-semibold text-indigo-300">Growth</h3>
-              <div className="mt-4 flex items-baseline">
-                <span className="text-4xl font-bold text-white">₹44,999</span>
-                <span className="ml-1 text-sm text-slate-400">/month</span>
+            {/* Plan 2: Growth */}
+            <div className="rounded-2xl border border-indigo-500/50 bg-indigo-950/20 p-6 backdrop-blur-md flex flex-col justify-between relative">
+              <div className="absolute top-0 right-6 -translate-y-1/2 bg-indigo-600 text-white text-xs px-3 py-1 rounded-full font-semibold uppercase tracking-wider">Most Popular</div>
+              <div>
+                <h3 className="text-lg font-semibold text-indigo-300">Growth</h3>
+                <div className="mt-4 flex items-baseline">
+                  <span className="text-4xl font-bold text-white">₹34,999</span>
+                  <span className="ml-1 text-sm text-slate-400">/month</span>
+                </div>
+                <p className="mt-4 text-sm text-slate-400">Built for growing teams running sales and customer support.</p>
+                <div className="mt-6 text-xs font-semibold text-indigo-400 tracking-wider uppercase mb-2">Everything in Starter PLUS</div>
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> 2,500 AI Voice Minutes</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Workflow Automation</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Priority WhatsApp Credits</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Team Management</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Advanced Analytics</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> API Access</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Lead Scoring</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Multilingual AI</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Priority Support</li>
+                </ul>
               </div>
-              <p className="mt-4 text-sm text-slate-400">For scaling businesses running active campaigns</p>
-              <ul className="mt-6 space-y-4 flex-1">
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> 1,500 AI calls/month (3,000 calling minutes)</li>
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Everything in Starter</li>
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Advanced call analytics & lead scoring</li>
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Priority WhatsApp message credits</li>
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Multilingual Hinglish support</li>
-              </ul>
-              <Button
-                onClick={() => startCheckout("growth")}
-                disabled={paymentLoading === "growth"}
-                className="mt-8 w-full bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-60"
-              >
-                {paymentLoading === "growth" ? "Opening..." : "Upgrade Now"}
-              </Button>
+              <div>
+                <Button
+                  onClick={() => startCheckout("growth")}
+                  disabled={paymentLoading === "growth"}
+                  className="mt-6 w-full bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-60"
+                >
+                  {paymentLoading === "growth" ? "Opening..." : "Upgrade Now"}
+                </Button>
+              </div>
             </div>
 
-            {/* Plan 3 */}
-            <div className="rounded-2xl border border-white/5 bg-slate-900/20 p-8 backdrop-blur-md flex flex-col">
-              <h3 className="text-lg font-semibold text-slate-300">Enterprise</h3>
-              <div className="mt-4 flex items-baseline">
-                <span className="text-4xl font-bold text-white">₹1,44,999</span>
-                <span className="ml-1 text-sm text-slate-400">/month</span>
+            {/* Plan 3: Business / Professional */}
+            <div className="rounded-2xl border border-white/5 bg-slate-900/20 p-6 backdrop-blur-md flex flex-col justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-300">Business</h3>
+                <div className="mt-4 flex items-baseline">
+                  <span className="text-4xl font-bold text-white">₹74,999</span>
+                  <span className="ml-1 text-sm text-slate-400">/month</span>
+                </div>
+                <p className="mt-4 text-sm text-slate-400">Designed for businesses handling high call volumes across multiple teams.</p>
+                <div className="mt-6 text-xs font-semibold text-slate-400 tracking-wider uppercase mb-2">Everything in Growth PLUS</div>
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> 6,000 AI Voice Minutes</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> AI Sales Agent</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> AI Customer Support Agent</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Gmail Integration</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Facebook Integration</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Instagram Integration</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Calendar Integration</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Custom Workflows</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Multi-location Management</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Advanced Reports</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> SLA Support</li>
+                </ul>
               </div>
-              <p className="mt-4 text-sm text-slate-400">For high-volume 24x7 calling operations</p>
-              <ul className="mt-6 space-y-4 flex-1">
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> 5,000 AI calls/month (10,000 calling minutes)</li>
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Everything in Growth</li>
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Dedicated success manager</li>
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Full API access</li>
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Custom LLM voice/accent training</li>
-              </ul>
-              <Button onClick={() => openContactSales("enterprise")} className="mt-8 w-full bg-white/10 hover:bg-white/20 text-white">Contact Sales</Button>
+              <div>
+                <Button
+                  onClick={() => startCheckout("business")}
+                  disabled={paymentLoading === "business"}
+                  className="mt-6 w-full bg-white/10 hover:bg-white/20 text-white disabled:opacity-60"
+                >
+                  {paymentLoading === "business" ? "Opening..." : "Get Started"}
+                </Button>
+              </div>
             </div>
 
-            {/* Plan 4 */}
-            <div className="rounded-2xl border border-white/5 bg-slate-900/20 p-8 backdrop-blur-md flex flex-col">
-              <h3 className="text-lg font-semibold text-slate-300">Custom</h3>
-              <div className="mt-4 flex items-baseline">
-                <span className="text-4xl font-bold text-white">Contact Sales</span>
+            {/* Plan 4: Enterprise */}
+            <div className="rounded-2xl border border-white/5 bg-slate-900/20 p-6 backdrop-blur-md flex flex-col justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-300">Enterprise</h3>
+                <div className="mt-4 flex items-baseline">
+                  <span className="text-4xl font-bold text-white">₹1,49,999</span>
+                  <span className="ml-1 text-sm text-slate-400">/month</span>
+                </div>
+                <p className="mt-4 text-sm text-slate-400">Enterprise-grade AI communication platform.</p>
+                <div className="mt-6 text-xs font-semibold text-slate-400 tracking-wider uppercase mb-2">Everything in Business PLUS</div>
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> 10,000 AI Voice Minutes Included</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Dedicated Infrastructure</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Custom LLM Training</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> White-label Deployment</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Private APIs</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> SSO</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Dedicated Success Manager</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Enterprise Security</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Custom Integrations</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> 24×7 Premium Support</li>
+                </ul>
               </div>
-              <p className="mt-4 text-sm text-slate-400">For 20,000+ calls/month or custom infrastructure needs</p>
-              <ul className="mt-6 space-y-4 flex-1">
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Custom call volume and concurrency</li>
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Private infrastructure planning</li>
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Bespoke integrations and reporting</li>
-                <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Enterprise onboarding support</li>
-              </ul>
-              <Button onClick={() => openContactSales("custom")} className="mt-8 w-full bg-white/10 hover:bg-white/20 text-white">Contact Sales</Button>
+              <div>
+                <Button onClick={() => openContactSales("enterprise")} className="mt-6 w-full bg-white/10 hover:bg-white/20 text-white">Contact Sales</Button>
+              </div>
             </div>
+
+            {/* Plan 5: Custom */}
+            <div className="rounded-2xl border border-white/5 bg-slate-900/20 p-6 backdrop-blur-md flex flex-col justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-300">Custom</h3>
+                <div className="mt-4 flex items-baseline">
+                  <span className="text-4xl font-bold text-white">Custom</span>
+                </div>
+                <p className="mt-4 text-sm text-slate-400">For 20,000+ voice minutes or bespoke enterprise services.</p>
+                <ul className="mt-6 space-y-3">
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> 20,000+ AI Voice Minutes</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Custom AI Infrastructure</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Unlimited Integrations</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Enterprise Consulting</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Dedicated Onboarding</li>
+                  <li className="flex items-center gap-2 text-sm text-slate-300"><CheckCircle2 className="h-4 w-4 text-indigo-400 shrink-0" /> Custom Pricing</li>
+                </ul>
+              </div>
+              <div>
+                <Button onClick={() => openContactSales("custom")} className="mt-6 w-full bg-white/10 hover:bg-white/20 text-white">Contact Sales</Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Global Pricing Disclaimer Note */}
+          <div className="mt-12 text-center text-xs text-slate-500 max-w-4xl mx-auto leading-relaxed border border-white/5 bg-slate-950/20 rounded-xl p-4 backdrop-blur-sm">
+            Plans include bundled AI voice minutes. Additional AI voice minutes, telephony charges, WhatsApp conversations, and premium AI model usage are billed based on actual consumption. Enterprise customers can choose custom bundled usage plans.
           </div>
         </div>
       </section>

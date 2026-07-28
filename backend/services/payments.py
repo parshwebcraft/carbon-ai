@@ -20,9 +20,15 @@ PAYMENT_PLANS = {
     },
     "growth": {
         "name": "Growth",
-        "amount_paise": 4499900,
+        "amount_paise": 3499900,
         "currency": "INR",
         "description": "ParshCall AI Growth monthly plan",
+    },
+    "business": {
+        "name": "Business / Professional",
+        "amount_paise": 7499900,
+        "currency": "INR",
+        "description": "ParshCall AI Business / Professional monthly plan",
     },
 }
 
@@ -36,7 +42,7 @@ class PaymentService:
     def create_order(self, plan_id: str, customer: dict | None = None) -> dict:
         plan = PAYMENT_PLANS.get(plan_id)
         if not plan:
-            raise HTTPException(status_code=400, detail="plan_id must be starter or growth")
+            raise HTTPException(status_code=400, detail="plan_id must be starter, growth, or business")
         if not self.key_id or not self.key_secret:
             raise HTTPException(status_code=503, detail="Razorpay environment variables are not configured")
 
