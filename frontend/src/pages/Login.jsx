@@ -10,7 +10,7 @@ import { Briefcase, Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
 export default function Login() {
   const { user, login } = useAuth();
   const nav = useNavigate();
-  const [email, setEmail] = useState("admin@parshwebcraft.in");
+  const [email, setEmail] = useState("admin@parshwebcraft.com");
   const [password, setPassword] = useState("password123");
   const [err, setErr] = useState("");
 
@@ -133,7 +133,7 @@ export default function Login() {
 
           <div className="bg-slate-900/40 border border-white/5 rounded-xl p-4 text-xs text-slate-400 space-y-1">
             <span className="font-semibold text-slate-300 block mb-1">Demo Access Credentials:</span>
-            <div>Email: <code className="text-indigo-300">admin@parshwebcraft.in</code></div>
+            <div>Email: <code className="text-indigo-300">admin@parshwebcraft.com</code></div>
             <div>Password: <code className="text-indigo-300">password123</code></div>
           </div>
 

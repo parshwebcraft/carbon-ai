@@ -84,7 +84,7 @@ def reset_database() -> None:
 def seed_users(db):
     admin = User(
         name="ParshWebCraft Admin",
-        email=os.environ.get("ADMIN_EMAIL", "admin@parshwebcraft.in").lower(),
+        email=os.environ.get("ADMIN_EMAIL", "admin@parshwebcraft.com").lower(),
         password_hash=hash_password(os.environ.get("ADMIN_PASSWORD", "password123")),
         role="Admin", is_active=True,
     )
@@ -443,7 +443,7 @@ def main():
         print(">> Seeding automations...")
         seed_automation(db)
 
-        print("Done. Login: admin@parshwebcraft.in / password123")
+        print("Done. Login: admin@parshwebcraft.com / password123")
     finally:
         db.close()
 
