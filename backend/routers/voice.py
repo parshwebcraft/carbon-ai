@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models import Lead, Call, AIAgentLog, Activity, User
 from deps import get_current_user
-from services import vapi_voice, llm
+from services import vapi_voice, omnidim_voice, llm
 
 logger = logging.getLogger("facets.voice")
 router = APIRouter(prefix="/voice", tags=["voice"])
@@ -23,7 +23,11 @@ class PlaceCallOut(BaseModel):
 
 @router.get("/status")
 def status(db: Session = Depends(get_db)):
-    return {"vapi_configured": vapi_voice.is_configured(db)}
+    return {
+        "vapi_configured": vapi_voice.is_configured(db),
+        "omnidim_configured": omnidim_voice.is_configured(db),
+        "provider": "omnidim" if omnidim_voice.is_configured(db) else ("vapi" if vapi_voice.is_configured(db) else "mock")
+    }
 
 
 @router.post("/place-call/{lead_id}", response_model=PlaceCallOut)
@@ -52,39 +56,115 @@ def place_call(lead_id: int, with_ai_script: bool = True,
         except Exception as e:  # noqa: BLE001
             logger.info("call_script skipped: %s", e)
 
-    try:
-        resp = vapi_voice.place_call(
-            to_number=lead.phone, lead={
-                "name": lead.name, "city": lead.city,
-                "customer_type": lead.customer_type,
-                "budget": lead.budget, "status": lead.status,
-            },
-            script=script_text,
-            db=db,
-        )
-    except vapi_voice.VapiNotConfigured as e:
-        raise HTTPException(503, str(e))
-    except Exception as e:  # noqa: BLE001
-        raise HTTPException(502, f"Vapi error: {e}")
+    call_provider = "omnidim" if omnidim_voice.is_configured(db) else "vapi"
+    call_id_str = None
+    resp = {}
 
-    vapi_id = resp.get("id")
+    if call_provider == "omnidim":
+        try:
+            resp = omnidim_voice.place_call(
+                to_number=lead.phone,
+                lead={
+                    "id": lead.id,
+                    "name": lead.name,
+                    "city": lead.city,
+                    "customer_type": lead.customer_type,
+                    "budget": lead.budget,
+                    "status": lead.status,
+                    "notes": script_text
+                },
+                script=script_text,
+                db=db
+            )
+            call_id_str = resp.get("id")
+        except Exception as e:
+            raise HTTPException(502, f"OmniDimension call error: {e}")
+    else:
+        try:
+            resp = vapi_voice.place_call(
+                to_number=lead.phone, lead={
+                    "name": lead.name, "city": lead.city,
+                    "customer_type": lead.customer_type,
+                    "budget": lead.budget, "status": lead.status,
+                },
+                script=script_text,
+                db=db,
+            )
+            call_id_str = resp.get("id")
+        except vapi_voice.VapiNotConfigured as e:
+            raise HTTPException(503, str(e))
+        except Exception as e:  # noqa: BLE001
+            raise HTTPException(502, f"Vapi error: {e}")
+
     call = Call(
         lead_id=lead.id,
         call_status="In Progress",
-        call_summary="AI voice call initiated by " + (me.name or me.email),
+        call_summary=f"AI voice call ({call_provider.title()}) initiated by " + (me.name or me.email),
         call_duration=0,
-        vapi_call_id=vapi_id,
+        vapi_call_id=call_id_str,
     )
     db.add(call)
     db.add(Activity(
         lead_id=lead.id, activity_type="Call",
-        description=f"AI voice call started (Vapi {vapi_id or '?'})",
+        description=f"AI voice call started ({call_provider.title()} {call_id_str or '?'})",
         created_by=me.id,
     ))
     db.commit()
     db.refresh(call)
-    return PlaceCallOut(call_id=call.id, vapi_call_id=vapi_id,
+    return PlaceCallOut(call_id=call.id, vapi_call_id=call_id_str,
                         status=resp.get("status", "queued"), raw=resp)
+
+
+@router.post("/omnidim-webhook")
+async def omnidim_webhook(req: Request, db: Session = Depends(get_db)):
+    """OmniDimension post-call webhook receiver."""
+    try:
+        body = await req.json()
+    except Exception:
+        body = {}
+    logger.info("Received OmniDimension webhook payload: %s", body)
+    
+    metadata = body.get("metadata") or {}
+    lead_id = metadata.get("crm_lead_id") or body.get("crm_lead_id")
+    request_id = str(body.get("requestId") or body.get("call_id") or body.get("id") or "")
+    
+    transcript = body.get("transcript") or body.get("full_conversation") or ""
+    summary = body.get("summary") or body.get("call_summary") or ""
+    sentiment = body.get("sentiment") or "Neutral"
+    duration = int(body.get("duration") or body.get("call_duration") or 0)
+    
+    call = None
+    if request_id:
+        call = db.query(Call).filter(Call.vapi_call_id == request_id).first()
+    if not call and lead_id:
+        try:
+            call = db.query(Call).filter(Call.lead_id == int(lead_id)).order_by(Call.id.desc()).first()
+        except Exception:
+            pass
+        
+    if call:
+        call.call_status = "Completed"
+        if duration:
+            call.call_duration = duration
+        if summary:
+            call.call_summary = summary
+        if transcript:
+            call.transcript = transcript
+        if sentiment:
+            call.sentiment = sentiment.capitalize()
+            
+        db.add(AIAgentLog(
+            lead_id=call.lead_id,
+            conversation_summary=call.call_summary or "OmniDimension AI voice call completed.",
+            sentiment=call.sentiment or "Neutral",
+            next_action=body.get("next_action") or "Follow up with customer",
+        ))
+        db.commit()
+        
+        # Auto-extract appointment & update budget
+        _process_appointment_extraction(db, call.lead_id, call.transcript or "", call.call_summary or "")
+        
+    return {"ok": True}
 
 
 def _determine_outcome(summary: str, transcript: str) -> str:

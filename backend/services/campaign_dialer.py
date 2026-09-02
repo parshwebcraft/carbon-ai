@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import Optional
 from sqlalchemy.orm import Session
 
-from services import vapi_voice
+from services import vapi_voice, omnidim_voice
 
 logger = logging.getLogger("facets.dialer")
 
@@ -280,11 +280,15 @@ def mock_dial(*, target: dict, campaign_prompt: Optional[str],
 
 
 # ---------------------------------------------------------------------------
-# Provider selection — keeps Vapi as a drop-in for the future
+# Provider selection — prefers OmniDimension (free) -> Vapi -> Mock
 # ---------------------------------------------------------------------------
 
 def provider_name(db: Optional[Session] = None) -> str:
-    return "vapi" if vapi_voice.is_configured(db) else "mock"
+    if omnidim_voice.is_configured(db):
+        return "omnidim"
+    if vapi_voice.is_configured(db):
+        return "vapi"
+    return "mock"
 
 
 def dial(*, target: dict, campaign_prompt: Optional[str],
@@ -292,12 +296,38 @@ def dial(*, target: dict, campaign_prompt: Optional[str],
     """Place a call via the active provider and return the final result.
 
     For the mock provider we resolve the full lifecycle synchronously.
-    For Vapi we kick off an outbound call and return immediately with status
-    `dialing` and a vapi_call_id; the existing /api/voice/webhook will update
-    the row when Vapi posts an end-of-call report. The engine treats anything
-    other than `completed/failed/busy/no_answer` as "pending finalisation".
+    For OmniDimension or Vapi we kick off an outbound call and return immediately with status
+    `dialing` and a call request id; the webhook/polling will update the row.
     """
-    if provider_name(db) == "vapi":
+    prov = provider_name(db)
+    if prov == "omnidim":
+        try:
+            script = lead_prompt_override or campaign_prompt
+            resp = omnidim_voice.place_call(
+                to_number=target["phone"],
+                lead={
+                    "id": target.get("lead_id") or target.get("id"),
+                    "name": target.get("name"),
+                    "city": target.get("city"),
+                    "customer_type": target.get("customer_type"),
+                    "budget": target.get("budget") or 0,
+                    "status": target.get("status") or "New",
+                },
+                script=script,
+                db=db,
+            )
+            return CallResult(
+                final_status="dialing",
+                duration=0, outcome=None, sentiment=None,
+                summary="OmniDimension AI voice call initiated.",
+                transcript=None, lead_score=None,
+                next_action="Awaiting OmniDimension call completion",
+                recording_url=None, call_cost=0.0,
+                vapi_call_id=resp.get("id"),
+            )
+        except Exception as e:  # noqa: BLE001
+            logger.warning("OmniDimension dial failed, falling back to mock: %s", e)
+    elif prov == "vapi":
         try:
             script = lead_prompt_override or campaign_prompt
             resp = vapi_voice.place_call(

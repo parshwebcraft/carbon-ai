@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 const APP_INFO = {
+  omnidim: { label: "OmniDimension AI", desc: "Autonomous AI voice agent calling powered by OmniDimension (omnidim.io)", icon: Phone, color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" },
   whatsapp: { label: "Meta WhatsApp", desc: "Send automated WhatsApp notifications via Meta Cloud API", icon: MessageSquare, color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" },
   google_sheets: { label: "Google Sheets", desc: "Instantly sync leads and activity columns to Google spreadsheets", icon: Table, color: "text-green-500 bg-green-500/10 border-green-500/20" },
   excel: { label: "Excel Integration", desc: "Download and sync task logs into Microsoft Office 365 cloud", icon: Table, color: "text-teal-500 bg-teal-500/10 border-teal-500/20" },
@@ -246,6 +247,17 @@ function ConfigDialog({ app, onSaved }) {
                 <Label className="text-xs text-slate-600">Phone Number ID</Label>
                 <Input 
                   placeholder="Enter Meta Phone Number ID" 
+                  value={secretKey} 
+                  onChange={e => setSecretKey(e.target.value)} 
+                />
+              </div>
+            )}
+
+            {app.app_name === "omnidim" && (
+              <div>
+                <Label className="text-xs text-slate-600">OmniDimension Agent ID</Label>
+                <Input 
+                  placeholder="e.g. 248152" 
                   value={secretKey} 
                   onChange={e => setSecretKey(e.target.value)} 
                 />

@@ -170,6 +170,11 @@ def test_integration_connection(name: str, db: Session = Depends(get_db), _: Use
                 else:
                     return {"success": False, "message": f"Failed authentication. API returned status {r.status_code}."}
 
+        elif name == "omnidim":
+            from services import omnidim_voice
+            res = omnidim_voice.test_connection(db)
+            return {"success": res["ok"], "message": res["message"]}
+
         elif name == "rest_api" or name == "webhook":
             url = app_int.webhook_url
             if not url:
