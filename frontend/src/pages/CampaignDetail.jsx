@@ -116,8 +116,8 @@ export default function CampaignDetail() {
           <h1 className="font-serif text-3xl" data-testid="campaign-name">{campaign.name}</h1>
           <p className="text-sm text-slate-600">
             {campaign.description || "—"} · Provider:{" "}
-            <Badge variant="outline" className={campaign.provider === "vapi" ? "border-emerald-300 text-emerald-800" : "border-indigo-300 text-indigo-800"}>
-              {campaign.provider === "vapi" ? "Vapi.ai" : "MOCK"}
+            <Badge variant="outline" className={campaign.provider === "omnidim" || campaign.provider === "vapi" ? "border-emerald-300 text-emerald-800" : "border-indigo-300 text-indigo-800"}>
+              {campaign.provider === "omnidim" ? "OmniDimension" : (campaign.provider === "vapi" ? "Vapi.ai" : "MOCK")}
             </Badge>
             <span className="ml-2">Status:{" "}
               <span data-testid="campaign-status"

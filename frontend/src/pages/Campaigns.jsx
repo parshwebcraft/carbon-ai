@@ -60,8 +60,8 @@ export default function Campaigns() {
           <div className="text-sm text-slate-600">
             Bulk outbound AI dialer — provider:&nbsp;
             <Badge variant="outline" data-testid="campaigns-provider-badge"
-                   className={provider === "vapi" ? "border-emerald-300 text-emerald-800" : "border-indigo-300 text-indigo-800"}>
-              {provider === "vapi" ? "Vapi.ai (live)" : "MOCK"}
+                   className={provider === "omnidim" || provider === "vapi" ? "border-emerald-300 text-emerald-800" : "border-indigo-300 text-indigo-800"}>
+              {provider === "omnidim" ? "OmniDimension (Live)" : (provider === "vapi" ? "Vapi.ai (Live)" : "MOCK")}
             </Badge>
           </div>
         </div>

@@ -132,11 +132,11 @@ export default function LeadDetail() {
 
   async function placeAiCall() {
     if (!lead.phone) { toast.error("Lead has no phone number"); return; }
-    if (!window.confirm(`Place AI voice call to ${lead.name} (${lead.phone}) via Vapi?`)) return;
+    if (!window.confirm(`Place AI voice call to ${lead.name} (${lead.phone}) with AI Voice Agent?`)) return;
     setAiBusy(true);
     try {
       const { data } = await api.post(`/voice/place-call/${id}`);
-      toast.success(`AI call started — Vapi id ${data.vapi_call_id || data.call_id}`);
+      toast.success(`AI voice call initiated — ID: ${data.vapi_call_id || data.call_id}`);
       api.get(`/calls`, { params: { lead_id: id } }).then(r => setCalls(r.data));
     } catch (e) { toast.error(errMsg(e)); }
     finally { setAiBusy(false); }
@@ -294,7 +294,7 @@ export default function LeadDetail() {
                       <td className="px-4 py-2 text-slate-700">
                         {c.call_summary || "—"}
                         {c.sentiment && <span className="ml-2"><StatusBadge value={c.sentiment} /></span>}
-                        {c.vapi_call_id && <div className="text-[10px] text-indigo-700 mt-0.5">Vapi: {c.vapi_call_id}</div>}
+                        {c.vapi_call_id && <div className="text-[10px] text-indigo-700 mt-0.5">Call Ref: {c.vapi_call_id}</div>}
                       </td>
                       <td className="px-4 py-2 text-slate-500">{dateTime(c.created_at)}</td>
                       <td className="px-4 py-2 text-right">
