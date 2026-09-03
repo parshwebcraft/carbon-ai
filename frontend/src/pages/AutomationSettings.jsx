@@ -93,7 +93,7 @@ export default function AutomationSettings() {
               <div className="flex items-center justify-between border-t border-indigo-50 pt-4">
                 <div>
                   <h4 className="font-medium text-sm text-slate-800">Enforce safe calling time windows (IST)</h4>
-                  <p className="text-xs text-slate-500 mt-0.5">Prevent Vapi calls from triggering outside of 10:00 AM - 6:00 PM IST.</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Prevent automated AI voice calls from triggering outside of 10:00 AM - 6:00 PM IST.</p>
                 </div>
                 <Switch checked={true} disabled />
               </div>

@@ -130,9 +130,9 @@ export default function CrmDialer() {
           cleanupCall();
         });
       } else {
-        // 3. Independent Mode (OmniDimension AI Voice Agent + Live Copilot)
+        // 3. Independent Mode (AI Voice Agent + Live Copilot)
         const res = await api.post(`/voice/place-call/${leadId}`);
-        toast.success(`AI Call initiated via OmniDimension (ID: ${res.data.vapi_call_id || res.data.call_id})`);
+        toast.success(`AI Call initiated (ID: ${res.data.vapi_call_id || res.data.call_id})`);
         
         setCallState("active");
         if (window.activeCrmCall) window.activeCrmCall.state = "active";

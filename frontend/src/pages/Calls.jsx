@@ -53,7 +53,7 @@ export default function Calls() {
     setSyncing(true);
     try {
       const res = await api.post("/calls/sync-omnidim");
-      toast.success(res.data.message || "OmniDimension calls synced!");
+      toast.success(res.data.message || "AI Call logs & recordings synced!");
       load();
     } catch (e) {
       toast.error(errMsg(e));
@@ -154,7 +154,7 @@ export default function Calls() {
             disabled={syncing}
           >
             <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} />
-            {syncing ? "Syncing..." : "Sync Omni Calls"}
+            {syncing ? "Syncing..." : "Sync AI Calls"}
           </Button>
           {selectedIds.size > 0 && (
             <Button variant="destructive" className="bg-rose-600 hover:bg-rose-700 text-white" onClick={deleteSelected}>

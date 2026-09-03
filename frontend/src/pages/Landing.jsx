@@ -299,8 +299,8 @@ export default function Landing() {
               <div className="flex gap-4">
                 <ShieldCheck className="h-6 w-6 text-indigo-400 shrink-0 mt-1" />
                 <div>
-                  <h3 className="text-lg font-semibold text-white">Twilio & Vapi Implementation</h3>
-                  <p className="text-slate-400 mt-1">Full API credentials setup, custom phone number routing, and WebRTC dialer settings tailored out-of-the-box.</p>
+                  <h3 className="text-lg font-semibold text-white">AI Voice & Telephony Architecture</h3>
+                  <p className="text-slate-400 mt-1">Full outbound calling setup, custom phone number routing, and intelligent AI dialer settings tailored out-of-the-box.</p>
                 </div>
               </div>
               <div className="flex gap-4">

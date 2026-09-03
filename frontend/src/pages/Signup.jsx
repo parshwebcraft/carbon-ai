@@ -60,7 +60,7 @@ export default function Signup() {
           <div className="space-y-3 pt-4">
             <div className="flex items-center gap-3 text-slate-300">
               <CheckCircle2 className="h-5 w-5 text-indigo-400 shrink-0" />
-              <span>Full Vapi AI Calling Integration</span>
+              <span>Autonomous AI Voice Agent Calling</span>
             </div>
             <div className="flex items-center gap-3 text-slate-300">
               <CheckCircle2 className="h-5 w-5 text-indigo-400 shrink-0" />

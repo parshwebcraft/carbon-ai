@@ -16,14 +16,14 @@ import {
 } from "lucide-react";
 
 const APP_INFO = {
-  omnidim: { label: "OmniDimension AI", desc: "Autonomous AI voice agent calling powered by OmniDimension (omnidim.io)", icon: Phone, color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" },
+  omnidim: { label: "AI Voice Agent", desc: "Autonomous AI sales calling engine and auto appointment booking", icon: Phone, color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" },
   whatsapp: { label: "Meta WhatsApp", desc: "Send automated WhatsApp notifications via Meta Cloud API", icon: MessageSquare, color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" },
   google_sheets: { label: "Google Sheets", desc: "Instantly sync leads and activity columns to Google spreadsheets", icon: Table, color: "text-green-500 bg-green-500/10 border-green-500/20" },
   excel: { label: "Excel Integration", desc: "Download and sync task logs into Microsoft Office 365 cloud", icon: Table, color: "text-teal-500 bg-teal-500/10 border-teal-500/20" },
   smtp: { label: "SMTP Email", desc: "Configure custom SMTP server to dispatch proposal and quotation emails", icon: Mail, color: "text-blue-500 bg-blue-500/10 border-blue-500/20" },
   openai: { label: "OpenAI GPT-4", desc: "Process natural language workflows and sentiment telemetry with GPT-4o-mini", icon: Sparkles, color: "text-purple-500 bg-purple-500/10 border-purple-500/20" },
   deepseek: { label: "DeepSeek AI", desc: "Supercharge your automated follow-ups using DeepSeek-V3 LLM", icon: Brain, color: "text-cyan-500 bg-cyan-500/10 border-cyan-500/20" },
-  vapi: { label: "Vapi.ai Voice", desc: "Trigger outbound autonomous sales phone calls for new leads", icon: Phone, color: "text-orange-500 bg-orange-500/10 border-orange-500/20" },
+  vapi: { label: "Secondary Voice", desc: "Secondary voice agent pipeline for outbound calls", icon: Phone, color: "text-orange-500 bg-orange-500/10 border-orange-500/20" },
   google_calendar: { label: "Google Calendar", desc: "Sync showroom and virtual appointments to client Google Calendars", icon: Calendar, color: "text-red-500 bg-red-500/10 border-red-500/20" },
   rest_api: { label: "REST API Outbound", desc: "Push JSON data events to external software APIs", icon: Globe, color: "text-indigo-500 bg-indigo-500/10 border-indigo-500/20" },
   webhook: { label: "Incoming Webhooks", desc: "Create endpoints to receive lead data from Elementor, Webflow, etc.", icon: Link, color: "text-pink-500 bg-pink-500/10 border-pink-500/20" },
@@ -255,7 +255,7 @@ function ConfigDialog({ app, onSaved }) {
 
             {app.app_name === "omnidim" && (
               <div>
-                <Label className="text-xs text-slate-600">OmniDimension Agent ID</Label>
+                <Label className="text-xs text-slate-600">Voice Agent ID</Label>
                 <Input 
                   placeholder="e.g. 248152" 
                   value={secretKey} 

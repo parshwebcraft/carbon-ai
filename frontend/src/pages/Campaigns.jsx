@@ -60,8 +60,8 @@ export default function Campaigns() {
           <div className="text-sm text-slate-600">
             Bulk outbound AI dialer — provider:&nbsp;
             <Badge variant="outline" data-testid="campaigns-provider-badge"
-                   className={provider === "omnidim" || provider === "vapi" ? "border-emerald-300 text-emerald-800" : "border-indigo-300 text-indigo-800"}>
-              {provider === "omnidim" ? "OmniDimension (Live)" : (provider === "vapi" ? "Vapi.ai (Live)" : "MOCK")}
+                   className={provider === "omnidim" || provider === "vapi" ? "border-emerald-300 text-emerald-800 bg-emerald-50" : "border-indigo-300 text-indigo-800"}>
+              {provider === "omnidim" || provider === "vapi" ? "AI Voice Agent (Live)" : "MOCK"}
             </Badge>
           </div>
         </div>
@@ -180,20 +180,20 @@ function CallingSettingsDialog({ onClose }) {
           onChange={(v) => setS({ ...s, end_time: v })} />
 
         <div className="col-span-2 border-t pt-3 mt-1 font-serif text-sm font-semibold text-indigo-900">
-          Vapi.ai Integration
+          AI Voice Agent Configuration
         </div>
         <div className="col-span-2">
-          <TextField label="Vapi API Key" testid="settings-vapi-key" type="password"
+          <TextField label="Voice API Key" testid="settings-vapi-key" type="password"
             value={s.vapi_api_key}
             onChange={(v) => setS({ ...s, vapi_api_key: v })} />
         </div>
         <div className="col-span-2">
-          <TextField label="Vapi Phone Number ID" testid="settings-vapi-phone"
+          <TextField label="Voice Phone Number / Identifier" testid="settings-vapi-phone"
             value={s.vapi_phone_number_id}
             onChange={(v) => setS({ ...s, vapi_phone_number_id: v })} />
         </div>
         <div className="col-span-2">
-          <TextField label="Vapi Assistant ID (Optional)" testid="settings-vapi-assistant"
+          <TextField label="AI Voice Agent ID" testid="settings-vapi-assistant"
             value={s.vapi_assistant_id}
             onChange={(v) => setS({ ...s, vapi_assistant_id: v })} />
         </div>
