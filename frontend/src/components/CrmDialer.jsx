@@ -85,57 +85,66 @@ export default function CrmDialer() {
   }, [device]);
 
   async function makeCall(phone, leadId) {
-    if (!device) {
-      toast.error("Twilio Dialer not registered. Check API credentials.");
-      return;
-    }
     setCallState("dialing");
-    toast.info(`Dialing ${phone}...`);
+    toast.info(`Initiating AI Assisted call to ${phone}...`);
     window.activeCrmCall = { leadId, phone, name: leadInfo?.name, state: "dialing", voiceTranscript: [], suggestions: {} };
 
     try {
-      // Get microphone access
-      const localStream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          channelCount: 1,
-          sampleRate: 48000,
-          echoCancellation: true,
-          noiseSuppression: true,
-        },
-      });
-      localStreamRef.current = localStream;
+      // 1. Get microphone access for AI Copilot listener
+      let localStream = null;
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            channelCount: 1,
+            sampleRate: 48000,
+            echoCancellation: true,
+            noiseSuppression: true,
+          },
+        });
+        localStreamRef.current = localStream;
+      } catch (micErr) {
+        console.warn("[CrmDialer] Mic permission denied or unavailable:", micErr);
+      }
 
-      // Place call via Twilio SDK
-      const call = await device.connect({ params: { to: phone } });
-      twilioCallRef.current = call;
-      setActiveCall(call);
+      // 2. If Twilio device is registered, dial through Twilio WebRTC
+      if (device) {
+        const call = await device.connect({ params: { to: phone } });
+        twilioCallRef.current = call;
+        setActiveCall(call);
 
-      // Handle call connection
-      call.on("accept", () => {
-        console.log("[CrmDialer] Call accepted");
+        call.on("accept", () => {
+          console.log("[CrmDialer] Call accepted");
+          setCallState("active");
+          if (window.activeCrmCall) window.activeCrmCall.state = "active";
+          startDurationTimer();
+          if (localStream) setupAudioStreaming(leadId, localStream, call);
+        });
+
+        call.on("disconnect", () => {
+          console.log("[CrmDialer] Call disconnected");
+          cleanupCall();
+        });
+
+        call.on("reject", () => {
+          toast.error("Call rejected");
+          cleanupCall();
+        });
+      } else {
+        // 3. Independent Mode (OmniDimension AI Voice Agent + Live Copilot)
+        const res = await api.post(`/voice/place-call/${leadId}`);
+        toast.success(`AI Call initiated via OmniDimension (ID: ${res.data.vapi_call_id || res.data.call_id})`);
+        
         setCallState("active");
-        if (window.activeCrmCall) {
-          window.activeCrmCall.state = "active";
-        }
+        if (window.activeCrmCall) window.activeCrmCall.state = "active";
         startDurationTimer();
 
-        // Connect audio streaming to backend
-        setupAudioStreaming(leadId, localStream, call);
-      });
-
-      call.on("disconnect", () => {
-        console.log("[CrmDialer] Call disconnected");
-        cleanupCall();
-      });
-
-      call.on("reject", () => {
-        toast.error("Call rejected");
-        cleanupCall();
-      });
-
+        if (localStream) {
+          setupAudioStreaming(leadId, localStream, null);
+        }
+      }
     } catch (err) {
       console.error("[CrmDialer] Make call failed:", err);
-      toast.error(`Call failed: ${err?.message || err || "Device connection error"}`);
+      toast.error(`Call failed: ${err?.message || err || "Connection error"}`);
       cleanupCall();
     }
   }
@@ -174,35 +183,46 @@ export default function CrmDialer() {
 
     ws.onopen = () => {
       console.log("[CrmDialer] Audio streaming WS connected");
-      // Listen for the incoming audio track from Twilio
-      call.on("track", (remoteTrack) => {
-        console.log("[CrmDialer] Remote audio track received");
-        try {
-          // Mix local microphone + remote customer track
-          const mixedStream = new MediaStream([
-            localStream.getAudioTracks()[0],
-            remoteTrack
-          ]);
-
-          const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-            ? "audio/webm;codecs=opus"
-            : "audio/webm";
-
-          const recorder = new MediaRecorder(mixedStream, { mimeType, audioBitsPerSecond: 128000 });
-          mediaRecRef.current = recorder;
-
-          recorder.ondataavailable = (e) => {
-            if (e.data?.size > 0 && ws.readyState === WebSocket.OPEN) {
-              ws.send(e.data);
-            }
-          };
-
-          recorder.start(CHUNK_INTERVAL_MS);
-        } catch (err) {
-          console.error("[CrmDialer] WebRTC mixing failed:", err);
-        }
-      });
+      if (call) {
+        // Listen for incoming audio track from Twilio
+        call.on("track", (remoteTrack) => {
+          console.log("[CrmDialer] Remote audio track received");
+          try {
+            const mixedStream = new MediaStream([
+              localStream.getAudioTracks()[0],
+              remoteTrack
+            ]);
+            startStreamRecorder(mixedStream);
+          } catch (err) {
+            console.error("[CrmDialer] WebRTC mixing failed:", err);
+          }
+        });
+      } else {
+        // Standalone browser microphone mode
+        startStreamRecorder(localStream);
+      }
     };
+
+    function startStreamRecorder(stream) {
+      try {
+        const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+          ? "audio/webm;codecs=opus"
+          : "audio/webm";
+
+        const recorder = new MediaRecorder(stream, { mimeType, audioBitsPerSecond: 128000 });
+        mediaRecRef.current = recorder;
+
+        recorder.ondataavailable = (e) => {
+          if (e.data?.size > 0 && ws.readyState === WebSocket.OPEN) {
+            ws.send(e.data);
+          }
+        };
+
+        recorder.start(CHUNK_INTERVAL_MS);
+      } catch (err) {
+        console.error("[CrmDialer] Recorder initialization failed:", err);
+      }
+    }
   }
 
   function startDurationTimer() {

@@ -8,7 +8,7 @@ import StatusBadge from "@/components/StatusBadge";
 import { toast } from "sonner";
 import {
   Phone, TrendingUp, Sparkles, Loader2, ChevronDown, ChevronUp,
-  Clock, FileText,
+  Clock, FileText, RefreshCw, Volume2,
 } from "lucide-react";
 
 const SENTIMENT_COLOR = {
@@ -32,6 +32,7 @@ function ScoreBadge({ score }) {
 export default function Calls() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [expanded, setExpanded] = useState(null);
   const [analysing, setAnalysing] = useState(null);
   const [insights, setInsights] = useState({}); // call_id -> insight data
@@ -46,6 +47,19 @@ export default function Calls() {
       })
       .catch(e => toast.error(errMsg(e)))
       .finally(() => setLoading(false));
+  }
+
+  async function syncOmni() {
+    setSyncing(true);
+    try {
+      const res = await api.post("/calls/sync-omnidim");
+      toast.success(res.data.message || "OmniDimension calls synced!");
+      load();
+    } catch (e) {
+      toast.error(errMsg(e));
+    } finally {
+      setSyncing(false);
+    }
   }
 
   useEffect(load, []);
@@ -133,6 +147,15 @@ export default function Calls() {
               Select All
             </label>
           )}
+          <Button 
+            variant="outline" 
+            className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 gap-1.5" 
+            onClick={syncOmni}
+            disabled={syncing}
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} />
+            {syncing ? "Syncing..." : "Sync Omni Calls"}
+          </Button>
           {selectedIds.size > 0 && (
             <Button variant="destructive" className="bg-rose-600 hover:bg-rose-700 text-white" onClick={deleteSelected}>
               Delete Selected ({selectedIds.size})
@@ -199,6 +222,18 @@ export default function Calls() {
 
                   <p className="text-sm text-slate-600 line-clamp-2">{c.call_summary}</p>
 
+                  {c.recording_url && (
+                    <div className="mt-2.5 flex items-center gap-2">
+                      <Volume2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <audio 
+                        controls 
+                        preload="none"
+                        className="h-7 w-full max-w-sm rounded-lg"
+                        src={c.recording_url.startsWith("http") ? c.recording_url : `${api.defaults.baseURL.replace(/\/api\/?$/, "")}${c.recording_url}`}
+                      />
+                    </div>
+                  )}
+
                   <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-slate-400">
                     <span className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
@@ -206,7 +241,9 @@ export default function Calls() {
                     </span>
                     <span>{dateTime(c.created_at)}</span>
                     {c.vapi_call_id && (
-                      <span className="font-mono text-[10px] text-slate-300">VAPI: {c.vapi_call_id.slice(0, 8)}…</span>
+                      <span className="font-mono text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                        ID: {c.vapi_call_id}
+                      </span>
                     )}
                   </div>
 

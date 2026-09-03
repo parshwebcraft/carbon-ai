@@ -33,6 +33,7 @@ def list_calls(lead_id: Optional[int] = None, db: Session = Depends(get_db),
             "call_summary": c.call_summary,
             "transcript": c.transcript,
             "sentiment": c.sentiment,
+            "recording_url": c.recording_url,
             "vapi_call_id": c.vapi_call_id,
             "created_at": c.created_at.isoformat() if c.created_at else None,
         })
@@ -94,3 +95,21 @@ def delete_all_calls(db: Session = Depends(get_db),
     db.query(Call).delete(synchronize_session=False)
     db.commit()
     return None
+
+
+@router.post("/sync-omnidim")
+def sync_omnidim_calls(db: Session = Depends(get_db), _: User = Depends(get_current_user)):
+    """Fetch call logs and download recording mp3 files from OmniDimension."""
+    from services import omnidim_voice
+    return omnidim_voice.sync_logs_and_recordings(db)
+
+
+@router.get("/recording/{filename}")
+def stream_recording(filename: str):
+    """Serve downloaded MP3 recording files directly to the browser."""
+    import os
+    from fastapi.responses import FileResponse
+    path = os.path.join("recordings", filename)
+    if os.path.exists(path):
+        return FileResponse(path, media_type="audio/mpeg")
+    raise HTTPException(404, "Recording file not found")

@@ -1,9 +1,10 @@
-"""SQLAlchemy database setup for SQLite (portable to MSSQL via DATABASE_URL)."""
 import os
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:////app/backend/facets.db")
+load_dotenv()
+DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./facets.db")
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 

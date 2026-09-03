@@ -3,8 +3,11 @@ import os
 import json
 import logging
 from typing import Optional, Dict, Any
+from dotenv import load_dotenv
 import httpx
 from sqlalchemy.orm import Session
+
+load_dotenv()
 
 logger = logging.getLogger("facets.omnidim")
 API_BASE = "https://omnidim.io/api/v1"
@@ -146,3 +149,126 @@ def place_call(*, to_number: str, lead: dict, script: Optional[str] = None, db: 
             "status": data.get("status", "dispatched"),
             "raw": data
         }
+
+
+def download_recording(recording_url: str, call_id: int) -> Optional[str]:
+    """Download audio recording from OmniDimension and save to backend/recordings/."""
+    if not recording_url:
+        return None
+    try:
+        os.makedirs("recordings", exist_ok=True)
+        filename = f"omnidim_{call_id}.mp3"
+        filepath = os.path.join("recordings", filename)
+        
+        # If full URL not provided, prepend base
+        full_url = recording_url if recording_url.startswith("http") else f"https://omnidim.io{recording_url}"
+        
+        with httpx.Client(timeout=20.0, follow_redirects=True) as client:
+            r = client.get(full_url)
+            if r.status_code == 200 and len(r.content) > 100:
+                with open(filepath, "wb") as f:
+                    f.write(r.content)
+                logger.info("Downloaded call recording to %s (%d bytes)", filepath, len(r.content))
+                return f"/api/calls/recording/{filename}"
+    except Exception as e:
+        logger.error("Failed to download recording for call %s: %s", call_id, e)
+    return None
+
+
+def sync_logs_and_recordings(db: Session) -> dict:
+    """Fetch recent call logs from OmniDimension, sync transcripts/summaries, and download audio recordings."""
+    from models import Call, Lead, AIAgentLog
+    from datetime import datetime, timezone
+    
+    if not is_configured(db):
+        return {"ok": False, "message": "OmniDimension not configured"}
+        
+    api_key = _api_key(db)
+    synced_count = 0
+    downloaded_count = 0
+
+    try:
+        with httpx.Client(timeout=15.0) as client:
+            res = client.get(
+                f"{API_BASE}/calls/logs?pagesize=50",
+                headers={"Authorization": f"Bearer {api_key}"}
+            )
+            if res.status_code != 200:
+                return {"ok": False, "message": f"OmniDimension error: {res.text}"}
+                
+            data = res.json()
+            call_logs = data.get("call_log_data") or []
+            
+            for item in call_logs:
+                call_id_remote = item.get("id")
+                req_id = str(item.get("call_request_id", {}).get("id") if isinstance(item.get("call_request_id"), dict) else item.get("call_request_id") or "")
+                to_num = item.get("to_number") or ""
+                duration = int(item.get("call_duration_in_seconds") or 0)
+                raw_status = item.get("call_status") or "completed"
+                status = "Completed" if raw_status.lower() == "completed" else raw_status.capitalize()
+                summary = item.get("sentiment_analysis_details") or ""
+                transcript = item.get("call_conversation") or ""
+                sentiment = item.get("sentiment_score") or "Neutral"
+                
+                # Extract recording URL
+                rec_url = item.get("internal_recording_url") or item.get("recording_url") or ""
+                
+                # Match existing Call record by vapi_call_id (which stores request_id / call_id) or lead phone
+                call = None
+                if req_id:
+                    call = db.query(Call).filter(Call.vapi_call_id == req_id).first()
+                if not call and call_id_remote:
+                    call = db.query(Call).filter(Call.vapi_call_id == str(call_id_remote)).first()
+                if not call and to_num:
+                    lead = db.query(Lead).filter(Lead.phone.endswith(to_num[-10:])).first()
+                    if lead:
+                        call = db.query(Call).filter(Call.lead_id == lead.id).order_by(Call.id.desc()).first()
+                
+                # If still no call record, create one
+                if not call and to_num:
+                    lead = db.query(Lead).filter(Lead.phone.endswith(to_num[-10:])).first()
+                    if lead:
+                        call = Call(
+                            lead_id=lead.id,
+                            vapi_call_id=req_id or str(call_id_remote),
+                            call_status=status,
+                            call_duration=duration,
+                            created_at=datetime.now(timezone.utc)
+                        )
+                        db.add(call)
+                        db.commit()
+                        db.refresh(call)
+                
+                if call:
+                    call.call_status = status
+                    call.call_duration = duration
+                    if summary:
+                        call.call_summary = summary
+                    if transcript:
+                        # Clean HTML tags from transcript
+                        cleaned_transcript = transcript.replace("<br/>", "\n").replace("<br>", "\n")
+                        call.transcript = cleaned_transcript
+                    if sentiment:
+                        call.sentiment = sentiment.capitalize()
+                    
+                    # Download audio recording to recordings/ folder if available
+                    if rec_url and call_id_remote:
+                        local_url = download_recording(rec_url, call_id_remote)
+                        if local_url:
+                            call.recording_url = local_url
+                            downloaded_count += 1
+                        else:
+                            call.recording_url = rec_url
+                    
+                    synced_count += 1
+            
+            db.commit()
+            return {
+                "ok": True, 
+                "message": f"Successfully synced {synced_count} call(s) and downloaded {downloaded_count} recording(s).",
+                "synced_count": synced_count,
+                "downloaded_count": downloaded_count
+            }
+    except Exception as e:
+        logger.error("OmniDimension sync error: %s", e)
+        return {"ok": False, "message": str(e)}
