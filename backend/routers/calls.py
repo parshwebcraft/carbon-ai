@@ -33,7 +33,7 @@ def list_calls(lead_id: Optional[int] = None, db: Session = Depends(get_db),
             "call_summary": c.call_summary,
             "transcript": c.transcript,
             "sentiment": c.sentiment,
-            "recording_url": c.recording_url,
+            "recording_url": getattr(c, "recording_url", None),
             "vapi_call_id": c.vapi_call_id,
             "created_at": c.created_at.isoformat() if c.created_at else None,
         })

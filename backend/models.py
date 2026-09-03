@@ -79,6 +79,7 @@ class Call(Base):
     transcript = Column(Text)
     sentiment = Column(String(20))
     vapi_call_id = Column(String(80), index=True)
+    recording_url = Column(Text, nullable=True)
     created_at = Column(DateTime, default=utcnow, nullable=False)
 
     lead = relationship("Lead", back_populates="calls")
