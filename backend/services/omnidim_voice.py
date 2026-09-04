@@ -109,24 +109,36 @@ def place_call(*, to_number: str, lead: dict, script: Optional[str] = None, db: 
         else:
             cleaned_number = "+" + cleaned_number
 
+    full_name = (lead.get("name") or "").strip()
+    first_name = full_name.split()[0] if full_name else "Sir"
+    city = (lead.get("city") or "").strip() or "Udaipur"
+    company = (lead.get("company") or "").strip() or "business"
+    customer_type = (lead.get("customer_type") or "").strip() or "General Business"
+
     payload = {
         "agent_id": agent_id,
         "to_number": cleaned_number,
         "call_context": {
-            "customer_name": lead.get("name") or "Valued Client",
-            "city": lead.get("city") or "India",
+            "customer_name": full_name or first_name,
+            "user_name": full_name or first_name,
+            "first_name": first_name,
+            "name": full_name or first_name,
+            "city": city,
+            "company": company,
+            "business_type": customer_type,
+            "customer_type": customer_type,
             "budget": f"INR {lead.get('budget', 0)}",
-            "customer_type": lead.get("customer_type") or "Website & AI Services",
             "status": lead.get("status") or "New",
             "notes": (script or lead.get("notes") or "")[:500]
         },
         "metadata": {
             "crm_lead_id": str(lead.get("id") or ""),
+            "customer_name": full_name or first_name,
             "source": "ParshCall_CRM"
         }
     }
 
-    logger.info("Dispatching OmniDimension call to %s (Agent: %s)", cleaned_number, agent_id)
+    logger.info("Dispatching OmniDimension call to %s for customer '%s' (Agent: %s)", cleaned_number, full_name, agent_id)
 
     with httpx.Client(timeout=15.0) as client:
         res = client.post(
