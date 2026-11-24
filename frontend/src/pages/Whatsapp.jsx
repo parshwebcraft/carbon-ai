@@ -3198,6 +3198,7 @@ export default function Whatsapp() {
                           onDragStart={e => e.dataTransfer.setData("text/plain", String(card.lead_id))}
                           onClick={() => {
                             setActiveId(card.lead_id);
+                            setMobileShowChat(true);
                             handleViewMode("inbox");
                           }}
                           className="bg-white dark:bg-[#152233] p-3 rounded-xl border border-slate-200 dark:border-[#1E2D40] shadow-2xs hover:shadow-xs transition-all cursor-pointer space-y-2 group hover:dark:border-[#2D3E54]"
@@ -3320,6 +3321,7 @@ export default function Whatsapp() {
                         return [newConvoItem, ...prev];
                       });
                       setActiveId(ld.id);
+                      setMobileShowChat(true);
                       setNewChatOpen(false);
                       handleViewMode("inbox");
                       toast.success(`Chat opened with ${ld.name}`);
