@@ -30,11 +30,16 @@ router = APIRouter(prefix="/campaigns", tags=["campaigns"])
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _filter_leads_query(db: Session, spec: LeadFilterSpec):
+def _filter_leads_query(db: Session, spec: LeadFilterSpec, company_id: Optional[str] = None):
     q = db.query(Lead).filter(Lead.phone.isnot(None), Lead.phone != "")
+    if company_id:
+        q = q.filter(Lead.company_id == company_id)
     if spec.lead_ids:
-        return db.query(Lead).filter(Lead.id.in_(spec.lead_ids),
-                                     Lead.phone.isnot(None), Lead.phone != "")
+        q2 = db.query(Lead).filter(Lead.id.in_(spec.lead_ids),
+                                   Lead.phone.isnot(None), Lead.phone != "")
+        if company_id:
+            q2 = q2.filter(Lead.company_id == company_id)
+        return q2
     if spec.status:
         q = q.filter(Lead.status.in_(spec.status))
     if spec.source:
@@ -105,11 +110,11 @@ def _serialise(c: Campaign, db: Session) -> CampaignOut:
     return out
 
 
-def _materialise_targets(db: Session, campaign: Campaign, body: CampaignCreate) -> int:
+def _materialise_targets(db: Session, campaign: Campaign, body: CampaignCreate, company_id: Optional[str] = None) -> int:
     count = 0
     seen = set()  # dedupe by phone within the campaign
     if body.source_type in ("leads", "mixed") and body.filters:
-        leads = _filter_leads_query(db, body.filters).all()
+        leads = _filter_leads_query(db, body.filters, company_id=company_id).all()
         for lead in leads:
             if not lead.phone or lead.phone in seen:
                 continue
@@ -129,8 +134,11 @@ def _materialise_targets(db: Session, campaign: Campaign, body: CampaignCreate) 
             if not t.phone or t.phone in seen:
                 continue
             seen.add(t.phone)
-            # Best-effort link to existing lead by phone
-            existing = db.query(Lead).filter(Lead.phone == t.phone).first()
+            # Best-effort link to existing lead by phone within tenant
+            lead_q = db.query(Lead).filter(Lead.phone == t.phone)
+            if company_id:
+                lead_q = lead_q.filter(Lead.company_id == company_id)
+            existing = lead_q.first()
             db.add(CampaignTarget(
                 campaign_id=campaign.id,
                 lead_id=existing.id if existing else None,
@@ -153,8 +161,10 @@ def _materialise_targets(db: Session, campaign: Campaign, body: CampaignCreate) 
 @router.get("", response_model=CampaignListOut)
 def list_campaigns(status: Optional[str] = None,
                    db: Session = Depends(get_db),
-                   _: User = Depends(get_current_user)):
+                   current_user: User = Depends(get_current_user)):
     q = db.query(Campaign)
+    if current_user.company_id and current_user.role != "SuperAdmin":
+        q = q.filter(Campaign.company_id == current_user.company_id)
     if status:
         q = q.filter(Campaign.status == status)
     items = q.order_by(Campaign.id.desc()).all()
@@ -168,6 +178,7 @@ def create_campaign(body: CampaignCreate,
     if body.source_type not in ("leads", "csv", "mixed"):
         raise HTTPException(400, "source_type must be leads|csv|mixed")
     campaign = Campaign(
+        company_id=me.company_id,
         name=body.name,
         description=body.description,
         status="draft",
@@ -183,7 +194,7 @@ def create_campaign(body: CampaignCreate,
     db.add(campaign)
     db.commit()
     db.refresh(campaign)
-    added = _materialise_targets(db, campaign, body)
+    added = _materialise_targets(db, campaign, body, company_id=me.company_id)
     logger.info("Campaign %s created with %s targets", campaign.id, added)
     return _serialise(campaign, db)
 
@@ -359,8 +370,8 @@ async def upload_csv(cid: int,
 @router.post("/preview", response_model=CampaignPreviewOut)
 def preview_filter(spec: LeadFilterSpec,
                    db: Session = Depends(get_db),
-                   _: User = Depends(get_current_user)):
-    leads = _filter_leads_query(db, spec).order_by(Lead.id.asc()).limit(2000).all()
+                   current_user: User = Depends(get_current_user)):
+    leads = _filter_leads_query(db, spec, company_id=current_user.company_id).order_by(Lead.id.asc()).limit(2000).all()
     sample = [{
         "id": l.id, "name": l.name, "phone": l.phone, "city": l.city,
         "status": l.status, "source": l.source, "customer_type": l.customer_type,

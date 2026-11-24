@@ -3,17 +3,147 @@
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#4F46E5" />
-        <meta name="description" content="ParshWebCraft CRM — Web & Software Digital Agency" />
+        <meta name="theme-color" content="#0A111C" />
+        <script>
+          (function() {
+            var theme = localStorage.getItem("theme");
+            if (theme === "light") {
+              document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#4F46E5');
+            } else {
+              document.documentElement.classList.add("dark");
+              document.body && document.body.classList.add("dark", "dark-theme");
+            }
+          })();
+        </script>
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+
+        <!-- Primary SEO Metadata -->
+        <title>AI CRM &amp; Sales Automation Platform for Indian Businesses | ParshAgent</title>
+        <meta name="description" content="ParshAgent is an AI-powered CRM and sales automation platform for Indian businesses. Automate outbound AI voice calls, WhatsApp campaigns, lead pipelines, and customer follow-ups from one platform." />
+        <meta name="keywords" content="AI CRM India, AI calling software India, AI voice agent India, AI sales automation software, WhatsApp CRM India, lead management software India, sales automation software India, AI CRM Ahmedabad" />
+        <link rel="canonical" href="https://parshagent.com/" />
+
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://parshagent.com/" />
+        <meta property="og:site_name" content="ParshAgent" />
+        <meta property="og:title" content="AI CRM &amp; Sales Automation Platform for Indian Businesses | ParshAgent" />
+        <meta property="og:description" content="Automate outbound AI voice calls, WhatsApp campaigns, lead pipelines, and customer follow-ups with ParshAgent's next-gen AI CRM platform." />
+        <meta property="og:image" content="https://parshagent.com/images/social-preview.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content="ParshAgent AI CRM &amp; Sales Automation Platform" />
+
+        <!-- Twitter / X -->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content="https://parshagent.com/" />
+        <meta name="twitter:title" content="AI CRM &amp; Sales Automation Platform for Indian Businesses | ParshAgent" />
+        <meta name="twitter:description" content="Automate outbound AI voice calls, WhatsApp campaigns, lead pipelines, and customer follow-ups with ParshAgent's next-gen AI CRM platform." />
+        <meta name="twitter:image" content="https://parshagent.com/images/social-preview.png" />
+
+        <!-- Favicon & Mobile PWA -->
         <link rel="manifest" href="/manifest.json" />
-        <link rel="icon" type="image/png" href="/images/logo-main.png" />
-        <link rel="apple-touch-icon" href="/images/logo-main.png" />
+        <link rel="icon" type="image/png" href="/images/ParshAgent_icon_only.png" />
+        <link rel="apple-touch-icon" href="/images/ParshAgent_icon_only.png" />
+        <meta name="application-name" content="ParshAgent" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="ParshAgent" />
+        
+        <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:wght@500;600;700&display=swap" rel="stylesheet" />
-        <title>ParshWebCraft CRM — Web Agency Pipeline</title>
+
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZYZDD6VMQ4"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+
+          gtag('config', 'G-ZYZDD6VMQ4', {
+            send_page_view: true
+          });
+        </script>
+
+        <!-- Structured Data (JSON-LD) -->
+        <script type="application/ld+json">
+        [
+          {
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "ParshAgent",
+            "operatingSystem": "Web, Cloud",
+            "applicationCategory": "BusinessApplication",
+            "applicationSubCategory": "CRM & Sales Automation",
+            "url": "https://parshagent.com",
+            "description": "AI-powered CRM, AI voice calling, and WhatsApp sales automation platform for Indian businesses.",
+            "offers": {
+              "@type": "AggregateOffer",
+              "priceCurrency": "INR",
+              "lowPrice": "9999",
+              "highPrice": "149999",
+              "offerCount": "4"
+            },
+            "featureList": [
+              "Autonomous AI Voice Agent Calling",
+              "AI Sales Copilot & Live Suggestions",
+              "WhatsApp Business API Campaigns",
+              "Lead Pipeline Management",
+              "Workflow & Task Automation"
+            ]
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "ParshAgent",
+            "url": "https://parshagent.com",
+            "logo": "https://parshagent.com/images/ParshAgent_with_text.png",
+            "sameAs": [],
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "telephone": "+91-95213-47419",
+              "contactType": "customer support",
+              "email": "support@parshwebcraft.in",
+              "areaServed": "IN",
+              "availableLanguage": ["English", "Hindi"]
+            },
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "Ahmedabad",
+              "addressRegion": "Gujarat",
+              "addressCountry": "IN"
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "ParshAgent",
+            "url": "https://parshagent.com",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://parshagent.com/?q={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
+          }
+        ]
+        </script>
+
         <script>window.addEventListener("error",function(e){if(e.error instanceof DOMException&&e.error.name==="DataCloneError"&&e.message&&e.message.includes("PerformanceServerTiming")){e.stopImmediatePropagation();e.preventDefault()}},true);</script>
-       
+        <script>
+          (function() {
+            try {
+              var saved = localStorage.getItem("theme");
+              var isDark = saved !== null ? saved === "dark" : true;
+              if (isDark) {
+                document.documentElement.classList.add("dark");
+              } else {
+                document.documentElement.classList.remove("dark");
+              }
+            } catch(e) {}
+          })();
+        </script>
     </head>
     <body>
         <noscript>You need to enable JavaScript to run this app.</noscript>

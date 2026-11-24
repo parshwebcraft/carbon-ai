@@ -5,12 +5,13 @@ from sqlalchemy.orm import Session
 
 from database import Base
 from models import utcnow, uuid_str
-from sqlalchemy import Column, DateTime, Integer, JSON, String, Text
+from sqlalchemy import Column, DateTime, Integer, JSON, String, Text, ForeignKey
 
 
 class PaymentRecord(Base):
     __tablename__ = "payments"
     id = Column(String(36), primary_key=True, default=uuid_str)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=True, index=True)
     plan_id = Column(String(40), nullable=False, index=True)
     plan_name = Column(String(80), nullable=False)
     amount_paise = Column(Integer, nullable=False)

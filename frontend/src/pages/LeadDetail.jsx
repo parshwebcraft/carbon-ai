@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import api from "@/lib/api";
 import { inr, dateShort, dateTime, errMsg, relative } from "@/lib/format";
 import { Card } from "@/components/ui/card";
@@ -15,9 +15,10 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import StatusBadge from "@/components/StatusBadge";
+import { useAuth } from "@/lib/auth";
 import {
   ArrowLeft, Save, Bot, Phone, FileText, MessageCircle, Plus,
-  Sparkles, PhoneCall,
+  Sparkles, PhoneCall, Trash2, Clock,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -26,18 +27,40 @@ const STATUSES = ["New", "Contacted", "Follow Up", "Interested", "Visit Schedule
 
 export default function LeadDetail() {
   const { id } = useParams();
+  const { user } = useAuth();
   const [lead, setLead] = useState(null);
   const [acts, setActs] = useState([]);
   const [calls, setCalls] = useState([]);
   const [msgs, setMsgs] = useState([]);
   const [quotes, setQuotes] = useState([]);
   const [aiLogs, setAiLogs] = useState([]);
+  const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [note, setNote] = useState("");
   const [newMsg, setNewMsg] = useState("");
   const [script, setScript] = useState("");
   const [scriptOpen, setScriptOpen] = useState(false);
   const [aiBusy, setAiBusy] = useState(false);
+  const [dripToggling, setDripToggling] = useState(false);
+
+  const toggleDrip = async () => {
+    if (!lead) return;
+    setDripToggling(true);
+    try {
+      const res = await api.post(`/leads/${id}/toggle-drip`);
+      setLead(prev => ({
+        ...prev,
+        drip_status: res.data.drip_status,
+        drip_step: res.data.drip_step,
+        last_drip_sent_at: res.data.last_drip_sent_at,
+      }));
+      toast.success(`Drip follow-up is now ${res.data.drip_status.toUpperCase()}`);
+    } catch (e) {
+      toast.error(errMsg(e) || "Failed to update drip status");
+    } finally {
+      setDripToggling(false);
+    }
+  };
 
   function loadAll() {
     api.get(`/leads/${id}`).then(r => setLead(r.data)).catch(() => {});
@@ -57,6 +80,19 @@ export default function LeadDetail() {
       setLead(data); toast.success("Lead saved");
     } catch (e) { toast.error(errMsg(e)); }
     finally { setSaving(false); }
+  }
+
+  async function deleteThisLead() {
+    if (!window.confirm(`Are you sure you want to delete lead "${lead?.name || id}"? All associated activities will be removed.`)) return;
+    setSaving(true);
+    try {
+      await api.delete(`/leads/${id}`);
+      toast.success("Lead deleted successfully");
+      navigate("/leads");
+    } catch (e) {
+      toast.error(errMsg(e));
+      setSaving(false);
+    }
   }
 
   async function addNote() {
@@ -130,13 +166,22 @@ export default function LeadDetail() {
     finally { setAiBusy(false); }
   }
 
+  const isCoachingWorkspace = user?.company_id === "58af863a-26a7-4161-93ed-237dbe117cc3" || 
+    (user?.company_name || "").toLowerCase().includes("gyan") ||
+    (user?.company_name || "").toLowerCase().includes("pujara");
+
+  const agentDisplayName = isCoachingWorkspace ? "Archita" : "Priya";
+  const agentFullTitle = isCoachingWorkspace 
+    ? "Archita (Pujara Institute Academic Counselor)" 
+    : "Priya (ParshWebCraft Sales Executive)";
+
   async function placeAiCall() {
     if (!lead.phone) { toast.error("Lead has no phone number"); return; }
-    if (!window.confirm(`Place AI voice call to ${lead.name} (${lead.phone}) with AI Voice Agent?`)) return;
+    if (!window.confirm(`Place AI voice call to ${lead.name} (${lead.phone}) with ${agentFullTitle}?`)) return;
     setAiBusy(true);
     try {
       const { data } = await api.post(`/voice/place-call/${id}`);
-      toast.success(`AI voice call initiated — ID: ${data.vapi_call_id || data.call_id}`);
+      toast.success(`${agentDisplayName} AI Voice Call initiated — ID: ${data.vapi_call_id || data.call_id}`);
       api.get(`/calls`, { params: { lead_id: id } }).then(r => setCalls(r.data));
     } catch (e) { toast.error(errMsg(e)); }
     finally { setAiBusy(false); }
@@ -189,13 +234,14 @@ export default function LeadDetail() {
         <Card className="p-5 border-indigo-100 bg-white lg:col-span-2 space-y-3">
           <h2 className="font-serif text-lg">Lead Information</h2>
           <div className="grid sm:grid-cols-2 gap-3">
+            <Field label="Full Name" value={lead.name} onChange={v => setLead({ ...lead, name: v })} testid="lead-name" />
             <Field label="Phone" value={lead.phone} onChange={v => setLead({ ...lead, phone: v })} testid="lead-phone" />
             <Field label="Email" value={lead.email} onChange={v => setLead({ ...lead, email: v })} testid="lead-email" />
             <Field label="City" value={lead.city} onChange={v => setLead({ ...lead, city: v })} testid="lead-city" />
             <Field label="Company" value={lead.company} onChange={v => setLead({ ...lead, company: v })} testid="lead-company" />
             <Field label="Budget (₹)" type="number" value={lead.budget}
               onChange={v => setLead({ ...lead, budget: Number(v) || 0 })} testid="lead-budget" />
-            <div>
+            <div className="sm:col-span-2">
               <Label className="text-xs text-slate-600">Status</Label>
               <Select value={lead.status} onValueChange={v => setLead({ ...lead, status: v })}>
                 <SelectTrigger data-testid="lead-status-select" className="mt-1"><SelectValue /></SelectTrigger>
@@ -215,8 +261,72 @@ export default function LeadDetail() {
           </div>
         </Card>
 
-        <Card className="p-5 border-indigo-100 bg-white space-y-3">
-          <h2 className="font-serif text-lg">Quick actions</h2>
+        <div className="space-y-4">
+          {/* Automated Spaced Follow-Up Drip Card */}
+          <Card className="p-5 border-indigo-100 bg-white space-y-3 shadow-2xs">
+            <div className="flex items-center justify-between">
+              <h2 className="font-serif text-lg flex items-center gap-2">
+                <Clock className="h-4 w-4 text-indigo-600" />
+                Follow-Up Drip
+              </h2>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${
+                (lead.drip_status || 'active') === 'active'
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : (lead.drip_status === 'paused')
+                  ? 'bg-amber-50 text-amber-700 border-amber-200'
+                  : (lead.drip_status === 'completed')
+                  ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                  : 'bg-slate-100 text-slate-700 border-slate-200'
+              }`}>
+                {lead.drip_status ? lead.drip_status : 'ACTIVE'}
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Auto spaced WhatsApp re-engagement (Day 1, Day 3, Day 7). Automatically pauses if the lead replies.
+            </p>
+
+            <div className="p-3 bg-slate-50/80 rounded-xl border border-slate-100 space-y-1.5 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-600">Current Step:</span>
+                <span className="font-semibold text-slate-900">
+                  {lead.drip_step === 0 ? "Step 0 (Pending Day 1)" :
+                   lead.drip_step === 1 ? "Step 1 (Day 1 Sent)" :
+                   lead.drip_step === 2 ? "Step 2 (Day 3 Sent)" :
+                   "Step 3 (Day 7 Completed)"}
+                </span>
+              </div>
+              {lead.last_drip_sent_at && (
+                <div className="flex justify-between items-center text-[11px] text-slate-500">
+                  <span>Last Drip Sent:</span>
+                  <span>{relative(lead.last_drip_sent_at)}</span>
+                </div>
+              )}
+              {lead.last_customer_message_at && (
+                <div className="flex justify-between items-center text-[11px] text-slate-500">
+                  <span>Last Lead Reply:</span>
+                  <span>{relative(lead.last_customer_message_at)}</span>
+                </div>
+              )}
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={dripToggling}
+              onClick={toggleDrip}
+              className={`w-full text-xs font-semibold h-8.5 transition-all ${
+                (lead.drip_status || 'active') === 'active'
+                  ? 'border-amber-300 text-amber-700 hover:bg-amber-50'
+                  : 'border-emerald-300 text-emerald-700 hover:bg-emerald-50'
+              }`}
+            >
+              {(lead.drip_status || 'active') === 'active' ? '⏸️ Pause Follow-Up Drip' : '▶️ Resume / Restart Drip'}
+            </Button>
+          </Card>
+
+          <Card className="p-5 border-indigo-100 bg-white space-y-3">
+            <h2 className="font-serif text-lg">Quick actions</h2>
           <Button data-testid="quick-log-call" variant="outline" className="w-full justify-start" onClick={logCall}>
             <Phone className="h-4 w-4 mr-2" /> Log a Call
           </Button>
@@ -226,7 +336,7 @@ export default function LeadDetail() {
           </Button>
           <Button data-testid="ai-voice-call" className="w-full justify-start bg-indigo-700 hover:bg-indigo-800"
             disabled={aiBusy} onClick={placeAiCall}>
-            <PhoneCall className="h-4 w-4 mr-2" /> Place AI Voice Call
+            <PhoneCall className="h-4 w-4 mr-2" /> Place AI Voice Call ({agentDisplayName})
           </Button>
           <Button data-testid="webrtc-voice-call" className="w-full justify-start bg-indigo-700 hover:bg-indigo-800 text-white"
             onClick={placeWebRtcCall}>
@@ -234,6 +344,10 @@ export default function LeadDetail() {
           </Button>
           <Button data-testid="quick-quote" variant="outline" className="w-full justify-start" onClick={createQuote}>
             <FileText className="h-4 w-4 mr-2" /> Create Quotation
+          </Button>
+          <Button data-testid="delete-lead-btn" variant="outline" className="w-full justify-start text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200"
+            disabled={saving} onClick={deleteThisLead}>
+            <Trash2 className="h-4 w-4 mr-2" /> Delete Lead
           </Button>
           <div className="pt-2">
             <Label className="text-xs text-slate-600">Add Activity Note</Label>
@@ -245,6 +359,7 @@ export default function LeadDetail() {
           </div>
         </Card>
       </div>
+    </div>
 
       <Tabs defaultValue="activities">
         <TabsList className="bg-indigo-50">

@@ -1,0 +1,38 @@
+User-agent: *
+Allow: /
+Allow: /#features
+Allow: /#services
+Allow: /#pricing
+Allow: /#about
+Allow: /#contact
+Allow: /privacy-policy
+Allow: /terms-and-conditions
+Allow: /terms
+Allow: /disclaimer
+Allow: /support
+Allow: /data-deletion
+Allow: /cookie-policy
+
+# Disallow private and authenticated CRM application paths
+Disallow: /dashboard
+Disallow: /leads
+Disallow: /leads/*
+Disallow: /tasks
+Disallow: /calls
+Disallow: /whatsapp
+Disallow: /products
+Disallow: /appointments
+Disallow: /quotations
+Disallow: /ai-logs
+Disallow: /campaigns
+Disallow: /campaigns/*
+Disallow: /copilot
+Disallow: /users
+Disallow: /automation
+Disallow: /automation/*
+Disallow: /login
+Disallow: /signup
+Disallow: /payment-success
+Disallow: /offline
+
+Sitemap: https://parshagent.com/sitemap.xml

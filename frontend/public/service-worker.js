@@ -1,6 +1,6 @@
-/* Facets CRM service worker — offline shell only. */
-const CACHE = "facets-shell-v2";
-const SHELL = ["/", "/offline.html", "/manifest.json", "/facets-icon.svg"];
+/* ParshAgent CRM service worker — offline shell. */
+const CACHE = "parshagent-shell-v3";
+const SHELL = ["/", "/offline.html"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).catch(() => {}));

@@ -1,9 +1,12 @@
-"""Unified LLM service provider (OpenAI ChatGPT & DeepSeek) used by AI features."""
+"""Unified LLM service provider (OpenAI ChatGPT, Groq, DeepSeek, Gemini) used by AI features."""
 import os
 import json
 import logging
 from typing import List, Dict, Optional
 from openai import OpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logger = logging.getLogger("facets.llm")
 
@@ -19,21 +22,36 @@ PROVIDER = os.environ.get("LLM_PROVIDER", "openai").lower().strip()
 
 
 def _get_client():
-    if PROVIDER == "deepseek":
+    provider = os.environ.get("LLM_PROVIDER", "groq" if os.environ.get("GROQ_API_KEY") else "openai").lower().strip()
+    if provider == "groq" or (not os.environ.get("OPENAI_API_KEY") and os.environ.get("GROQ_API_KEY")) or (os.environ.get("GROQ_API_KEY") and provider not in ("deepseek", "gemini")):
+        api_key = os.environ.get("GROQ_API_KEY", "").strip()
+        if not api_key:
+            raise LlmNotConfigured("GROQ_API_KEY is not set. Add it to .env.")
+        base_url = os.environ.get("GROQ_BASE_URL", "https://api.groq.com/openai/v1").strip()
+        model = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b").strip()
+        return OpenAI(api_key=api_key, base_url=base_url), model
+    elif provider == "deepseek":
         api_key = os.environ.get("DEEPSEEK_API_KEY", "").strip()
         if not api_key:
             raise LlmNotConfigured(
-                "DEEPSEEK_API_KEY is not set. Add it to /app/backend/.env."
+                "DEEPSEEK_API_KEY is not set. Add it to .env."
             )
         base_url = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com").strip()
         model = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat").strip()
+        return OpenAI(api_key=api_key, base_url=base_url), model
+    elif provider == "gemini" or (not os.environ.get("OPENAI_API_KEY") and os.environ.get("GEMINI_API_KEY")):
+        api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+        if not api_key:
+            raise LlmNotConfigured("GEMINI_API_KEY is not set. Add it to .env.")
+        base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
+        model = os.environ.get("GEMINI_MODEL", "gemini-1.5-flash").strip()
         return OpenAI(api_key=api_key, base_url=base_url), model
     else:
         # Default to OpenAI
         api_key = os.environ.get("OPENAI_API_KEY", "").strip()
         if not api_key:
             raise LlmNotConfigured(
-                "OPENAI_API_KEY is not set. Add it to /app/backend/.env."
+                "OPENAI_API_KEY is not set. Add it to .env."
             )
         base_url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1").strip()
         model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini").strip()
@@ -86,39 +104,87 @@ def chat_json(messages: List[Dict[str, str]], **kw) -> dict:
 # ---- Domain helpers (Web & Digital Agency CRM) ----
 
 AGENCY_SYSTEM = (
-    "You are an experienced business development consultant for ParshWebCraft, a premium Indian web design, "
-    "digital marketing, custom software development, and mobile app agency. "
-    "Be warm, professional, polite, and use clear Indian English. "
-    "Keep replies concise and business-oriented. Speak in INR or USD as appropriate. "
-    "Keep WhatsApp replies under 60 words and end with a clear next step "
-    "(scheduling a discovery call, booking a free website audit, sharing portfolio, or sending a proposal estimate)."
+    "You are an empathetic, highly skilled business consultant and representative for Gauransh Jaroli & ParshWebCraft digital agency.\n"
+    "You are chatting directly with contacts and leads on WhatsApp.\n\n"
+    "CRITICAL CONVERSATIONAL RULES (FOLLOW STRICTLY):\n"
+    "1. FESTIVAL & HOLIDAY GREETINGS (STRICT RULE - ZERO SALES PITCH):\n"
+    "   - When the user sends a festival greeting (e.g., 'Happy Diwali', 'Wishing you and family a very Happy Diwali', 'Same to you', 'Shubh Deepawali', 'Happy New Year'):\n"
+    "     Reply with genuine warmth, blessing, and joy reciprocating the festive wish to them and their family.\n"
+    "     Example: 'Thank you so much! Wishing you and your family a very Happy & Prosperous Diwali! 🪔✨ May this festival bring good health, happiness, and abundant success to your home!'\n"
+    "     STRICT PROHIBITION: NEVER pitch services, packages, websites, or agency offerings on festival greetings. DO NOT ask business questions. Just celebrate the moment with pure warmth and respect.\n\n"
+    "2. PERSONAL & PHONEBOOK AWARENESS:\n"
+    "   - Many contacts are friends, college mates, family members, or acquaintances from Gauransh's phonebook.\n"
+    "   - If they ask personal pleasantries (e.g. 'Kaise ho Gauransh?', 'Bhaiya aap ho?', 'Kaun bol raha hai?', 'Sab badhiya?'):\n"
+    "     Reply naturally in a friendly, conversational tone (e.g. 'Main ekdum badhiya hoon! Aap bataiye aap kaise hain? Aur Happy Diwali aapko aur family ko!').\n"
+    "     Never speak like a cold corporate robot.\n\n"
+    "3. LISTEN FIRST FOR WORK INQUIRIES, NEVER HARD-SELL:\n"
+    "   - Only discuss services and projects if the customer explicitly asks about work, websites, software, marketing, or business requirements.\n"
+    "   - If the user says 'I have a requirement' or 'listen to me': invite them warmly to share (e.g. 'Sure, go ahead! Tell me what you have in mind.').\n"
+    "   - When the user shares an idea: acknowledge it thoughtfully and ask ONE relevant clarifying question.\n\n"
+    "4. DO NOT PUSH CALLS OR MEETINGS PREMATURELY:\n"
+    "   - NEVER push a phone call or meeting unless the customer specifically asks for a call or explicitly asks how to proceed.\n"
+    "   - If the customer says 'call baad me', 'call last me', or wants to discuss here: respect it 100% and stay focused on understanding their requirements.\n\n"
+    "5. STRICT PRICING & QUOTATION GUARDRAIL (NEVER INVENT OR FABRICATE RATES):\n"
+    "   - NEVER make up or quote random prices, packages, or rupee amounts out of thin air (like ₹15,000 or ₹25,000).\n"
+    "   - When the customer asks for rates, packages, or pricing:\n"
+    "     Explain politely that packages are customized based on their specific business needs (e.g., post frequency, creative design style, ad budget) so they get the best ROI.\n"
+    "     Tell them that our team will connect with them directly with a tailored proposal and exact pricing.\n\n"
+    "6. NATURAL HUMAN CHAT STYLE:\n"
+    "   - Match the customer's language naturally (casual Hinglish or Indian English).\n"
+    "   - Speak like a friendly tech consultant (e.g., 'Shopify', 'custom website', 'designs', 'products', 'features').\n"
+    "   - NEVER use robotic translated Hindi words like 'SKU sankhya', 'property sheet', 'kripya', 'pasandida platform'.\n"
+    "   - Keep messages short (1 to 2 sentences, maximum 3). Never write long paragraphs.\n"
+    "   - Only ask ONE question at a time so the customer can reply easily."
 )
 
 
-def whatsapp_reply(lead: dict, history: list[dict]) -> str:
+def whatsapp_reply(lead: dict, history: list[dict], custom_knowledge: str = None) -> str:
     """Generate a contextual WhatsApp reply for a lead.
 
     history: [{direction:"in|out", message:"..."}] oldest first.
     """
     convo_lines = []
+    last_inbound = ""
     for m in history[-12:]:
-        who = "Customer" if m["direction"] == "in" else "Agent"
-        convo_lines.append(f"{who}: {m['message']}")
+        who = "Customer" if m.get("direction") == "in" else "Agent"
+        convo_lines.append(f"{who}: {m.get('message')}")
+        if m.get("direction") == "in":
+            last_inbound = (m.get("message") or "").strip()
 
-    user_prompt = (
-        f"Lead profile:\n"
-        f"- Name: {lead.get('name', 'Customer')}\n"
-        f"- City: {lead.get('city') or 'Unknown'}\n"
-        f"- Interest: {lead.get('customer_type') or 'General'}\n"
-        f"- Budget: ₹{int(lead.get('budget') or 0):,}\n"
-        f"- Status: {lead.get('status') or 'New'}\n\n"
-        f"Conversation so far:\n" + "\n".join(convo_lines) +
-        "\n\nWrite ONLY the next agent reply, no preamble."
-    )
-    return chat([
-        {"role": "system", "content": AGENCY_SYSTEM},
-        {"role": "user", "content": user_prompt},
-    ], temperature=0.6, max_tokens=200).strip()
+    name = lead.get("name") or "there"
+
+    # Try calling LLM first
+    try:
+        system_prompt = AGENCY_SYSTEM
+        if custom_knowledge and custom_knowledge.strip():
+            system_prompt = f"{AGENCY_SYSTEM}\n\nAgency Knowledge Base:\n{custom_knowledge.strip()}"
+
+        user_prompt = (
+            f"Customer name: {name}\n\n"
+            f"Conversation history:\n" + "\n".join(convo_lines) +
+            "\n\nRespond directly to the customer's last message. Keep it conversational, brief (1-2 sentences), and follow the guidelines above. Write ONLY your message with no quotation marks or prefixes:"
+        )
+        return chat([
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ], temperature=0.6, max_tokens=500).strip()
+    except Exception as e:
+        logger.warning("LLM API call failed in whatsapp_reply (%s). Using smart fallback reply.", e)
+        text_lower = last_inbound.lower()
+        if any(w in text_lower for w in ["diwali", "deepawali", "deepavali", "happy diwali", "shubh deepawali", "same to you", "wishing you"]):
+            return f"Thank you so much, {name}! Wishing you and your family a very Happy & Prosperous Diwali! 🪔✨ May this year bring endless happiness, good health, and success to your home!"
+        elif any(w in text_lower for w in ["kaise ho", "kaisa hai", "kese ho", "sab theek", "sab badhiya", "bhaiya", "gauransh"]):
+            return f"Main ekdum badhiya hoon! Aap bataiye aap kaise hain? Aur Happy Diwali aapko aur family ko! 🌟"
+        elif any(w in text_lower for w in ["okk", "ok", "okay", "thik", "theek", "thanks", "thank you", "dhanyawad", "sure", "done", "got it"]):
+            return f"Thank you, {name}! Wishing you a wonderful celebration. Feel free to connect anytime!"
+        elif any(w in text_lower for w in ["hi", "hello", "hey", "namaste", "start"]):
+            return f"Hi {name}, thanks for reaching out! Happy Diwali to you and family. How can I help you today?"
+        elif any(w in text_lower for w in ["price", "cost", "budget", "package", "rate"]):
+            return f"Hi {name}, our packages are customized based on your requirements. Would tomorrow at 3 PM work for a quick 10-minute discovery call?"
+        elif any(w in text_lower for w in ["call", "meet", "meeting", "talk", "discuss"]):
+            return f"Sure {name}! We'd love to connect. Please share your convenient date and time, or drop your phone number."
+        else:
+            return f"Hi {name}, thank you for your message! Our team has received it and will follow up with you shortly. Have a great day!"
 
 
 def call_insights(call: dict, lead: dict) -> dict:
@@ -250,3 +316,58 @@ def quotation_suggest(lead: dict, products: list[dict]) -> dict:
         {"role": "system", "content": AGENCY_SYSTEM},
         {"role": "user", "content": prompt},
     ], temperature=0.3, max_tokens=600)
+
+
+def whatsapp_reply_suggestions(lead: dict, history: list[dict]) -> list[str]:
+    """Generate 3 distinct contextual WhatsApp reply suggestions for a lead."""
+    convo_lines = []
+    for m in history[-12:]:
+        who = "Customer" if m.get("direction") == "in" else "Agent"
+        convo_lines.append(f"{who}: {m.get('message', '')}")
+
+    name = lead.get("name") or "there"
+    fallback = [
+        f"Hi {name}, thanks for reaching out! Let me check the details and get right back to you.",
+        f"Sure! We can definitely help you with this. Would tomorrow at 3 PM be a good time for a quick 10-minute call?",
+        f"I've noted your requirements. Let me share our portfolio and package options with you shortly!"
+    ]
+
+    user_prompt = (
+        f"Lead profile:\n"
+        f"- Name: {name}\n"
+        f"- City: {lead.get('city') or 'Unknown'}\n"
+        f"- Interest: {lead.get('customer_type') or 'General'}\n"
+        f"- Budget: ₹{int(lead.get('budget') or 0):,}\n"
+        f"- Status: {lead.get('status') or 'New'}\n\n"
+        f"Conversation history:\n" + ("\n".join(convo_lines) if convo_lines else "No prior messages.") +
+        "\n\nGenerate EXACTLY 3 distinct, high-converting, professional WhatsApp reply options that the agent can send immediately.\n"
+        "Option 1: Friendly acknowledgment & helpful direct response\n"
+        "Option 2: Value proposition with an engaging question\n"
+        "Option 3: Clear next step (e.g. scheduling a call or sharing demo link)\n"
+        "Keep each option under 35 words. Return ONLY a JSON object: {\"suggestions\": [\"option 1\", \"option 2\", \"option 3\"]}"
+    )
+    try:
+        data = chat_json([
+            {"role": "system", "content": AGENCY_SYSTEM},
+            {"role": "user", "content": user_prompt},
+        ], temperature=0.5, max_tokens=300)
+        if isinstance(data, dict) and "suggestions" in data and isinstance(data["suggestions"], list):
+            valid = [str(s).strip() for s in data["suggestions"] if str(s).strip()]
+            if len(valid) >= 2:
+                return valid[:3]
+    except Exception as e:
+        logger.warning("whatsapp_reply_suggestions error: %s", e)
+
+    return fallback
+
+
+def translate_text(text: str, target_lang: str = "English") -> str:
+    """Translate text into target language."""
+    if not text or not text.strip():
+        return ""
+    prompt = f"Translate the following customer message into {target_lang}. Keep tone natural, friendly and accurate. Return ONLY the translation without quotes:\n\n{text}"
+    return chat([
+        {"role": "system", "content": "You are a professional multilingual translator for business customer support."},
+        {"role": "user", "content": prompt}
+    ], temperature=0.3, max_tokens=250).strip()
+

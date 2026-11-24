@@ -17,6 +17,17 @@ export function AuthProvider({ children }) {
     });
   }, [token]);
 
+  async function refreshUser() {
+    try {
+      const { data } = await api.get("/auth/me");
+      localStorage.setItem("facets_user", JSON.stringify(data));
+      setUser(data);
+      return data;
+    } catch {
+      return null;
+    }
+  }
+
   async function login(email, password) {
     const { data } = await api.post("/auth/login", { email, password });
     localStorage.setItem("facets_token", data.access_token);
@@ -24,15 +35,23 @@ export function AuthProvider({ children }) {
     localStorage.setItem("facets_user", JSON.stringify(data.user));
     setToken(data.access_token);
     setUser(data.user);
+    return data.user;
   }
 
-  async function register(name, email, password) {
-    const { data } = await api.post("/auth/register", { name, email, password });
+  async function register(name, email, password, company_name = "", phone = "") {
+    const { data } = await api.post("/auth/register", {
+      name,
+      email,
+      password,
+      company_name,
+      phone,
+    });
     localStorage.setItem("facets_token", data.access_token);
     localStorage.setItem("facets_refresh", data.refresh_token);
     localStorage.setItem("facets_user", JSON.stringify(data.user));
     setToken(data.access_token);
     setUser(data.user);
+    return data.user;
   }
 
   function logout() {
@@ -44,7 +63,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthCtx.Provider value={{ user, token, login, logout, register }}>
+    <AuthCtx.Provider value={{ user, token, login, logout, register, refreshUser }}>
       {children}
     </AuthCtx.Provider>
   );

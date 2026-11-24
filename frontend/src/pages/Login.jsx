@@ -6,12 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Briefcase, Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
+import SEO from "@/components/SEO";
 
 export default function Login() {
   const { user, login } = useAuth();
   const nav = useNavigate();
-  const [email, setEmail] = useState("admin@parshwebcraft.com");
-  const [password, setPassword] = useState("password123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
 
   useEffect(() => {
@@ -37,15 +38,20 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-[#070814] flex flex-col md:flex-row relative overflow-hidden">
+      <SEO 
+        title="Sign In to Your Sales Workspace | ParshAgent AI CRM"
+        description="Access your ParshAgent CRM dashboard to manage AI calling campaigns, WhatsApp pipelines, customer leads, and automated sales workflows."
+        canonical="https://parshagent.com/login"
+      />
       {/* Background gradients */}
       <div className="absolute top-[-10%] left-[-10%] w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-violet-600/10 rounded-full blur-[140px] pointer-events-none" />
 
       {/* Left panel - Motto & Branding (Desktop only) */}
       <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-indigo-950/40 to-slate-950/60 p-12 lg:p-20 flex-col justify-between border-r border-white/5 relative z-10">
-        <div className="flex items-center gap-2.5">
-          <img src="/images/logo-navbar.png" alt="ParshWebCraft Logo" className="h-7 object-contain" />
-          <span className="font-serif font-semibold text-xl tracking-tight text-white">ParshWebCraft</span>
+        <div className="flex items-center gap-3">
+          <img src="/images/ParshAgent_icon_only.png" alt="ParshAgent Logo" className="h-9 w-auto object-contain" />
+          <span className="font-serif font-semibold text-2xl tracking-tight text-white">ParshAgent</span>
         </div>
 
         <div className="space-y-6 max-w-md">
@@ -53,26 +59,26 @@ export default function Login() {
             Automate follow-ups, humanize interactions, close contracts.
           </h2>
           <p className="text-slate-400 leading-relaxed text-base">
-            Power your agency's sales team with autonomous callers, smart analytics, and interactive campaign pacing.
+            Power your sales team with autonomous callers, smart analytics, and interactive campaign pacing.
           </p>
           <div className="space-y-3 pt-4">
             <div className="flex items-center gap-3 text-slate-300">
               <CheckCircle2 className="h-5 w-5 text-indigo-400 shrink-0" />
-              <span>Autonomous AI Voice Agent Calling</span>
+              <span>Autonomous AI Voice Agent Calling (Hinglish/Hindi)</span>
             </div>
             <div className="flex items-center gap-3 text-slate-300">
               <CheckCircle2 className="h-5 w-5 text-indigo-400 shrink-0" />
-              <span>AI Copilot & Assist Dialers</span>
+              <span>Meta WhatsApp Cloud Embedded Signup</span>
             </div>
             <div className="flex items-center gap-3 text-slate-300">
               <CheckCircle2 className="h-5 w-5 text-indigo-400 shrink-0" />
-              <span>Automated WhatsApp Campaigns</span>
+              <span>Dedicated Multi-Tenant Private Workspace</span>
             </div>
           </div>
         </div>
 
         <div className="text-sm text-slate-500">
-          © 2026 ParshWebCraft. Next-gen Sales Pipelines.
+          © 2026 ParshAgent by ParshWebCraft. Next-gen Sales Pipelines.
         </div>
       </div>
 
@@ -81,8 +87,8 @@ export default function Login() {
         <div className="w-full max-w-md space-y-8">
           <div className="md:hidden flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <img src="/images/logo-navbar.png" alt="ParshWebCraft Logo" className="h-6 object-contain" />
-              <span className="font-serif font-semibold text-lg text-white">ParshWebCraft</span>
+              <img src="/images/ParshAgent_icon_only.png" alt="ParshAgent Logo" className="h-7 w-auto object-contain" />
+              <span className="font-serif font-semibold text-lg text-white">ParshAgent</span>
             </div>
             <Link to="/" className="text-sm text-indigo-400 flex items-center gap-1">
               <ArrowLeft className="h-4 w-4" /> Home
@@ -102,6 +108,7 @@ export default function Login() {
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email" type="email" autoComplete="email" required
+                placeholder="name@company.com"
                 value={email} onChange={(e) => setEmail(e.target.value)}
                 className="mt-1"
               />
@@ -110,6 +117,7 @@ export default function Login() {
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password" type="password" autoComplete="current-password" required
+                placeholder="••••••••"
                 value={password} onChange={(e) => setPassword(e.target.value)}
                 className="mt-1"
               />
@@ -130,12 +138,6 @@ export default function Login() {
               Sign In
             </Button>
           </form>
-
-          <div className="bg-slate-900/40 border border-white/5 rounded-xl p-4 text-xs text-slate-400 space-y-1">
-            <span className="font-semibold text-slate-300 block mb-1">Demo Access Credentials:</span>
-            <div>Email: <code className="text-indigo-300">admin@parshwebcraft.com</code></div>
-            <div>Password: <code className="text-indigo-300">password123</code></div>
-          </div>
 
           <p className="text-center text-sm text-slate-400">
             Don't have an account?{" "}

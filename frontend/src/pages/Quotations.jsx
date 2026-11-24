@@ -12,7 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Sparkles, Loader2, Gem, X, CheckCircle2, Plus, Edit3, Trash2 } from "lucide-react";
+import { Sparkles, Loader2, Gem, X, CheckCircle2, Plus, Edit3, Trash2, MessageCircle, Download, FileText } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
 const STATUSES = ["Draft", "Sent", "Accepted", "Rejected"];
@@ -29,6 +29,7 @@ export default function Quotations() {
   const [editingQuote, setEditingQuote] = useState(null);
   const [editOpen, setEditOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
+  const [sendingWaId, setSendingWaId] = useState(null);
 
   function load() {
     setLoading(true);
@@ -41,6 +42,24 @@ export default function Quotations() {
       .finally(() => setLoading(false));
   }
   useEffect(load, []);
+
+  async function sendQuotationViaWhatsapp(q) {
+    setSendingWaId(q.id);
+    try {
+      const res = await api.post(`/quotations/${q.id}/send-whatsapp`);
+      toast.success(`Quotation PDF #${q.quotation_number} sent via WhatsApp!`);
+      load();
+    } catch (e) {
+      toast.error(errMsg(e, "Failed to send quotation via WhatsApp"));
+    } finally {
+      setSendingWaId(null);
+    }
+  }
+
+  function downloadQuotationPdf(q) {
+    const base = import.meta.env.VITE_API_URL || "/api";
+    window.open(`${base}/quotations/${q.id}/pdf`, "_blank");
+  }
 
   async function setStatus(q, s) {
     try { await api.put(`/quotations/${q.id}`, { status: s }); load(); }
@@ -200,7 +219,25 @@ export default function Quotations() {
                     </td>
                     <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{dateShort(q.created_at)}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs border-emerald-300 text-emerald-700 hover:bg-emerald-50 gap-1 font-medium"
+                          onClick={() => sendQuotationViaWhatsapp(q)}
+                          disabled={sendingWaId === q.id}
+                          title="Send PDF directly to Lead's WhatsApp"
+                        >
+                          {sendingWaId === q.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <MessageCircle className="h-3 w-3 text-emerald-600" />}
+                          Send WhatsApp
+                        </Button>
+                        <button 
+                          onClick={() => downloadQuotationPdf(q)}
+                          className="p-1.5 hover:bg-slate-100 rounded text-slate-500 hover:text-indigo-600 transition-colors"
+                          title="View / Download Quotation PDF"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                        </button>
                         <Button
                           size="sm"
                           variant="outline"
@@ -212,7 +249,7 @@ export default function Quotations() {
                         </Button>
                         <button 
                           onClick={() => { setEditingQuote(q); setEditOpen(true); }}
-                          className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-indigo-600 transition-colors"
+                          className="p-1.5 hover:bg-slate-100 rounded text-slate-400 hover:text-indigo-600 transition-colors"
                           title="Edit Details"
                         >
                           <Edit3 className="h-3.5 w-3.5" />
@@ -220,7 +257,7 @@ export default function Quotations() {
                         {isAdmin && (
                           <button 
                             onClick={() => handleDelete(q.id)}
-                            className="p-1 hover:bg-rose-50 rounded text-slate-400 hover:text-rose-600 transition-colors"
+                            className="p-1.5 hover:bg-rose-50 rounded text-slate-400 hover:text-rose-600 transition-colors"
                             title="Delete"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -437,8 +474,17 @@ function EditQuotationDialog({ quotation, onSaved }) {
           </Select>
         </div>
       </div>
-      <DialogFooter>
-        <Button className="bg-indigo-700 hover:bg-indigo-800" disabled={saving} onClick={save}>Save</Button>
+      <DialogFooter className="flex items-center justify-between sm:justify-between w-full">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="gap-1.5 border-slate-300 text-slate-700 hover:bg-slate-50"
+          onClick={() => window.open(`${import.meta.env.VITE_API_URL || '/api'}/quotations/${quotation.id}/pdf`, '_blank')}
+        >
+          <Download className="h-4 w-4 text-indigo-600" /> Download PDF
+        </Button>
+        <Button className="bg-indigo-700 hover:bg-indigo-800" disabled={saving} onClick={save}>Save Changes</Button>
       </DialogFooter>
     </DialogContent>
   );

@@ -12,9 +12,12 @@ router = APIRouter(prefix="/calls", tags=["calls"])
 
 @router.get("")
 def list_calls(lead_id: Optional[int] = None, db: Session = Depends(get_db),
-               _: User = Depends(get_current_user)):
+               current_user: User = Depends(get_current_user)):
     """Return calls enriched with lead name + AI score from LeadInsight."""
-    q = db.query(Call)
+    cid = current_user.company_id
+    if not cid:
+        return []
+    q = db.query(Call).filter(Call.company_id == cid)
     if lead_id is not None:
         q = q.filter(Call.lead_id == lead_id)
     calls = q.order_by(Call.created_at.desc()).all()
@@ -50,8 +53,11 @@ def get_call(call_id: int, db: Session = Depends(get_db), _: User = Depends(get_
 
 @router.post("", response_model=CallOut, status_code=201)
 def create_call(payload: CallCreate, db: Session = Depends(get_db),
-                _: User = Depends(get_current_user)):
-    c = Call(**payload.model_dump(exclude_unset=True))
+                current_user: User = Depends(get_current_user)):
+    call_dict = payload.model_dump(exclude_unset=True)
+    if current_user.company_id:
+        call_dict["company_id"] = current_user.company_id
+    c = Call(**call_dict)
     db.add(c)
     db.commit()
     db.refresh(c)
@@ -109,7 +115,8 @@ def stream_recording(filename: str):
     """Serve downloaded MP3 recording files directly to the browser."""
     import os
     from fastapi.responses import FileResponse
-    path = os.path.join("recordings", filename)
+    recordings_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "recordings")
+    path = os.path.join(recordings_dir, filename)
     if os.path.exists(path):
         return FileResponse(path, media_type="audio/mpeg")
     raise HTTPException(404, "Recording file not found")

@@ -283,8 +283,8 @@ def mock_dial(*, target: dict, campaign_prompt: Optional[str],
 # Provider selection — prefers OmniDimension (free) -> Vapi -> Mock
 # ---------------------------------------------------------------------------
 
-def provider_name(db: Optional[Session] = None) -> str:
-    if omnidim_voice.is_configured(db):
+def provider_name(db: Optional[Session] = None, company_id: Optional[str] = None) -> str:
+    if omnidim_voice.is_configured(db, company_id=company_id):
         return "omnidim"
     if vapi_voice.is_configured(db):
         return "vapi"
@@ -299,7 +299,8 @@ def dial(*, target: dict, campaign_prompt: Optional[str],
     For OmniDimension or Vapi we kick off an outbound call and return immediately with status
     `dialing` and a call request id; the webhook/polling will update the row.
     """
-    prov = provider_name(db)
+    company_id = target.get("company_id")
+    prov = provider_name(db, company_id=company_id)
     if prov == "omnidim":
         try:
             script = lead_prompt_override or campaign_prompt
@@ -312,9 +313,11 @@ def dial(*, target: dict, campaign_prompt: Optional[str],
                     "customer_type": target.get("customer_type"),
                     "budget": target.get("budget") or 0,
                     "status": target.get("status") or "New",
+                    "company_id": company_id,
                 },
                 script=script,
                 db=db,
+                company_id=company_id,
             )
             return CallResult(
                 final_status="dialing",
@@ -338,6 +341,7 @@ def dial(*, target: dict, campaign_prompt: Optional[str],
                     "customer_type": target.get("customer_type"),
                     "budget": target.get("budget") or 0,
                     "status": target.get("status") or "New",
+                    "company_id": company_id,
                 },
                 script=script,
                 db=db,

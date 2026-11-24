@@ -17,16 +17,54 @@ def uuid_str():
     return str(uuid4())
 
 
+class Company(Base):
+    __tablename__ = "companies"
+    id = Column(String(36), primary_key=True, default=uuid_str)
+    name = Column(String(160), nullable=False)
+    slug = Column(String(120), unique=True, index=True, nullable=False)
+    brand_name = Column(String(160))
+    website = Column(String(255))
+    industry = Column(String(120), default="Technology & Services")
+    phone = Column(String(32))
+    status = Column(String(30), default="active", nullable=False)
+
+    # Subscription & Billing fields
+    plan_name = Column(String(80), default="starter")  # starter | growth | business | enterprise
+    subscription_status = Column(String(40), default="trialing")  # active | trialing | pending_payment | cancelled
+    subscription_amount = Column(Float, default=9999.0)
+    subscription_currency = Column(String(10), default="INR")
+    razorpay_order_id = Column(String(120), nullable=True)
+    razorpay_payment_id = Column(String(120), nullable=True)
+    razorpay_subscription_id = Column(String(120), nullable=True)
+    trial_ends_at = Column(DateTime, nullable=True)
+
+    # Onboarding wizard state
+    onboarding_completed = Column(Boolean, default=False, nullable=False)
+    onboarding_step = Column(String(50), default="profile")  # profile | subscription | voice_agent | completed
+
+    # Voice Agent settings for this company
+    voice_agent_name = Column(String(120), default="Priya - AI Sales Specialist")
+    voice_language = Column(String(40), default="Hinglish")  # Hinglish | Hindi | English
+    voice_pitch = Column(Text, nullable=True)
+    voice_caller_id = Column(String(40), nullable=True)
+
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=True, index=True)
     name = Column(String(120), nullable=False)
     email = Column(String(160), unique=True, index=True, nullable=False)
+    phone = Column(String(32), nullable=True)
     password_hash = Column(String(255), nullable=False)
-    role = Column(String(20), nullable=False, default="Sales")  # Admin | Manager | Sales
+    role = Column(String(20), nullable=False, default="Admin")  # SuperAdmin | Admin | Manager | Sales
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime, default=utcnow, nullable=False)
 
+    company = relationship("Company", foreign_keys=[company_id])
     leads = relationship("Lead", back_populates="assignee", foreign_keys="Lead.assigned_to")
     tasks = relationship("Task", back_populates="assignee", foreign_keys="Task.assigned_to")
 
@@ -34,6 +72,7 @@ class User(Base):
 class Lead(Base):
     __tablename__ = "leads"
     id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=True, index=True)
     name = Column(String(160), nullable=False)
     phone = Column(String(32))
     email = Column(String(160))
@@ -44,6 +83,12 @@ class Lead(Base):
     budget = Column(Float, default=0.0)
     customer_type = Column(String(40))     # Gold | Diamond | Bridal | Existing | High Value
     notes = Column(Text)
+    ai_bot_paused = Column(Boolean, default=False, nullable=False)
+    ai_bot_handover_reason = Column(String(255), nullable=True)
+    drip_step = Column(Integer, default=0, nullable=False)
+    drip_status = Column(String(30), default="active", nullable=False)
+    last_drip_sent_at = Column(DateTime, nullable=True)
+    last_customer_message_at = Column(DateTime, nullable=True)
     assigned_to = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=utcnow, nullable=False)
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
@@ -60,6 +105,7 @@ class Lead(Base):
 class Activity(Base):
     __tablename__ = "activities"
     id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=True, index=True)
     lead_id = Column(Integer, ForeignKey("leads.id"), nullable=False)
     activity_type = Column(String(40), nullable=False)  # Note | Call | Email | Status Change | Meeting
     description = Column(Text, nullable=False)
@@ -72,6 +118,7 @@ class Activity(Base):
 class Call(Base):
     __tablename__ = "calls"
     id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=True, index=True)
     lead_id = Column(Integer, ForeignKey("leads.id"), nullable=False)
     call_duration = Column(Integer, default=0)  # seconds
     call_status = Column(String(40), default="Completed")  # Completed | Missed | No Answer | Voicemail | In Progress
@@ -88,6 +135,7 @@ class Call(Base):
 class Task(Base):
     __tablename__ = "tasks"
     id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=True, index=True)
     lead_id = Column(Integer, ForeignKey("leads.id"), nullable=True)
     assigned_to = Column(Integer, ForeignKey("users.id"), nullable=True)
     title = Column(String(200), nullable=False)
@@ -104,12 +152,79 @@ class Task(Base):
 class WhatsappMessage(Base):
     __tablename__ = "whatsapp_messages"
     id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=True, index=True)
     lead_id = Column(Integer, ForeignKey("leads.id"), nullable=False)
-    direction = Column(String(10), nullable=False)  # in | out
+    direction = Column(String(10), nullable=False)  # in | out | note
     message = Column(Text, nullable=False)
+    media_type = Column(String(30), nullable=True)   # document | image | audio | video
+    media_url = Column(Text, nullable=True)          # public URL
+    media_filename = Column(String(255), nullable=True) # e.g. Quotation_QT-2026.pdf
+    media_caption = Column(Text, nullable=True)      # optional caption
+    buttons_json = Column(Text, nullable=True)       # JSON string of interactive buttons or choice payload
+    interactive_type = Column(String(30), nullable=True) # button | cta_url | button_reply | list
+    status = Column(String(30), default="delivered", nullable=True) # sent | delivered | read | failed
+    wa_message_id = Column(String(128), nullable=True, index=True)
+    cost_category = Column(String(30), default="SERVICE", nullable=True) # MARKETING | UTILITY | SERVICE
     created_at = Column(DateTime, default=utcnow, nullable=False)
 
     lead = relationship("Lead", back_populates="whatsapp_messages")
+
+
+class WhatsAppBroadcast(Base):
+    """Bulk WhatsApp Broadcast & Retargeting Campaign."""
+    __tablename__ = "whatsapp_broadcasts"
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=True, index=True)
+    name = Column(String(160), nullable=False)
+    message_template = Column(Text, nullable=False)
+    media_url = Column(Text, nullable=True)
+    media_type = Column(String(30), nullable=True)
+    media_filename = Column(String(255), nullable=True)
+    buttons_json = Column(Text, nullable=True)
+    interactive_type = Column(String(30), nullable=True)
+
+    filter_status = Column(String(100), nullable=True)
+    filter_source = Column(String(100), nullable=True)
+    delay_seconds = Column(Integer, default=3, nullable=False)
+
+    total_recipients = Column(Integer, default=0, nullable=False)
+    sent_count = Column(Integer, default=0, nullable=False)
+    delivered_count = Column(Integer, default=0, nullable=False)
+    read_count = Column(Integer, default=0, nullable=False)
+    replied_count = Column(Integer, default=0, nullable=False)
+    failed_count = Column(Integer, default=0, nullable=False)
+
+    status = Column(String(20), default="draft", nullable=False, index=True)
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    started_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+    recipients = relationship("WhatsAppBroadcastRecipient", back_populates="broadcast", cascade="all, delete-orphan")
+
+
+class WhatsAppBroadcastRecipient(Base):
+    """Target recipient in a WhatsApp broadcast campaign."""
+    __tablename__ = "whatsapp_broadcast_recipients"
+    id = Column(Integer, primary_key=True, index=True)
+    broadcast_id = Column(Integer, ForeignKey("whatsapp_broadcasts.id"), nullable=False, index=True)
+    lead_id = Column(Integer, ForeignKey("leads.id"), nullable=True, index=True)
+
+    name = Column(String(160), nullable=False)
+    phone = Column(String(32), nullable=False, index=True)
+    rendered_message = Column(Text, nullable=True)
+
+    status = Column(String(20), default="pending", nullable=False, index=True)
+    wa_message_id = Column(String(128), nullable=True, index=True)
+    error_message = Column(Text, nullable=True)
+    sent_at = Column(DateTime, nullable=True)
+    delivered_at = Column(DateTime, nullable=True)
+    read_at = Column(DateTime, nullable=True)
+    replied_at = Column(DateTime, nullable=True)
+
+    broadcast = relationship("WhatsAppBroadcast", back_populates="recipients")
+    lead = relationship("Lead")
 
 
 class Notification(Base):
@@ -138,6 +253,7 @@ class Product(Base):
 class Appointment(Base):
     __tablename__ = "appointments"
     id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=True, index=True)
     customer_name = Column(String(160), nullable=False)
     lead_id = Column(Integer, ForeignKey("leads.id"), nullable=True)
     appointment_date = Column(DateTime, nullable=False)
@@ -149,10 +265,14 @@ class Appointment(Base):
 class Quotation(Base):
     __tablename__ = "quotations"
     id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=True, index=True)
     lead_id = Column(Integer, ForeignKey("leads.id"), nullable=False)
     quotation_number = Column(String(40), unique=True, nullable=False)
     amount = Column(Float, default=0.0)
     status = Column(String(30), default="Draft")  # Draft | Sent | Accepted | Rejected
+    notes = Column(Text, nullable=True)
+    items_json = Column(Text, nullable=True)
+    pdf_url = Column(Text, nullable=True)
     created_at = Column(DateTime, default=utcnow, nullable=False)
 
     lead = relationship("Lead", back_populates="quotations")
@@ -161,6 +281,7 @@ class Quotation(Base):
 class AIAgentLog(Base):
     __tablename__ = "ai_agent_logs"
     id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=True, index=True)
     lead_id = Column(Integer, ForeignKey("leads.id"), nullable=False)
     conversation_summary = Column(Text)
     sentiment = Column(String(20))     # Positive | Neutral | Negative
@@ -174,6 +295,7 @@ class Setting(Base):
     """Generic key/value JSON settings (singleton rows)."""
     __tablename__ = "settings"
     id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=True, index=True)
     key = Column(String(80), unique=True, index=True, nullable=False)
     value = Column(Text, nullable=False, default="{}")
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
@@ -183,6 +305,7 @@ class Campaign(Base):
     """Outbound AI-calling campaign."""
     __tablename__ = "campaigns"
     id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=True, index=True)
     name = Column(String(160), nullable=False)
     description = Column(Text)
     # draft | running | paused | completed | cancelled
@@ -369,7 +492,8 @@ class AiFeedback(Base):
 class Integration(Base):
     __tablename__ = "integrations"
     id = Column(Integer, primary_key=True, index=True)
-    app_name = Column(String(50), unique=True, index=True, nullable=False)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=True, index=True)
+    app_name = Column(String(50), index=True, nullable=False)
     enabled = Column(Boolean, default=False, nullable=False)
     api_key = Column(String(255), nullable=True)
     secret_key = Column(String(255), nullable=True)
@@ -403,17 +527,6 @@ class WorkflowRun(Base):
 # ============================================================
 # ParshCall AI Foundation / Multi-company AI OS
 # ============================================================
-
-class Company(Base):
-    __tablename__ = "companies"
-    id = Column(String(36), primary_key=True, default=uuid_str)
-    name = Column(String(160), nullable=False)
-    slug = Column(String(120), unique=True, index=True, nullable=False)
-    brand_name = Column(String(160))
-    website = Column(String(255))
-    status = Column(String(30), default="active", nullable=False)
-    created_at = Column(DateTime, default=utcnow, nullable=False)
-    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
 
 
 class CompanyUser(Base):
@@ -620,3 +733,84 @@ class TrainingExample(Base):
     approved_by = Column(String(80))
     approved_at = Column(DateTime)
     created_at = Column(DateTime, default=utcnow, nullable=False)
+
+
+class AiAgentConfig(Base):
+    __tablename__ = "ai_agent_configs"
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=True, index=True)
+    agent_name = Column(String(100), default="AI Sales Bot")
+    enabled = Column(Boolean, default=True, nullable=False)
+    knowledge_chunks = Column(Text, nullable=True)
+    qualification_prompt = Column(Text, nullable=True)
+    calendar_link = Column(String(255), default="")
+    founder_phone = Column(String(50), default="")
+    founder_email = Column(String(160), default="")
+    auto_reply_enabled = Column(Boolean, default=True, nullable=False)
+    drip_followup_enabled = Column(Boolean, default=True, nullable=False)
+    drip_day1_text = Column(Text, nullable=True)
+    drip_day3_text = Column(Text, nullable=True)
+    drip_day7_text = Column(Text, nullable=True)
+    buttons_enabled = Column(Boolean, default=False, nullable=False)
+    button1_title = Column(String(30), nullable=True, default="")
+    button2_title = Column(String(30), nullable=True, default="")
+    button3_title = Column(String(30), nullable=True, default="")
+    show_footer = Column(Boolean, default=False, nullable=False)
+    footer_text = Column(String(60), nullable=True, default="")
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+
+class PaymentLinkRecord(Base):
+    __tablename__ = "payment_link_records"
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=True, index=True)
+    link_id = Column(String(100), unique=True, index=True, nullable=False)
+    customer_name = Column(String(160), nullable=True)
+    customer_phone = Column(String(50), nullable=True)
+    amount = Column(Float, nullable=False)
+    currency = Column(String(10), default="INR")
+    description = Column(String(255), nullable=True)
+    status = Column(String(50), default="created")  # created, paid, expired, cancelled
+    payment_url = Column(String(500), nullable=False)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+
+
+class MetaTemplateRecord(Base):
+    __tablename__ = "meta_template_records"
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=True, index=True)
+    meta_id = Column(String(100), nullable=True)
+    name = Column(String(100), index=True, nullable=False)
+    language = Column(String(20), default="en")
+    category = Column(String(50), default="UTILITY")  # UTILITY, MARKETING
+    template_type = Column(String(50), default="STANDARD")  # STANDARD, CAROUSEL, CATALOG
+    header_type = Column(String(20), default="NONE")  # NONE, TEXT, IMAGE, DOCUMENT
+    header_text = Column(String(255), nullable=True)
+    body_text = Column(Text, nullable=False)
+    footer_text = Column(String(255), nullable=True)
+    buttons = Column(JSON, default=list)
+    variables = Column(JSON, default=list)
+    sample_values = Column(JSON, default=list)
+    status = Column(String(50), default="DRAFT")  # DRAFT, PENDING, APPROVED, REJECTED, PAUSED
+    rejection_reason = Column(String(500), nullable=True)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+
+
+class WhatsAppAccount(Base):
+    __tablename__ = "whatsapp_accounts"
+    id = Column(Integer, primary_key=True, index=True)
+    company_id = Column(String(36), ForeignKey("companies.id"), nullable=True, index=True)
+    waba_id = Column(String(80), index=True, nullable=True)
+    phone_number_id = Column(String(80), index=True, nullable=True)
+    display_phone_number = Column(String(40), nullable=True)
+    verified_name = Column(String(160), nullable=True)
+    access_token = Column(Text, nullable=True)
+    status = Column(String(40), default="CONNECTED")  # CONNECTED | PENDING | DISCONNECTED
+    quality_rating = Column(String(40), nullable=True)  # GREEN | YELLOW | RED
+    code_verification_status = Column(String(40), nullable=True)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)
+
+

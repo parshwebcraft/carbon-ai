@@ -16,9 +16,12 @@ def list_tasks(
     assigned_to: Optional[int] = None,
     lead_id: Optional[int] = None,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
-    q = db.query(Task)
+    cid = current_user.company_id
+    if not cid:
+        return []
+    q = db.query(Task).filter(Task.company_id == cid)
     if status:
         q = q.filter(Task.status == status)
     if assigned_to is not None:
@@ -39,8 +42,11 @@ def get_task(task_id: int, db: Session = Depends(get_db), _: User = Depends(get_
 
 @router.post("", response_model=TaskOut, status_code=201)
 def create_task(payload: TaskCreate, db: Session = Depends(get_db),
-                _: User = Depends(get_current_user)):
-    t = Task(**payload.model_dump(exclude_unset=True))
+                current_user: User = Depends(get_current_user)):
+    task_dict = payload.model_dump(exclude_unset=True)
+    if current_user.company_id:
+        task_dict["company_id"] = current_user.company_id
+    t = Task(**task_dict)
     db.add(t)
     db.commit()
     db.refresh(t)

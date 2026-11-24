@@ -3,6 +3,9 @@ import axios from "axios";
 // Normalize the backend URL — always ensure it ends with /api
 // This handles cases where REACT_APP_BACKEND_URL is set without /api
 function buildApiBase() {
+  if (typeof window !== "undefined" && window.location && window.location.hostname && window.location.hostname.endsWith("parshagent.com")) {
+    return "https://api.parshagent.com/api";
+  }
   const raw = process.env.REACT_APP_BACKEND_URL || "http://localhost:8000/api";
   // Strip any trailing slash, then ensure it ends with /api
   const stripped = raw.replace(/\/+$/, "");

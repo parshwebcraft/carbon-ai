@@ -25,17 +25,26 @@ class RefreshIn(BaseModel):
 class UserBase(BaseModel):
     name: str
     email: EmailStr
-    role: str = "Sales"
+    role: str = "Admin"
     is_active: bool = True
+    phone: Optional[str] = None
+    company_id: Optional[str] = None
+    company_name: Optional[str] = None
+    subscription_status: Optional[str] = None
+    onboarding_completed: Optional[bool] = None
+    onboarding_step: Optional[str] = None
 
 
 class UserCreate(UserBase):
     password: str
+    company_name: Optional[str] = None
+    phone: Optional[str] = None
 
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None
     role: Optional[str] = None
+    phone: Optional[str] = None
     is_active: Optional[bool] = None
     password: Optional[str] = None
 
@@ -50,7 +59,7 @@ class UserOut(UserBase):
 class LeadBase(BaseModel):
     name: str
     phone: Optional[str] = None
-    email: Optional[EmailStr] = None
+    email: Optional[str] = None
     company: Optional[str] = None
     city: Optional[str] = None
     source: Optional[str] = None
@@ -68,7 +77,7 @@ class LeadCreate(LeadBase):
 class LeadUpdate(BaseModel):
     name: Optional[str] = None
     phone: Optional[str] = None
-    email: Optional[EmailStr] = None
+    email: Optional[str] = None
     company: Optional[str] = None
     city: Optional[str] = None
     source: Optional[str] = None
@@ -77,6 +86,10 @@ class LeadUpdate(BaseModel):
     customer_type: Optional[str] = None
     notes: Optional[str] = None
     assigned_to: Optional[int] = None
+    ai_bot_paused: Optional[bool] = None
+    ai_bot_handover_reason: Optional[str] = None
+    drip_step: Optional[int] = None
+    drip_status: Optional[str] = None
 
 
 class LeadOut(LeadBase):
@@ -85,6 +98,12 @@ class LeadOut(LeadBase):
     updated_at: datetime
     lead_score: Optional[int] = None
     intent: Optional[str] = None
+    ai_bot_paused: Optional[bool] = False
+    ai_bot_handover_reason: Optional[str] = None
+    drip_step: Optional[int] = 0
+    drip_status: Optional[str] = "active"
+    last_drip_sent_at: Optional[datetime] = None
+    last_customer_message_at: Optional[datetime] = None
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -179,8 +198,14 @@ class TaskOut(TaskBase):
 # ---------------- WhatsApp ----------------
 class WhatsappBase(BaseModel):
     lead_id: int
-    direction: str  # in | out
+    direction: str  # in | out | note
     message: str
+    media_type: Optional[str] = None
+    media_url: Optional[str] = None
+    media_filename: Optional[str] = None
+    media_caption: Optional[str] = None
+    buttons_json: Optional[str] = None
+    interactive_type: Optional[str] = None
 
 
 class WhatsappCreate(WhatsappBase):
@@ -190,6 +215,7 @@ class WhatsappCreate(WhatsappBase):
 class WhatsappOut(WhatsappBase):
     id: int
     created_at: datetime
+    company_id: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -219,6 +245,7 @@ class PaymentCreateOrderOut(BaseModel):
     plan_id: str
     plan_name: str
     description: str
+    is_test: Optional[bool] = False
 
 
 class PaymentVerifyIn(BaseModel):
@@ -306,22 +333,31 @@ class QuotationBase(BaseModel):
     quotation_number: str
     amount: float = 0.0
     status: str = "Draft"
+    notes: Optional[str] = None
+    items_json: Optional[str] = None
+    pdf_url: Optional[str] = None
 
 
 class QuotationCreate(BaseModel):
     lead_id: int
     amount: float = 0.0
     status: str = "Draft"
+    notes: Optional[str] = None
+    items_json: Optional[str] = None
 
 
 class QuotationUpdate(BaseModel):
     amount: Optional[float] = None
     status: Optional[str] = None
+    notes: Optional[str] = None
+    items_json: Optional[str] = None
+    pdf_url: Optional[str] = None
 
 
 class QuotationOut(QuotationBase):
     id: int
     created_at: datetime
+    company_id: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
 
 

@@ -16,13 +16,14 @@ import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import StatusBadge from "@/components/StatusBadge";
-import { Plus, Search, TrendingUp, Cpu } from "lucide-react";
+import WhatsAppBroadcastModal from "@/components/WhatsAppBroadcastModal";
+import { Plus, Search, TrendingUp, Cpu, MessageSquare, FileSpreadsheet, Send } from "lucide-react";
 import { toast } from "sonner";
 
 const STATUSES = ["New", "Contacted", "Follow Up", "Interested", "Meeting Scheduled",
   "Proposal Sent", "Negotiation", "Won", "Lost"];
-const SOURCES = ["Website", "WhatsApp", "LinkedIn", "Facebook", "Walk-In", "Referral", "Google Ads"];
-const CUSTOMER_TYPES = ["Startup Website", "E-commerce Business", "Mobile App Client", "Local SEO Audit", "SaaS Software Partner"];
+const SOURCES = ["Coaching Data", "Calling List", "Website", "WhatsApp", "LinkedIn", "Facebook", "Walk-In", "Referral", "Google Ads"];
+const CUSTOMER_TYPES = ["Student / Parent", "Revision Batch", "Demo Class", "Startup Website", "E-commerce Business", "Mobile App Client", "Local SEO Audit", "SaaS Software Partner", "General Lead"];
 
 export default function Leads() {
   const navigate = useNavigate();
@@ -32,6 +33,8 @@ export default function Leads() {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
+  const [broadcastOpen, setBroadcastOpen] = useState(false);
+  const [broadcastInitialMode, setBroadcastInitialMode] = useState("all");
 
   function load() {
     setLoading(true);
@@ -105,10 +108,33 @@ export default function Leads() {
           <h1 className="font-serif text-3xl">Leads</h1>
           <p className="text-sm text-slate-600">{data.total} leads in pipeline</p>
         </div>
-        <div className="flex items-center gap-2">
-          {selectedIds.size > 0 && (
-            <Button variant="destructive" className="bg-rose-600 hover:bg-rose-700 text-white" onClick={deleteSelected}>
-              Delete Selected ({selectedIds.size})
+        <div className="flex flex-wrap items-center gap-2">
+          {selectedIds.size > 0 ? (
+            <>
+              <Button
+                className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 shadow-sm font-medium"
+                onClick={() => {
+                  setBroadcastInitialMode("selected");
+                  setBroadcastOpen(true);
+                }}
+              >
+                <MessageSquare className="h-4 w-4" />
+                WhatsApp Broadcast ({selectedIds.size})
+              </Button>
+              <Button variant="destructive" className="bg-rose-600 hover:bg-rose-700 text-white" onClick={deleteSelected}>
+                Delete Selected ({selectedIds.size})
+              </Button>
+            </>
+          ) : (
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 shadow-sm font-medium"
+              onClick={() => {
+                setBroadcastInitialMode("excel");
+                setBroadcastOpen(true);
+              }}
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              Upload Excel Broadcast
             </Button>
           )}
           <Button variant="outline" className="text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700" onClick={deleteAll}>
@@ -117,12 +143,12 @@ export default function Leads() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="border-indigo-200 text-indigo-700 hover:bg-indigo-50">
+              <Button variant="outline" className="border-indigo-200 dark:border-indigo-500/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/60">
                 <Cpu className="h-4 w-4 mr-1.5" />
                 Automation
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-white">
+            <DropdownMenuContent align="end" className="bg-white dark:bg-slate-900 border-indigo-100 dark:border-white/10">
               <DropdownMenuItem onClick={() => navigate("/automation/builder?template=followup")}>
                 Create Follow-up Workflow
               </DropdownMenuItem>
@@ -140,7 +166,7 @@ export default function Leads() {
 
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button data-testid="new-lead-btn" className="bg-indigo-700 hover:bg-indigo-800">
+              <Button data-testid="new-lead-btn" className="bg-indigo-600 hover:bg-indigo-700 text-white">
                 <Plus className="h-4 w-4 mr-1.5" /> New Lead
               </Button>
             </DialogTrigger>
@@ -149,7 +175,7 @@ export default function Leads() {
         </div>
       </div>
 
-      <Card className="p-4 border-indigo-100 bg-white">
+      <Card className="p-4 border-indigo-100 dark:border-white/10 bg-white dark:bg-slate-900/80">
         <div className="grid sm:grid-cols-4 gap-3">
           <div className="sm:col-span-2 relative">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
@@ -185,17 +211,17 @@ export default function Leads() {
         </div>
       </Card>
 
-      <Card className="border-indigo-100 bg-white overflow-hidden">
+      <Card className="border-indigo-100 dark:border-white/10 bg-white dark:bg-slate-900/80 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm" data-testid="leads-table">
-            <thead className="bg-indigo-50/60 text-slate-700">
+            <thead className="bg-indigo-50/60 dark:bg-white/[0.03] text-slate-700 dark:text-slate-200">
               <tr>
                 <th className="px-4 py-3 w-10 text-center">
                   <input
                     type="checkbox"
                     checked={data.items.length > 0 && selectedIds.size === data.items.length}
                     onChange={toggleSelectAll}
-                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                    className="rounded border-slate-300 dark:border-white/20 text-indigo-600 focus:ring-indigo-500 cursor-pointer bg-transparent"
                   />
                 </th>
                 <th className="text-left px-4 py-3 font-semibold">Name</th>
@@ -205,58 +231,58 @@ export default function Leads() {
                 <th className="text-right px-4 py-3 font-semibold">Budget</th>
                 <th className="text-left px-4 py-3 font-semibold">Status</th>
                 <th className="text-left px-4 py-3 font-semibold flex items-center gap-1">
-                  <TrendingUp className="h-3.5 w-3.5 text-indigo-600" /> AI Score
+                  <TrendingUp className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" /> AI Score
                 </th>
                 <th className="text-left px-4 py-3 font-semibold">Created</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={9} className="p-6 text-center text-slate-500">Loading…</td></tr>
+                <tr><td colSpan={9} className="p-6 text-center text-slate-400">Loading…</td></tr>
               ) : data.items.length === 0 ? (
-                <tr><td colSpan={9} className="p-6 text-center text-slate-500">No leads</td></tr>
+                <tr><td colSpan={9} className="p-6 text-center text-slate-400">No leads</td></tr>
               ) : data.items.map((l) => (
-                <tr key={l.id} className="border-t border-indigo-50 hover:bg-indigo-50/30">
+                <tr key={l.id} className="border-t border-indigo-50 dark:border-white/5 hover:bg-indigo-50/30 dark:hover:bg-slate-800/40 transition-colors">
                   <td className="px-4 py-3 text-center">
                     <input
                       type="checkbox"
                       checked={selectedIds.has(l.id)}
                       onChange={() => toggleSelect(l.id)}
-                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                      className="rounded border-slate-300 dark:border-white/20 text-indigo-600 focus:ring-indigo-500 cursor-pointer bg-transparent"
                     />
                   </td>
                   <td className="px-4 py-3">
-                    <Link to={`/leads/${l.id}`} data-testid={`lead-row-${l.id}`} className="font-medium text-slate-900 hover:text-indigo-800">
+                    <Link to={`/leads/${l.id}`} data-testid={`lead-row-${l.id}`} className="font-medium text-slate-900 dark:text-slate-100 hover:text-indigo-600 dark:hover:text-indigo-400">
                       {l.name}
                     </Link>
-                    <div className="text-xs text-slate-500">{l.phone}</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">{l.phone}</div>
                   </td>
-                  <td className="px-4 py-3 text-slate-700">{l.city || "—"}</td>
-                  <td className="px-4 py-3 text-slate-700">{l.source || "—"}</td>
-                  <td className="px-4 py-3 text-slate-700">{l.customer_type || "—"}</td>
-                  <td className="px-4 py-3 text-right font-medium">{inr(l.budget)}</td>
+                  <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{l.city || "—"}</td>
+                  <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{l.source || "—"}</td>
+                  <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{l.customer_type || "—"}</td>
+                  <td className="px-4 py-3 text-right font-medium text-slate-900 dark:text-slate-100">{inr(l.budget)}</td>
                   <td className="px-4 py-3"><StatusBadge value={l.status} /></td>
                   <td className="px-4 py-3">
                     {l.lead_score != null ? (
                       <div className="flex flex-col gap-0.5">
                         <span className={`inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-full border w-fit ${
-                          l.lead_score >= 75 ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                          l.lead_score >= 50 ? "bg-indigo-50 text-indigo-700 border-indigo-200" :
-                          "bg-rose-50 text-rose-600 border-rose-200"
+                          l.lead_score >= 75 ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60" :
+                          l.lead_score >= 50 ? "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/60" :
+                          "bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-300 border-rose-200 dark:border-rose-800/60"
                         }`}>{l.lead_score}%</span>
                         {l.intent && <span className="text-[10px] text-slate-400 truncate max-w-[100px]">{l.intent}</span>}
                       </div>
                     ) : (
-                      <span className="text-xs text-slate-300">—</span>
+                      <span className="text-xs text-slate-400">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{dateShort(l.created_at)}</td>
+                  <td className="px-4 py-3 text-slate-500 dark:text-slate-400 whitespace-nowrap">{dateShort(l.created_at)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <div className="flex items-center justify-between p-3 border-t border-indigo-100 bg-indigo-50/30 text-sm">
+        <div className="flex items-center justify-between p-3 border-t border-indigo-100 dark:border-white/5 bg-indigo-50/30 dark:bg-slate-900/40 text-sm text-slate-600 dark:text-slate-300">
           <div>Page {data.page} of {totalPages}</div>
           <div className="flex gap-2">
             <Button data-testid="leads-prev" size="sm" variant="outline" disabled={page <= 1}
@@ -266,6 +292,17 @@ export default function Leads() {
           </div>
         </div>
       </Card>
+
+      <WhatsAppBroadcastModal
+        open={broadcastOpen}
+        onOpenChange={setBroadcastOpen}
+        preselectedLeadIds={Array.from(selectedIds)}
+        initialTargetMode={broadcastInitialMode}
+        onSuccess={() => {
+          setSelectedIds(new Set());
+          load();
+        }}
+      />
     </div>
   );
 }
@@ -273,7 +310,7 @@ export default function Leads() {
 function NewLeadDialog({ onSaved }) {
   const [form, setForm] = useState({
     name: "", phone: "", email: "", city: "", company: "",
-    source: "Website", status: "New", customer_type: "Startup Website",
+    source: "Calling List", status: "New", customer_type: "Student / Parent",
     budget: 0, notes: "",
   });
   const [saving, setSaving] = useState(false);
@@ -281,7 +318,16 @@ function NewLeadDialog({ onSaved }) {
   async function save() {
     setSaving(true);
     try {
-      await api.post("/leads", { ...form, budget: Number(form.budget) || 0 });
+      const payload = {
+        ...form,
+        budget: Number(form.budget) || 0,
+        email: form.email?.trim() || null,
+        phone: form.phone?.trim() || null,
+        city: form.city?.trim() || null,
+        company: form.company?.trim() || null,
+        notes: form.notes?.trim() || null,
+      };
+      await api.post("/leads", payload);
       toast.success("Lead created");
       onSaved();
     } catch (e) {
@@ -299,15 +345,15 @@ function NewLeadDialog({ onSaved }) {
       <div className="grid sm:grid-cols-2 gap-3">
         <Field label="Name *" testid="new-lead-name" value={form.name}
           onChange={(v) => setForm({ ...form, name: v })} />
-        <Field label="Phone" testid="new-lead-phone" value={form.phone}
+        <Field label="Phone *" testid="new-lead-phone" value={form.phone}
           onChange={(v) => setForm({ ...form, phone: v })} />
-        <Field label="Email" testid="new-lead-email" value={form.email}
+        <Field label="Email (Optional)" testid="new-lead-email" value={form.email}
           onChange={(v) => setForm({ ...form, email: v })} />
         <Field label="City" testid="new-lead-city" value={form.city}
           onChange={(v) => setForm({ ...form, city: v })} />
-        <Field label="Company" testid="new-lead-company" value={form.company}
+        <Field label="School / Coaching / Company" testid="new-lead-company" value={form.company}
           onChange={(v) => setForm({ ...form, company: v })} />
-        <Field label="Budget (₹)" type="number" testid="new-lead-budget" value={form.budget}
+        <Field label="Fee / Budget (₹)" type="number" testid="new-lead-budget" value={form.budget}
           onChange={(v) => setForm({ ...form, budget: v })} />
         <SelectField label="Source" testid="new-lead-source" value={form.source}
           options={SOURCES} onChange={(v) => setForm({ ...form, source: v })} />

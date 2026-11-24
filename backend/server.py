@@ -9,6 +9,7 @@ import asyncio
 import logging
 import os
 from fastapi import FastAPI, APIRouter
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import inspect, text
 from starlette.middleware.cors import CORSMiddleware
 
@@ -22,6 +23,7 @@ from routers import (
     tasks as tasks_router,
     calls as calls_router,
     whatsapp_webhook as whatsapp_ext_router,
+    whatsapp_broadcast as whatsapp_broadcast_router,
     whatsapp as whatsapp_router,
     activities as activities_router,
     products as products_router,
@@ -41,6 +43,8 @@ from routers import (
     automation as automation_router,
     foundation as foundation_router,
     payments as payments_router,
+    growth as growth_router,
+    onboarding as onboarding_router,
 )
 from services import scheduler as scheduler_service
 from services import campaign_engine
@@ -49,13 +53,13 @@ logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("facets")
 
-app = FastAPI(title="ParshWebCraft CRM", version="1.2.0")
+app = FastAPI(title="ParshAgent CRM", version="1.2.0")
 api = APIRouter(prefix="/api")
 
 
 @api.get("/")
 def root():
-    return {"app": "ParshWebCraft CRM", "status": "ok"}
+    return {"app": "ParshAgent CRM", "status": "ok"}
 
 
 @api.get("/health")
@@ -74,9 +78,10 @@ api.include_router(leads_router.router)
 api.include_router(activities_router.router)
 api.include_router(tasks_router.router)
 api.include_router(calls_router.router)
-# IMPORTANT: register whatsapp_webhook BEFORE the generic whatsapp router so
-# /api/whatsapp/webhook is matched before /api/whatsapp/{lead_id}.
+# IMPORTANT: register whatsapp_webhook and whatsapp_broadcast BEFORE the generic whatsapp router so
+# /api/whatsapp/webhook and /api/whatsapp/broadcasts are matched before /api/whatsapp/{lead_id}.
 api.include_router(whatsapp_ext_router.router)
+api.include_router(whatsapp_broadcast_router.router)
 api.include_router(whatsapp_router.router)
 api.include_router(products_router.router)
 api.include_router(appointments_router.router)
@@ -94,11 +99,20 @@ api.include_router(voice_dialer_router.router)
 api.include_router(automation_router.router)
 api.include_router(foundation_router.router)
 api.include_router(payments_router.router)
+api.include_router(growth_router.router)
+api.include_router(onboarding_router.router)
 
 app.include_router(api)
 
-cors_origins = os.environ.get("CORS_ORIGINS", "*").split(",")
-if "*" in cors_origins:
+# Mount public uploads for WhatsApp rich media engine & quotations
+UPLOADS_DIR = ROOT_DIR / "uploads"
+(UPLOADS_DIR / "quotations").mkdir(parents=True, exist_ok=True)
+(UPLOADS_DIR / "whatsapp").mkdir(parents=True, exist_ok=True)
+(UPLOADS_DIR / "brochures").mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
+
+raw_cors = os.environ.get("CORS_ORIGINS", "").strip()
+if not raw_cors or raw_cors == "*":
     cors_origins = [
         "http://localhost:3000",
         "http://localhost:3001",
@@ -106,13 +120,17 @@ if "*" in cors_origins:
         "http://127.0.0.1:3001",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "https://parshagent.com",
+        "https://www.parshagent.com",
     ]
+else:
+    cors_origins = [origin.strip() for origin in raw_cors.split(",") if origin.strip()]
 
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
     allow_origins=cors_origins,
-    allow_origin_regex="https://.*\\.vercel\\.app",
+    allow_origin_regex=r"https://.*\.vercel\.app|https://.*\.parshagent\.com",
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -181,18 +199,23 @@ def startup() -> None:
     _ensure_call_columns()
     _ensure_admin_seed()
     _ensure_parshcall_foundation_seed()
-    if scheduler_service.followups_enabled():
+    enable_bg = os.environ.get("ENABLE_BACKGROUND_TASKS", "true").lower() in ("true", "1", "yes")
+    if enable_bg and scheduler_service.followups_enabled():
         loop = asyncio.get_event_loop()
         loop.create_task(scheduler_service.loop())
-    # Campaign engine — always-on; idle when no campaigns are running
-    loop = asyncio.get_event_loop()
-    loop.create_task(campaign_engine.loop())
+    if enable_bg:
+        loop = asyncio.get_event_loop()
+        loop.create_task(campaign_engine.loop())
     
     # Launch Keep-alive self-pinger (Disabled to conserve Render free tier instance hours)
     # loop.create_task(keep_alive_loop())
     
-    # Launch Task overdue checker
-    loop.create_task(task_overdue_checker_loop())
+    if enable_bg:
+        loop = asyncio.get_event_loop()
+        loop.create_task(task_overdue_checker_loop())
+        logger.info("Background loops (campaign_engine, overdue_checker) running in this worker.")
+    else:
+        logger.info("Background loops disabled in this worker (ENABLE_BACKGROUND_TASKS=false).")
     
     logger.info("Facets CRM ready")
 
@@ -219,8 +242,13 @@ def _ensure_call_columns() -> None:
 
 
 def _ensure_admin_seed() -> None:
-    admin_email = os.environ.get("ADMIN_EMAIL", "admin@parshwebcraft.com").lower()
-    admin_password = os.environ.get("ADMIN_PASSWORD", "password123")
+    admin_email = os.environ.get("ADMIN_EMAIL", "").strip().lower()
+    admin_password = os.environ.get("ADMIN_PASSWORD", "").strip()
+
+    if not admin_email or not admin_password:
+        logger.warning("ADMIN_EMAIL or ADMIN_PASSWORD not set in environment. Skipping default admin user creation.")
+        return
+
     db = SessionLocal()
     try:
         existing = db.query(models.User).filter(models.User.email == admin_email).first()
@@ -231,7 +259,7 @@ def _ensure_admin_seed() -> None:
                 role="Admin", is_active=True,
             ))
             db.commit()
-            logger.info("Seeded default admin %s", admin_email)
+            logger.info("Seeded production admin account %s", admin_email)
         elif not verify_password(admin_password, existing.password_hash):
             existing.password_hash = hash_password(admin_password)
             db.commit()

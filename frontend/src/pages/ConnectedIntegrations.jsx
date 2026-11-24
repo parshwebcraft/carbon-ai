@@ -10,6 +10,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import WhatsAppConnectModal from "@/components/WhatsAppConnectModal";
 import {
   Mail, MessageSquare, Table, Sparkles, Brain, Phone, Calendar,
   Globe, Link, Plug, Activity, Loader2, CheckCircle2, AlertTriangle,
@@ -34,6 +35,7 @@ export default function ConnectedIntegrations() {
   const [loading, setLoading] = useState(true);
   const [configApp, setConfigApp] = useState(null);
   const [configOpen, setConfigOpen] = useState(false);
+  const [waModalOpen, setWaModalOpen] = useState(false);
   const [testLoading, setTestLoading] = useState(null); // name of app being tested
 
   function load() {
@@ -118,15 +120,37 @@ export default function ConnectedIntegrations() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-100 mt-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="h-8 text-xs flex-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 border-indigo-100"
-                    onClick={() => { setConfigApp(app); setConfigOpen(true); }}
-                  >
-                    Configure
-                  </Button>
+                <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100 mt-2">
+                  {app.app_name === "whatsapp" ? (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-8 text-xs flex-1 text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 border-emerald-200"
+                        onClick={() => setWaModalOpen(true)}
+                      >
+                        Connect WhatsApp
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 text-xs text-slate-500 hover:text-slate-800 px-2"
+                        title="Manual API Configuration"
+                        onClick={() => { setConfigApp(app); setConfigOpen(true); }}
+                      >
+                        Manual
+                      </Button>
+                    </>
+                  ) : (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-8 text-xs flex-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 border-indigo-100"
+                      onClick={() => { setConfigApp(app); setConfigOpen(true); }}
+                    >
+                      Configure
+                    </Button>
+                  )}
                   <Button 
                     variant="ghost" 
                     size="sm" 
@@ -153,6 +177,12 @@ export default function ConnectedIntegrations() {
           <ConfigDialog app={configApp} onSaved={() => { setConfigOpen(false); setConfigApp(null); load(); }} />
         </Dialog>
       )}
+
+      <WhatsAppConnectModal
+        open={waModalOpen}
+        onOpenChange={setWaModalOpen}
+        onConnected={load}
+      />
     </div>
   );
 }

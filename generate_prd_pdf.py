@@ -1,0 +1,503 @@
+import subprocess
+import os
+
+html_content = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ParshAgent - Product Requirement Document & Implementation Plan</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  @page {
+    size: A4;
+    margin: 18mm 16mm 18mm 16mm;
+    @bottom-right {
+      content: "Page " counter(page);
+      font-size: 8pt;
+      color: #94A3B8;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #1E293B;
+    line-height: 1.55;
+    font-size: 9.5pt;
+    margin: 0;
+    padding: 0;
+    background: #FFFFFF;
+  }
+
+  .cover-header {
+    border-bottom: 2px solid #005C4B;
+    padding-bottom: 18px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .brand-title {
+    font-size: 24pt;
+    font-weight: 800;
+    color: #0F172A;
+    letter-spacing: -0.5px;
+    margin: 0;
+  }
+
+  .brand-subtitle {
+    font-size: 11pt;
+    font-weight: 600;
+    color: #005C4B;
+    margin-top: 4px;
+    margin-bottom: 0;
+  }
+
+  .meta-box {
+    text-align: right;
+    font-size: 8.5pt;
+    color: #64748B;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 7.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-emerald { background: #DCFCE7; color: #166534; }
+  .badge-blue { background: #DBEAFE; color: #1E40AF; }
+  .badge-amber { background: #FEF3C7; color: #92400E; }
+
+  h1 {
+    font-size: 15pt;
+    font-weight: 700;
+    color: #0F172A;
+    border-bottom: 1px solid #E2E8F0;
+    padding-bottom: 6px;
+    margin-top: 22px;
+    margin-bottom: 10px;
+    page-break-after: avoid;
+  }
+
+  h2 {
+    font-size: 11.5pt;
+    font-weight: 700;
+    color: #005C4B;
+    margin-top: 16px;
+    margin-bottom: 6px;
+    page-break-after: avoid;
+  }
+
+  h3 {
+    font-size: 10pt;
+    font-weight: 600;
+    color: #334155;
+    margin-top: 12px;
+    margin-bottom: 4px;
+    page-break-after: avoid;
+  }
+
+  p {
+    margin: 0 0 8px 0;
+    color: #334155;
+  }
+
+  ul, ol {
+    margin: 0 0 10px 0;
+    padding-left: 20px;
+    color: #334155;
+  }
+
+  li {
+    margin-bottom: 4px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 16px 0;
+    font-size: 8.5pt;
+    page-break-inside: avoid;
+  }
+
+  th {
+    background: #F1F5F9;
+    color: #0F172A;
+    font-weight: 700;
+    text-align: left;
+    padding: 8px 10px;
+    border: 1px solid #CBD5E1;
+  }
+
+  td {
+    padding: 7px 10px;
+    border: 1px solid #E2E8F0;
+    vertical-align: top;
+  }
+
+  tr:nth-child(even) td {
+    background: #F8FAFC;
+  }
+
+  .callout {
+    background: #F8FAFC;
+    border-left: 3.5px solid #005C4B;
+    padding: 10px 14px;
+    margin: 12px 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 8.8pt;
+  }
+
+  .callout-title {
+    font-weight: 700;
+    color: #005C4B;
+    margin-bottom: 3px;
+  }
+
+  .code-block {
+    background: #0F172A;
+    color: #F8FAFC;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8pt;
+    padding: 10px 12px;
+    border-radius: 6px;
+    margin: 10px 0;
+    overflow-x: auto;
+    line-height: 1.45;
+  }
+
+  .grid-2 {
+    display: flex;
+    gap: 14px;
+    margin: 10px 0;
+  }
+
+  .card {
+    flex: 1;
+    border: 1px solid #E2E8F0;
+    border-radius: 6px;
+    padding: 10px 12px;
+    background: #FAFAFA;
+  }
+
+  .card-title {
+    font-weight: 700;
+    font-size: 9pt;
+    color: #0F172A;
+    margin-bottom: 4px;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+</style>
+</head>
+<body>
+
+<div class="cover-header">
+  <div>
+    <h1 class="brand-title">ParshAgent</h1>
+    <div class="brand-subtitle">AI Calling + WhatsApp Conversational Sales Suite & Bulk Engine</div>
+    <div style="margin-top: 6px;">
+      <span class="badge badge-emerald">Production Grade PRD</span>
+      <span class="badge badge-blue">v2.0 Implementation Spec</span>
+      <span class="badge badge-amber">Meta Cloud API Certified</span>
+    </div>
+  </div>
+  <div class="meta-box">
+    <div><strong>Organization:</strong> ParshWeb Craft</div>
+    <div><strong>Author:</strong> Gauransh Jaroli (Founder)</div>
+    <div><strong>Target VPS:</strong> 103.190.54.151 (Ubuntu 24.04)</div>
+    <div><strong>Status:</strong> Approved & Ready for Build</div>
+  </div>
+</div>
+
+<div class="callout">
+  <div class="callout-title">Executive Summary</div>
+  ParshAgent is an enterprise-grade Omnichannel AI Sales Engine combining Voice-First Outreach (Vapi/Omnidim) with real-time Meta WhatsApp Cloud API conversational qualification, automated appointment booking (Google Calendar/Meet), Razorpay digital payment link closures, and an AiSensy-grade Bulk Marketing & Interactive Flow builder — completely eliminating 3rd-party recurring SaaS fees.
+</div>
+
+<h1>1. Architectural Overview & Product Vision</h1>
+<p>
+Traditional sales workflows suffer severe lead leakage between customer calls and subsequent text follow-ups. ParshAgent closes this gap with a closed-loop automated architecture:
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 25%;">Phase</th>
+      <th style="width: 35%;">Action & AI Trigger</th>
+      <th style="width: 40%;">Outcome & Telemetry</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>1. Inbound/Outbound Call</strong></td>
+      <td>AI Voice Agent conducts 60-90s initial discovery. Real-time transcript extracted via Webhook.</td>
+      <td>Lead qualified; CRM status set to <code>Call Completed</code>. Intent summary generated.</td>
+    </tr>
+    <tr>
+      <td><strong>2. Instant WhatsApp Handoff</strong></td>
+      <td>Within 5 seconds of call disconnect, Meta Cloud API sends personalized portfolio brochure & summary.</td>
+      <td>Double Blue Tick verified. Conversation window opened (24-hour service window).</td>
+    </tr>
+    <tr>
+      <td><strong>3. Conversational AI Bot</strong></td>
+      <td>Multi-turn LLM dialog identifies requirements, answers questions, handles pricing objections.</td>
+      <td>Lead attributes (<code>budget</code>, <code>service_type</code>, <code>timeline</code>) updated in PostgreSQL.</td>
+    </tr>
+    <tr>
+      <td><strong>4. Meeting Scheduling</strong></td>
+      <td>Google Calendar free/busy slots inspected; 2 optimal slots offered. Google Meet link issued.</td>
+      <td>Calendar invite sent to client; Instant WhatsApp Alert sent to Gauransh's phone.</td>
+    </tr>
+    <tr>
+      <td><strong>5. Payment Closure</strong></td>
+      <td>Razorpay API generates customized token advance payment link with one-click UPI checkout.</td>
+      <td>Razorpay webhook moves CRM card to <code>Closed / Won</code>; automated tax invoice sent.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h1>2. Module 1: Two-Way Conversational AI Qualification Bot</h1>
+<h2>2.1 Natural Language Understanding & Persona Guardrails</h2>
+<ul>
+  <li><strong>Agency Knowledge Base:</strong> The bot represents ParshWeb Craft, specializing in high-performance web development, custom SaaS, and AI automation.</li>
+  <li><strong>Tone & Style:</strong> Professional, friendly, concise, natural Hinglish/English. No hallucinated discounts or unapproved delivery commitments.</li>
+  <li><strong>Human Takeover (Smart Auto-Pause):</strong> When an operator types a manual reply inside the Alpha CRM inbox, the AI Bot pauses for 60 minutes on that lead unless manually re-enabled.</li>
+</ul>
+
+<h2>2.2 Automated Lead State Machine</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Stage</th>
+      <th>Trigger Condition</th>
+      <th>Bot Behavioral Objective</th>
+      <th>Kanban Column</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>Discovery</code></td>
+      <td>Customer initiates chat or responds to post-call template.</td>
+      <td>Ask for business model & website scope (e.g. Portfolio vs E-comm).</td>
+      <td><code>Unlabeled</code></td>
+    </tr>
+    <tr>
+      <td><code>Qualification</code></td>
+      <td>Scope stated by customer.</td>
+      <td>Inquire about budget bracket (₹25k, ₹50k, ₹1L+) & launch timeline.</td>
+      <td><code>Needs Human / Active</code></td>
+    </tr>
+    <tr>
+      <td><code>Scheduling</code></td>
+      <td>Budget and scope align with agency threshold.</td>
+      <td>Offer 2 specific 15-min discovery slots with Founder Gauransh.</td>
+      <td><code>Follow Up</code></td>
+    </tr>
+    <tr>
+      <td><code>Closing</code></td>
+      <td>Client requests quotation or token advance payment.</td>
+      <td>Generate Razorpay payment link & PDF proposal document.</td>
+      <td><code>Closed / Won</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<h1>3. Module 2: Rich Media & Dynamic Assets Engine</h1>
+<p>
+Meta Cloud API supports rich binary media dispatch. The engine handles outbound file synthesis and delivery:
+</p>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-title">📄 Dynamic PDF Proposal & Portfolio Dispatch</div>
+    <p>When a lead asks for past work or package pricing, the bot sends an official PDF document directly inside WhatsApp:</p>
+    <div class="code-block">{
+  "messaging_product": "whatsapp",
+  "recipient_type": "individual",
+  "to": "91XXXXXXXXXX",
+  "type": "document",
+  "document": {
+    "link": "https://api.parshagent.com/media/ParshWebCraft_Portfolio.pdf",
+    "filename": "ParshWebCraft_Agency_Portfolio.pdf",
+    "caption": "Here is our verified agency portfolio & recent case studies!"
+  }
+}</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">💳 Razorpay One-Click Payment Links</div>
+    <p>Integrated with Razorpay Payment Links API v1:</p>
+    <ul>
+      <li>Dynamic generation of ₹5,000 / custom advance amount.</li>
+      <li>Automatic expiry after 24 hours.</li>
+      <li>Webhook listener on <code>/api/payments/razorpay/webhook</code> for instant <code>payment.captured</code> status handling.</li>
+    </ul>
+  </div>
+</div>
+
+<h1>4. Module 3: Google Calendar, Meet & Dual-Alert System</h1>
+<h2>4.1 Calendar Synchronization</h2>
+<ul>
+  <li>OAuth 2.0 connection to Gauransh's Google Workspace Calendar.</li>
+  <li>Reads free/busy schedule in real-time to prevent double bookings.</li>
+  <li>Generates official Google Meet video conference link on slot confirmation.</li>
+</ul>
+
+<h2>4.2 Instant Dual Alerts (Owner Notification)</h2>
+<p>
+The moment a customer books a discovery call or requests a quotation, ParshAgent dispatches two concurrent notifications:
+</p>
+<ol>
+  <li><strong>WhatsApp Notification to Personal Phone (+91 84420 97839):</strong>
+    <div class="code-block">🔥 New Qualified Discovery Call Booked!
+━━━━━━━━━━━━━━━━━━━━━━
+👤 Client Name: Rohan Mehra
+📱 Phone: +91 98765 43210
+🌐 Requirement: E-Commerce Store (Shopify / Custom MERN)
+💰 Expected Budget: ₹45,000 - ₹60,000
+📅 Scheduled Slot: Tomorrow, 19 Oct at 4:30 PM IST
+🔗 Meet Link: https://meet.google.com/xyz-abcd-uvw</div>
+  </li>
+  <li><strong>Direct Email Alert (to gauranshjaroli... / admin@parshwebcraft.com):</strong>
+    Contains full chat transcript, customer profile tags, and CRM direct link.
+  </li>
+</ol>
+
+<h1>5. Module 4: AiSensy-Grade Bulk Campaign Broadcast Engine</h1>
+<p>
+Eliminating the ₹3,000 - ₹6,000 monthly 3rd-party SaaS expense by utilizing ParshWeb Craft's direct Meta Cloud API setup:
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Capability</th>
+      <th>Technical Architecture</th>
+      <th>Business Impact</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Meta Template Sync</strong></td>
+      <td>Syncs verified Marketing & Utility templates via <code>GET /v21.0/{waba_id}/message_templates</code>.</td>
+      <td>Create templates in Meta Business Suite; automatically available in CRM dropdown.</td>
+    </tr>
+    <tr>
+      <td><strong>Dynamic Variable Mapping</strong></td>
+      <td>Maps <code>{{1}}</code> to Name, <code>{{2}}</code> to Company, <code>{{3}}</code> to Custom Offer.</td>
+      <td>100% personalized messages avoiding spam detection flags.</td>
+    </tr>
+    <tr>
+      <td><strong>Segmented Audience Dispatch</strong></td>
+      <td>CSV upload parser or CRM Lead filter by status/city/source with Celery/Background task queue.</td>
+      <td>Send targeted campaigns to 100 to 10,000+ leads with controlled throttling (80 msg/sec).</td>
+    </tr>
+    <tr>
+      <td><strong>Real-Time Delivery Telemetry</strong></td>
+      <td>Webhook tracks <code>sent</code>, <code>delivered</code>, <code>read</code>, and <code>failed</code> events into PostgreSQL.</td>
+      <td>Accurate analytics on campaign open rates & client response percentages.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<h1>6. Module 5: Interactive Chatbot Flow Builder (Buttons & Menus)</h1>
+<h2>6.1 Native WhatsApp Interactive Components</h2>
+<ul>
+  <li><strong>Quick Reply Buttons:</strong> Up to 3 clickable buttons (e.g. <code>[🌐 Website Design]</code>, <code>[📞 AI Calling]</code>, <code>[💬 Talk to Human]</code>).</li>
+  <li><strong>List Messages:</strong> Sectioned drop-down menus with up to 10 selectable items (e.g. Service Catalog).</li>
+  <li><strong>Payload Tracking:</strong> Every button click sends an <code>interactive</code> callback ID parsed instantly by our hardened webhook.</li>
+</ul>
+
+<h1>7. Implementation Roadmap & Technical Milestones</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 15%;">Sprint</th>
+      <th style="width: 40%;">Deliverables & Scope</th>
+      <th style="width: 25%;">Target Endpoints</th>
+      <th style="width: 20%;">ETA</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Sprint 1</strong></td>
+      <td>AI Conversational Bot Core + Lead Attribute Extraction + Dual Alerts (WhatsApp alert to Founder + Email alert).</td>
+      <td><code>/api/ai/whatsapp-reply</code><br><code>/api/whatsapp/internal-alert</code></td>
+      <td>Days 1 – 3</td>
+    </tr>
+    <tr>
+      <td><strong>Sprint 2</strong></td>
+      <td>Rich Media Engine (PDF brochures & Image sharing) + Google Calendar slot booking & Meet integration.</td>
+      <td><code>/api/media/send-document</code><br><code>/api/calendar/book-slot</code></td>
+      <td>Days 4 – 6</td>
+    </tr>
+    <tr>
+      <td><strong>Sprint 3</strong></td>
+      <td>Razorpay Payment Links integration + Webhook capture + Kanban stage auto-advance (Closed / Won).</td>
+      <td><code>/api/payments/razorpay/link</code><br><code>/api/payments/razorpay/webhook</code></td>
+      <td>Days 7 – 9</td>
+    </tr>
+    <tr>
+      <td><strong>Sprint 4</strong></td>
+      <td>Bulk Marketing Campaign Broadcast Engine + Template Synchronizer + Interactive 3-Button Flow Builder.</td>
+      <td><code>/api/whatsapp/templates</code><br><code>/api/whatsapp/broadcast</code></td>
+      <td>Days 10 – 14</td>
+    </tr>
+  </tbody>
+</table>
+
+<h1>8. Infrastructure & Security Specifications</h1>
+<ul>
+  <li><strong>Host Environment:</strong> Ubuntu 24.04 LTS (103.190.54.151), Nginx SSL Reverse Proxy, Python 3.12, FastAPI, Gunicorn Uvicorn workers.</li>
+  <li><strong>Database Layer:</strong> PostgreSQL 16 (<code>parshagent_db</code>) with optimized indexes on <code>phone</code>, <code>wa_message_id</code>, and <code>lead_id</code>.</li>
+  <li><strong>Meta API Security:</strong> Permanent non-expiring System User Token (<code>expires_at: 0</code>) stored in root-protected <code>.env</code>.</li>
+  <li><strong>Reliability:</strong> Systemd managed service (<code>Restart=always</code>), non-blocking FastAPI <code>BackgroundTasks</code> ensuring Meta webhook responses in &lt;50ms.</li>
+</ul>
+
+<div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #CBD5E1; text-align: center; font-size: 8pt; color: #94A3B8;">
+  ParshAgent PRD &amp; Implementation Document &bull; Confidential &bull; ParshWeb Craft &copy; 2026 &bull; All Rights Reserved
+</div>
+
+</body>
+</html>
+"""
+
+html_path = "/Users/gaura1/Projects/carbon-ai-main/ParshAgent_PRD.html"
+pdf_path = "/Users/gaura1/Projects/carbon-ai-main/ParshAgent_WhatsApp_AI_Suite_PRD.pdf"
+
+with open(html_path, "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+print("HTML written to:", html_path)
+
+chrome_cmd = [
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "--headless",
+    "--disable-gpu",
+    "--no-pdf-header-footer",
+    f"--print-to-pdf={pdf_path}",
+    html_path
+]
+
+res = subprocess.run(chrome_cmd, capture_output=True, text=True)
+if res.returncode == 0:
+    print("SUCCESS: PDF successfully generated at:", pdf_path)
+    file_size = os.path.getsize(pdf_path)
+    print(f"PDF Size: {file_size / 1024:.1f} KB")
+else:
+    print("Chrome Error:", res.stderr)

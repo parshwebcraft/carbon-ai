@@ -34,7 +34,10 @@ def status(db: Session = Depends(get_db)):
 def place_call(lead_id: int, with_ai_script: bool = True,
                db: Session = Depends(get_db),
                me: User = Depends(get_current_user)):
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+    query = db.query(Lead).filter(Lead.id == lead_id)
+    if me.company_id and me.role != "SuperAdmin":
+        query = query.filter(Lead.company_id == me.company_id)
+    lead = query.first()
     if not lead:
         raise HTTPException(404, "Lead not found")
     if not lead.phone:
@@ -66,6 +69,7 @@ def place_call(lead_id: int, with_ai_script: bool = True,
                 to_number=lead.phone,
                 lead={
                     "id": lead.id,
+                    "company_id": lead.company_id,
                     "name": lead.name,
                     "city": lead.city,
                     "customer_type": lead.customer_type,
@@ -74,7 +78,8 @@ def place_call(lead_id: int, with_ai_script: bool = True,
                     "notes": script_text
                 },
                 script=script_text,
-                db=db
+                db=db,
+                company_id=me.company_id or lead.company_id
             )
             call_id_str = resp.get("id")
         except Exception as e:
@@ -97,6 +102,7 @@ def place_call(lead_id: int, with_ai_script: bool = True,
             raise HTTPException(502, f"Vapi error: {e}")
 
     call = Call(
+        company_id=lead.company_id or me.company_id,
         lead_id=lead.id,
         call_status="In Progress",
         call_summary=f"AI voice call ({call_provider.title()}) initiated by " + (me.name or me.email),
@@ -105,6 +111,7 @@ def place_call(lead_id: int, with_ai_script: bool = True,
     )
     db.add(call)
     db.add(Activity(
+        company_id=lead.company_id or me.company_id,
         lead_id=lead.id, activity_type="Call",
         description=f"AI voice call started ({call_provider.title()} {call_id_str or '?'})",
         created_by=me.id,
@@ -154,6 +161,7 @@ async def omnidim_webhook(req: Request, db: Session = Depends(get_db)):
             call.sentiment = sentiment.capitalize()
             
         db.add(AIAgentLog(
+            company_id=call.company_id,
             lead_id=call.lead_id,
             conversation_summary=call.call_summary or "OmniDimension AI voice call completed.",
             sentiment=call.sentiment or "Neutral",
@@ -272,6 +280,7 @@ async def webhook(req: Request, db: Session = Depends(get_db)):
             call.sentiment = sentiment
         # Push to AI agent log so it surfaces on lead timeline
         db.add(AIAgentLog(
+            company_id=call.company_id,
             lead_id=call.lead_id,
             conversation_summary=call.call_summary,
             sentiment=call.sentiment or "Neutral",
@@ -320,6 +329,7 @@ def _process_appointment_extraction(db: Session, lead_id: int, transcript: str, 
                 lead = db.query(Lead).filter(Lead.id == lead_id).first()
                 if lead:
                     appt = Appointment(
+                        company_id=lead.company_id,
                         customer_name=lead.name,
                         lead_id=lead.id,
                         appointment_date=appt_dt,
@@ -334,6 +344,27 @@ def _process_appointment_extraction(db: Session, lead_id: int, transcript: str, 
                         
                     db.commit()
                     logger.info("Successfully created appointment for lead %s via AI voice call sync.", lead_id)
+
+                    # Trigger Instant Dual Alert (WhatsApp + Email) to owner
+                    try:
+                        from services import alert_service
+                        notes_lower = (data.get("notes") or "").lower()
+                        cust_type_lower = (lead.customer_type or "").lower()
+                        is_demo = "demo" in notes_lower or any(k in cust_type_lower for k in ("student", "parent", "revision", "demo"))
+                        event = "demo_scheduled" if is_demo else "discovery_call"
+                        alert_service.dispatch_dual_alert(
+                            event_type=event,
+                            lead=lead,
+                            details={
+                                "slot": appt_dt.strftime("%Y-%m-%d %I:%M %p"),
+                                "notes": data.get("notes", "Scheduled via AI Voice Call"),
+                                "budget": lead.budget,
+                            },
+                            db=db,
+                            company_id=lead.company_id
+                        )
+                    except Exception as e_alert:
+                        logger.warning("Could not dispatch voice dual alert: %s", e_alert)
             except Exception as ex:
                 logger.error("Failed to parse and save extracted appointment: %s", ex)
     except Exception as e:

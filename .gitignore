@@ -62,6 +62,13 @@ chainlit.md
 .vercel
 
 # Data and databases
+*.db
+*.sqlite
+*.sqlite3
+backend/facets.db
+backend/recordings/*.mp3
+backend/recordings/*.webm
+!backend/recordings/.gitkeep
 agenthub/agents/youtube/db
 
 # Archive files and large assets
@@ -91,3 +98,8 @@ frontend/node_modules/.cache/default-development/8.pack
 frontend/node_modules/.cache/default-development/0.pack
 frontend/node_modules/.cache/default-development/2.pack
 frontend/node_modules/.cache/default-development/1.pack
+backend/uploads/
+backend/recordings/
+*.bak
+raw_google_contacts.csv
+frontend/public/Gauransh_Cleaned_Contacts.xlsx

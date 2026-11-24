@@ -20,9 +20,14 @@ def list_leads(
     source: Optional[str] = None,
     assigned_to: Optional[int] = None,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
     q = db.query(Lead)
+    if current_user.company_id:
+        q = q.filter(Lead.company_id == current_user.company_id)
+    else:
+        return LeadListOut(items=[], total=0, page=page, page_size=page_size)
+
     if search:
         like = f"%{search}%"
         q = q.filter(or_(Lead.name.ilike(like), Lead.email.ilike(like),
@@ -58,8 +63,11 @@ def list_leads(
 
 
 @router.get("/{lead_id}", response_model=LeadOut)
-def get_lead(lead_id: int, db: Session = Depends(get_db), _: User = Depends(get_current_user)):
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+def get_lead(lead_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    q = db.query(Lead).filter(Lead.id == lead_id)
+    if current_user.company_id and current_user.role != "SuperAdmin":
+        q = q.filter(Lead.company_id == current_user.company_id)
+    lead = q.first()
     if not lead:
         raise HTTPException(404, "Lead not found")
     out = LeadOut.model_validate(lead)
@@ -78,8 +86,14 @@ logger = logging.getLogger("facets.leads")
 
 @router.post("", response_model=LeadOut, status_code=201)
 def create_lead(payload: LeadCreate, db: Session = Depends(get_db),
-                _: User = Depends(get_current_user)):
-    lead = Lead(**payload.model_dump(exclude_unset=True))
+                current_user: User = Depends(get_current_user)):
+    lead_dict = payload.model_dump(exclude_unset=True)
+    if current_user.company_id:
+        lead_dict["company_id"] = current_user.company_id
+    for field in ["email", "phone", "city", "company", "notes", "customer_type"]:
+        if field in lead_dict and isinstance(lead_dict[field], str) and not lead_dict[field].strip():
+            lead_dict[field] = None
+    lead = Lead(**lead_dict)
     db.add(lead)
     db.commit()
     db.refresh(lead)
@@ -92,39 +106,123 @@ def create_lead(payload: LeadCreate, db: Session = Depends(get_db),
 
 @router.put("/{lead_id}", response_model=LeadOut)
 def update_lead(lead_id: int, payload: LeadUpdate, db: Session = Depends(get_db),
-                _: User = Depends(get_current_user)):
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+                current_user: User = Depends(get_current_user)):
+    q = db.query(Lead).filter(Lead.id == lead_id)
+    if current_user.company_id and current_user.role != "SuperAdmin":
+        q = q.filter(Lead.company_id == current_user.company_id)
+    lead = q.first()
     if not lead:
         raise HTTPException(404, "Lead not found")
     for k, v in payload.model_dump(exclude_unset=True).items():
+        if isinstance(v, str) and not v.strip() and k in ["email", "phone", "city", "company", "notes", "customer_type"]:
+            v = None
         setattr(lead, k, v)
     db.commit()
     db.refresh(lead)
     return LeadOut.model_validate(lead)
 
 
+def _delete_leads_safely(db: Session, lead_ids: list[int]):
+    if not lead_ids:
+        return
+    import models
+
+    fk_mappings = [
+        (models.Activity, models.Activity.lead_id),
+        (models.Call, models.Call.lead_id),
+        (models.Task, models.Task.lead_id),
+        (models.WhatsappMessage, models.WhatsappMessage.lead_id),
+        (models.Appointment, models.Appointment.lead_id),
+        (models.Quotation, models.Quotation.lead_id),
+        (models.AIAgentLog, models.AIAgentLog.lead_id),
+        (models.LeadInsight, models.LeadInsight.lead_id),
+        (models.CampaignTarget, models.CampaignTarget.lead_id),
+        (models.CopilotSession, models.CopilotSession.lead_id),
+        (models.ConversationMemory, models.ConversationMemory.customer_id),
+        (models.AICallIntelligence, models.AICallIntelligence.lead_id),
+        (models.CustomerConversationMemory, models.CustomerConversationMemory.lead_id),
+    ]
+    for model_cls, col in fk_mappings:
+        try:
+            db.query(model_cls).filter(col.in_(lead_ids)).delete(synchronize_session=False)
+        except Exception:
+            pass
+
+    db.query(models.Lead).filter(models.Lead.id.in_(lead_ids)).delete(synchronize_session=False)
+    db.commit()
+
+
 @router.delete("/{lead_id}", status_code=204)
 def delete_lead(lead_id: int, db: Session = Depends(get_db),
-                _: User = Depends(require_roles("Admin", "Manager"))):
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+                current_user: User = Depends(require_roles("Admin", "Manager"))):
+    q = db.query(Lead).filter(Lead.id == lead_id)
+    if current_user.company_id and current_user.role != "SuperAdmin":
+        q = q.filter(Lead.company_id == current_user.company_id)
+    lead = q.first()
     if not lead:
         raise HTTPException(404, "Lead not found")
-    db.delete(lead)
-    db.commit()
+    _delete_leads_safely(db, [lead_id])
     return None
 
 
 @router.post("/delete-multiple", status_code=204)
 def delete_multiple_leads(lead_ids: list[int], db: Session = Depends(get_db),
-                          _: User = Depends(require_roles("Admin", "Manager"))):
-    db.query(Lead).filter(Lead.id.in_(lead_ids)).delete(synchronize_session=False)
-    db.commit()
+                          current_user: User = Depends(require_roles("Admin", "Manager"))):
+    q = db.query(Lead.id).filter(Lead.id.in_(lead_ids))
+    if current_user.company_id and current_user.role != "SuperAdmin":
+        q = q.filter(Lead.company_id == current_user.company_id)
+    allowed_ids = [r[0] for r in q.all()]
+    _delete_leads_safely(db, allowed_ids)
     return None
 
 
 @router.post("/delete-all", status_code=204)
 def delete_all_leads(db: Session = Depends(get_db),
-                     _: User = Depends(require_roles("Admin", "Manager"))):
-    db.query(Lead).delete(synchronize_session=False)
-    db.commit()
+                     current_user: User = Depends(require_roles("Admin", "Manager"))):
+    q = db.query(Lead.id)
+    if current_user.company_id and current_user.role != "SuperAdmin":
+        q = q.filter(Lead.company_id == current_user.company_id)
+    all_ids = [r[0] for r in q.all()]
+    _delete_leads_safely(db, all_ids)
     return None
+
+
+@router.post("/{lead_id}/toggle-drip")
+def toggle_lead_drip(lead_id: int, db: Session = Depends(get_db),
+                     current_user: User = Depends(get_current_user)):
+    q = db.query(Lead).filter(Lead.id == lead_id)
+    if current_user.company_id and current_user.role != "SuperAdmin":
+        q = q.filter(Lead.company_id == current_user.company_id)
+    lead = q.first()
+    if not lead:
+        raise HTTPException(404, "Lead not found")
+
+    cur_status = getattr(lead, "drip_status", "active") or "active"
+    if cur_status == "active":
+        lead.drip_status = "paused"
+    elif cur_status == "paused":
+        lead.drip_status = "active"
+    else:
+        # If stopped or completed, restarting reactivates drip at step 0
+        lead.drip_status = "active"
+        lead.drip_step = 0
+
+    db.commit()
+    db.refresh(lead)
+    return {
+        "ok": True,
+        "lead_id": lead.id,
+        "drip_status": lead.drip_status,
+        "drip_step": lead.drip_step,
+        "last_drip_sent_at": lead.last_drip_sent_at.isoformat() if lead.last_drip_sent_at else None
+    }
+
+
+@router.post("/drip/run-now")
+def trigger_drip_run_now(db: Session = Depends(get_db),
+                         current_user: User = Depends(require_roles("Admin", "Manager"))):
+    from services.scheduler import run_drip_cycle_sync
+    dispatched = run_drip_cycle_sync()
+    return {"ok": True, "dispatched_count": dispatched}
+
+

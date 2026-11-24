@@ -39,8 +39,11 @@ def status():
 
 @router.post("/whatsapp-reply/{lead_id}", response_model=ReplyOut)
 def whatsapp_reply(lead_id: int, db: Session = Depends(get_db),
-                   _: User = Depends(get_current_user)):
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+                   current_user: User = Depends(get_current_user)):
+    q = db.query(Lead).filter(Lead.id == lead_id)
+    if current_user.company_id and current_user.role != "SuperAdmin":
+        q = q.filter(Lead.company_id == current_user.company_id)
+    lead = q.first()
     if not lead:
         raise HTTPException(404, "Lead not found")
     history = (db.query(WhatsappMessage)
@@ -59,10 +62,64 @@ def whatsapp_reply(lead_id: int, db: Session = Depends(get_db),
     return ReplyOut(reply=reply)
 
 
+class ReplySuggestionsOut(BaseModel):
+    suggestions: list[str]
+
+
+@router.post("/whatsapp-reply-suggestions/{lead_id}", response_model=ReplySuggestionsOut)
+def whatsapp_reply_suggestions_endpoint(lead_id: int, db: Session = Depends(get_db),
+                                        current_user: User = Depends(get_current_user)):
+    q = db.query(Lead).filter(Lead.id == lead_id)
+    if current_user.company_id and current_user.role != "SuperAdmin":
+        q = q.filter(Lead.company_id == current_user.company_id)
+    lead = q.first()
+    if not lead:
+        raise HTTPException(404, "Lead not found")
+    history = (db.query(WhatsappMessage)
+                 .filter(WhatsappMessage.lead_id == lead_id)
+                 .order_by(WhatsappMessage.created_at.asc()).all())
+    try:
+        suggestions = llm.whatsapp_reply_suggestions(
+            {"name": lead.name, "city": lead.city, "customer_type": lead.customer_type,
+             "budget": lead.budget, "status": lead.status},
+            [{"direction": m.direction, "message": m.message} for m in history],
+        )
+    except Exception:
+        name = lead.name or "there"
+        suggestions = [
+            f"Hi {name}, thanks for reaching out! Let me check this for you right away.",
+            f"Sure! Would tomorrow at 3 PM work for a quick 10-minute discovery call?",
+            f"I have noted your requirement and will share the portfolio/quotation shortly."
+        ]
+    return ReplySuggestionsOut(suggestions=suggestions)
+
+
+class TranslateIn(BaseModel):
+    text: str
+    target_lang: str = "English"
+
+
+class TranslateOut(BaseModel):
+    translated: str
+
+
+@router.post("/translate", response_model=TranslateOut)
+def translate_endpoint(payload: TranslateIn, _: User = Depends(get_current_user)):
+    try:
+        translated = llm.translate_text(payload.text, payload.target_lang)
+        return TranslateOut(translated=translated)
+    except Exception as e:
+        raise HTTPException(502, f"Translation error: {e}")
+
+
+
 @router.post("/call-insights/{call_id}", response_model=InsightsOut)
 def call_insights(call_id: int, db: Session = Depends(get_db),
-                  _: User = Depends(get_current_user)):
-    call = db.query(Call).filter(Call.id == call_id).first()
+                  current_user: User = Depends(get_current_user)):
+    cq = db.query(Call).filter(Call.id == call_id)
+    if current_user.company_id and current_user.role != "SuperAdmin":
+        cq = cq.filter(Call.company_id == current_user.company_id)
+    call = cq.first()
     if not call:
         raise HTTPException(404, "Call not found")
     lead = db.query(Lead).filter(Lead.id == call.lead_id).first()
@@ -82,6 +139,7 @@ def call_insights(call_id: int, db: Session = Depends(get_db),
 
     # Persist into AIAgentLog so it shows on the lead timeline.
     db.add(AIAgentLog(
+        company_id=call.company_id or current_user.company_id,
         lead_id=call.lead_id,
         conversation_summary=data.get("summary"),
         sentiment=data.get("sentiment"),
@@ -97,8 +155,11 @@ def call_insights(call_id: int, db: Session = Depends(get_db),
 
 @router.post("/call-script/{lead_id}", response_model=ScriptOut)
 def call_script(lead_id: int, db: Session = Depends(get_db),
-                _: User = Depends(get_current_user)):
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+                current_user: User = Depends(get_current_user)):
+    lq = db.query(Lead).filter(Lead.id == lead_id)
+    if current_user.company_id and current_user.role != "SuperAdmin":
+        lq = lq.filter(Lead.company_id == current_user.company_id)
+    lead = lq.first()
     if not lead:
         raise HTTPException(404, "Lead not found")
     history = (db.query(Activity)
@@ -119,14 +180,17 @@ def call_script(lead_id: int, db: Session = Depends(get_db),
 
 @router.post("/whatsapp-analyse/{lead_id}")
 def whatsapp_analyse(lead_id: int, db: Session = Depends(get_db),
-                     _: User = Depends(get_current_user)):
+                     current_user: User = Depends(get_current_user)):
     """Full AI analysis of a WhatsApp conversation thread.
 
     Returns: intent, sentiment, objections, conversion_probability, next_action, summary
     """
     from services import copilot as copilot_svc
 
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+    lq = db.query(Lead).filter(Lead.id == lead_id)
+    if current_user.company_id and current_user.role != "SuperAdmin":
+        lq = lq.filter(Lead.company_id == current_user.company_id)
+    lead = lq.first()
     if not lead:
         raise HTTPException(404, "Lead not found")
     history = (db.query(WhatsappMessage)

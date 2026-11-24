@@ -17,13 +17,20 @@ class OmniDimNotConfigured(RuntimeError):
     pass
 
 
-def _get_setting(key: str, db: Optional[Session] = None) -> Optional[str]:
+def _get_setting(key: str, db: Optional[Session] = None, company_id: Optional[str] = None) -> Optional[str]:
     if db:
         try:
             from models import Setting, Integration
             # 1. Check Integration table
-            integ = db.query(Integration).filter(Integration.app_name == "omnidim").first()
-            if integ and integ.enabled:
+            q = db.query(Integration).filter(Integration.app_name == "omnidim", Integration.enabled == True)
+            if company_id:
+                integ = q.filter(Integration.company_id == company_id).first()
+            else:
+                integ = q.first()
+            if not integ and company_id:
+                integ = q.first()
+
+            if integ:
                 if key == "omnidim_api_key" and integ.api_key:
                     return integ.api_key.strip()
                 if key == "omnidim_agent_id" and integ.secret_key:
@@ -44,35 +51,35 @@ def _get_setting(key: str, db: Optional[Session] = None) -> Optional[str]:
     return os.environ.get(env_name, "").strip() or None
 
 
-def _api_key(db: Optional[Session] = None) -> str:
-    k = _get_setting("omnidim_api_key", db)
+def _api_key(db: Optional[Session] = None, company_id: Optional[str] = None) -> str:
+    k = _get_setting("omnidim_api_key", db, company_id)
     if not k:
         raise OmniDimNotConfigured("OmniDimension API key not configured.")
     return k
 
 
-def _agent_id(db: Optional[Session] = None) -> int:
-    aid = _get_setting("omnidim_agent_id", db)
+def _agent_id(db: Optional[Session] = None, company_id: Optional[str] = None) -> int:
+    aid = _get_setting("omnidim_agent_id", db, company_id)
     if not aid:
         raise OmniDimNotConfigured("OmniDimension Agent ID not configured.")
     try:
-        # Strip any leading '#' if user typed #248152
+        # Strip any leading '#' if user typed #248152 or #273581
         cleaned = aid.replace("#", "").strip()
         return int(cleaned)
     except ValueError:
         raise OmniDimNotConfigured(f"Invalid OmniDimension Agent ID: {aid}")
 
 
-def is_configured(db: Optional[Session] = None) -> bool:
+def is_configured(db: Optional[Session] = None, company_id: Optional[str] = None) -> bool:
     try:
-        return bool(_get_setting("omnidim_api_key", db) and _get_setting("omnidim_agent_id", db))
+        return bool(_get_setting("omnidim_api_key", db, company_id) and _get_setting("omnidim_agent_id", db, company_id))
     except Exception:
         return False
 
 
-def test_connection(db: Optional[Session] = None) -> dict:
+def test_connection(db: Optional[Session] = None, company_id: Optional[str] = None) -> dict:
     """Validate OmniDimension API key by fetching agents list."""
-    key = _api_key(db)
+    key = _api_key(db, company_id)
     with httpx.Client(timeout=12.0) as client:
         res = client.get(
             f"{API_BASE}/agents",
@@ -93,13 +100,14 @@ def test_connection(db: Optional[Session] = None) -> dict:
             }
 
 
-def place_call(*, to_number: str, lead: dict, script: Optional[str] = None, db: Optional[Session] = None) -> Dict[str, Any]:
+def place_call(*, to_number: str, lead: dict, script: Optional[str] = None, db: Optional[Session] = None, company_id: Optional[str] = None) -> Dict[str, Any]:
     """Dispatch an outbound AI voice call to a phone number via OmniDimension."""
     if not to_number:
         raise ValueError("to_number is required")
 
-    api_key = _api_key(db)
-    agent_id = _agent_id(db)
+    cid = company_id or lead.get("company_id")
+    api_key = _api_key(db, cid)
+    agent_id = _agent_id(db, cid)
 
     # Ensure to_number has leading + (E.164 format)
     cleaned_number = to_number.strip().replace(" ", "").replace("-", "")
@@ -110,19 +118,34 @@ def place_call(*, to_number: str, lead: dict, script: Optional[str] = None, db: 
             cleaned_number = "+" + cleaned_number
 
     full_name = (lead.get("name") or "").strip()
+    if full_name in ("-", "--", "None", "NA", "N/A", "null"):
+        full_name = ""
     first_name = full_name.split()[0] if full_name else "Sir"
-    city = (lead.get("city") or "").strip() or "Udaipur"
-    company = (lead.get("company") or "").strip() or "business"
-    customer_type = (lead.get("customer_type") or "").strip() or "General Business"
+    contact_name = full_name or "Sir"
+
+    # Dynamic company context isolation
+    is_coaching = (cid == "58af863a-26a7-4161-93ed-237dbe117cc3") or (agent_id in (273581, 273980))
+    if is_coaching:
+        default_city = "Ahmedabad"
+        default_company = "Pujara Institute"
+        default_customer_type = "Student / Parent"
+    else:
+        default_city = "Udaipur"
+        default_company = "ParshWebCraft"
+        default_customer_type = "Web Design & Digital Solutions"
+
+    city = (lead.get("city") or "").strip() or default_city
+    company = (lead.get("company") or "").strip() or default_company
+    customer_type = (lead.get("customer_type") or "").strip() or default_customer_type
 
     payload = {
         "agent_id": agent_id,
         "to_number": cleaned_number,
         "call_context": {
-            "customer_name": full_name or first_name,
-            "user_name": full_name or first_name,
+            "customer_name": contact_name,
+            "user_name": contact_name,
             "first_name": first_name,
-            "name": full_name or first_name,
+            "name": contact_name,
             "city": city,
             "company": company,
             "business_type": customer_type,
@@ -133,7 +156,7 @@ def place_call(*, to_number: str, lead: dict, script: Optional[str] = None, db: 
         },
         "metadata": {
             "crm_lead_id": str(lead.get("id") or ""),
-            "customer_name": full_name or first_name,
+            "customer_name": contact_name,
             "source": "ParshCall_CRM"
         }
     }
@@ -168,14 +191,19 @@ def download_recording(recording_url: str, call_id: int) -> Optional[str]:
     if not recording_url:
         return None
     try:
-        os.makedirs("recordings", exist_ok=True)
+        recordings_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "recordings")
+        os.makedirs(recordings_dir, exist_ok=True)
         filename = f"omnidim_{call_id}.mp3"
-        filepath = os.path.join("recordings", filename)
+        filepath = os.path.join(recordings_dir, filename)
+        
+        # If already downloaded, return local URL immediately without network call
+        if os.path.exists(filepath) and os.path.getsize(filepath) > 100:
+            return f"/api/calls/recording/{filename}"
         
         # If full URL not provided, prepend base
         full_url = recording_url if recording_url.startswith("http") else f"https://omnidim.io{recording_url}"
         
-        with httpx.Client(timeout=20.0, follow_redirects=True) as client:
+        with httpx.Client(timeout=5.0, follow_redirects=True) as client:
             r = client.get(full_url)
             if r.status_code == 200 and len(r.content) > 100:
                 with open(filepath, "wb") as f:
@@ -200,9 +228,9 @@ def sync_logs_and_recordings(db: Session) -> dict:
     downloaded_count = 0
 
     try:
-        with httpx.Client(timeout=15.0) as client:
+        with httpx.Client(timeout=10.0) as client:
             res = client.get(
-                f"{API_BASE}/calls/logs?pagesize=50",
+                f"{API_BASE}/calls/logs?pagesize=20",
                 headers={"Authorization": f"Bearer {api_key}"}
             )
             if res.status_code != 200:
@@ -239,17 +267,31 @@ def sync_logs_and_recordings(db: Session) -> dict:
                 # If still no call record, create one
                 if not call and to_num:
                     lead = db.query(Lead).filter(Lead.phone.endswith(to_num[-10:])).first()
-                    if lead:
-                        call = Call(
-                            lead_id=lead.id,
-                            vapi_call_id=req_id or str(call_id_remote),
-                            call_status=status,
-                            call_duration=duration,
-                            created_at=datetime.now(timezone.utc)
+                    if not lead:
+                        # Auto-create lead so no client call is ever lost
+                        client_name = item.get("extracted_variables", {}).get("user_name") or f"Client {to_num[-4:]}"
+                        lead = Lead(
+                            name=client_name,
+                            phone=to_num,
+                            city="Udaipur",
+                            customer_type="General Business",
+                            status="Contacted" if status == "Completed" else "New",
+                            assigned_to=1
                         )
-                        db.add(call)
+                        db.add(lead)
                         db.commit()
-                        db.refresh(call)
+                        db.refresh(lead)
+
+                    call = Call(
+                        lead_id=lead.id,
+                        vapi_call_id=req_id or str(call_id_remote),
+                        call_status=status,
+                        call_duration=duration,
+                        created_at=datetime.now(timezone.utc)
+                    )
+                    db.add(call)
+                    db.commit()
+                    db.refresh(call)
                 
                 if call:
                     call.call_status = status
@@ -263,14 +305,24 @@ def sync_logs_and_recordings(db: Session) -> dict:
                     if sentiment:
                         call.sentiment = sentiment.capitalize()
                     
-                    # Download audio recording to recordings/ folder if available
+                    # Set recording URL: check if cached locally, otherwise download or point to remote
                     if rec_url and call_id_remote:
-                        local_url = download_recording(rec_url, call_id_remote)
-                        if local_url:
-                            call.recording_url = local_url
-                            downloaded_count += 1
-                        else:
-                            call.recording_url = rec_url
+                        full_rec = rec_url if rec_url.startswith("http") else f"https://omnidim.io{rec_url}"
+                        # If not already pointing to a working local file, try to cache
+                        already_cached = False
+                        if call.recording_url and call.recording_url.startswith("/api/calls/recording/"):
+                            local_fname = call.recording_url.split("/")[-1]
+                            recordings_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "recordings")
+                            if os.path.exists(os.path.join(recordings_dir, local_fname)):
+                                already_cached = True
+                        
+                        if not already_cached:
+                            local_url = download_recording(rec_url, call_id_remote)
+                            if local_url:
+                                call.recording_url = local_url
+                                downloaded_count += 1
+                            else:
+                                call.recording_url = full_rec
                     
                     synced_count += 1
             

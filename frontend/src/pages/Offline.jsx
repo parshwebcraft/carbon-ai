@@ -9,7 +9,7 @@ export default function Offline() {
         </div>
         <h1 className="mt-4 font-serif text-3xl text-slate-900">You&apos;re offline</h1>
         <p className="mt-2 text-sm text-slate-600 max-w-sm mx-auto">
-          ParshWebCraft CRM needs internet to sync your web agency pipeline. Reconnect and try again.
+          ParshAgent CRM needs internet to sync your AI sales pipeline. Reconnect and try again.
         </p>
       </div>
     </div>

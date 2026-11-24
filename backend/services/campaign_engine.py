@@ -205,6 +205,8 @@ def _process_one(db, campaign: Campaign, tgt: CampaignTarget) -> None:
     target_payload = {
         "name": tgt.name, "phone": tgt.phone, "city": tgt.city,
         "notes": tgt.notes, "source": tgt.source,
+        "lead_id": tgt.lead_id,
+        "company_id": campaign.company_id,
     }
     if tgt.lead_id:
         lead = db.query(Lead).filter(Lead.id == tgt.lead_id).first()

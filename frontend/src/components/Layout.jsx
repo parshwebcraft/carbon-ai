@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Users, ListTodo, Phone, MessageCircle,
   CalendarCheck2, FileText, Bot, UserCog, LogOut, Menu, X, Bell, PhoneCall, Sparkles, Briefcase,
-  Sun, Moon, Cpu, GitBranch, Layers, History, Plug, Sliders,
+  Sun, Moon, Cpu, GitBranch, Layers, History, Plug, Sliders, Columns,
+  CreditCard, Smartphone, Key, Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import InstallPrompt from "@/components/InstallPrompt";
@@ -14,11 +15,14 @@ import CrmDialer from "@/components/CrmDialer";
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/leads", label: "Leads", icon: Users },
-  { to: "/tasks", label: "Tasks", icon: ListTodo },
-  { to: "/calls", label: "Calls", icon: Phone },
-  { to: "/campaigns", label: "AI Calling", icon: PhoneCall },
-  { to: "/copilot",   label: "AI Copilot", icon: Sparkles },
+  { to: "/campaigns", label: "Campaigns", icon: Send, badge: "AI" },
   { to: "/whatsapp",  label: "WhatsApp",   icon: MessageCircle },
+  { to: "/calls", label: "Calls", icon: Phone },
+  { to: "/tasks", label: "Tasks", icon: ListTodo },
+  { to: "/copilot",   label: "AI Copilot", icon: Sparkles },
+  { to: "/kanban",    label: "Kanban",     icon: Columns },
+  { to: "/wa-meta-manual", label: "Meta API Keys", icon: Key },
+
   { to: "/products", label: "Services", icon: Briefcase },
   { to: "/appointments", label: "Appointments", icon: CalendarCheck2 },
   { to: "/quotations", label: "Quotations", icon: FileText },
@@ -32,6 +36,14 @@ const AUTOMATION_NAV = [
   { to: "/automation/logs", label: "Automation Logs", icon: History },
   { to: "/automation/integrations", label: "Connected Integrations", icon: Plug },
   { to: "/automation/settings", label: "Automation Settings", icon: Sliders },
+];
+
+const GROWTH_NAV = [
+  { to: "/campaigns", label: "Campaigns", icon: Send, badge: "LIVE" },
+  { to: "/growth?tab=agents", label: "AI Agents", icon: Bot, badge: "NEW" },
+  { to: "/growth?tab=templates", label: "Create Template", icon: Smartphone },
+  { to: "/growth?tab=payments", label: "Payment Links", icon: CreditCard },
+  { to: "/growth?tab=apps", label: "Apps", icon: Plug },
 ];
 
 function StarryBackground() {
@@ -111,6 +123,7 @@ function StarryBackground() {
 export default function Layout({ children }) {
   const { user, logout } = useAuth();
   const nav = useNavigate();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem("theme");
@@ -118,23 +131,33 @@ export default function Layout({ children }) {
   });
 
   useEffect(() => {
+    if (user && user.onboarding_completed === false && location.pathname !== "/onboarding") {
+      nav("/onboarding");
+    }
+  }, [user, location.pathname, nav]);
+
+  useEffect(() => {
     if (isDark) {
-      document.body.classList.add("dark-theme");
+      document.documentElement.classList.add("dark");
+      document.body.classList.add("dark", "dark-theme");
       localStorage.setItem("theme", "dark");
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#0A111C');
     } else {
-      document.body.classList.remove("dark-theme");
+      document.documentElement.classList.remove("dark");
+      document.body.classList.remove("dark", "dark-theme");
       localStorage.setItem("theme", "light");
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#4F46E5');
     }
   }, [isDark]);
 
   return (
-    <div className={cn("min-h-screen relative overflow-x-hidden transition-colors duration-300", isDark ? "text-slate-100" : "text-slate-900")}>
+    <div className={cn("h-screen w-screen overflow-hidden flex flex-col transition-colors duration-300", isDark ? "text-slate-100" : "text-slate-900")}>
       {isDark && <StarryBackground />}
 
-      <div className="relative z-10 flex flex-col min-h-screen">
+      <div className="relative z-10 flex flex-col h-full overflow-hidden">
         {/* Mobile topbar */}
         <header className={cn(
-          "md:hidden sticky top-0 z-30 flex items-center justify-between px-4 h-14 transition-colors duration-300",
+          "md:hidden shrink-0 z-30 flex items-center justify-between px-4 h-14 transition-colors duration-300",
           isDark ? "glass-header text-slate-100" : "bg-white border-b border-indigo-100 text-slate-900"
         )}>
           <button
@@ -146,7 +169,7 @@ export default function Layout({ children }) {
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
           <Link to="/dashboard" className="flex items-center gap-2 font-serif font-semibold text-lg">
-            <img src="/images/logo-navbar.png" alt="ParshWebCraft Logo" className="h-6 object-contain mr-1" /> ParshWebCraft CRM
+            <img src="/images/ParshAgent_icon_only.png" alt="ParshAgent Logo" className="h-7 w-auto object-contain mr-1" /> ParshAgent
           </Link>
           <button
             onClick={() => setIsDark(!isDark)}
@@ -157,22 +180,26 @@ export default function Layout({ children }) {
           </button>
         </header>
 
-        <div className="flex flex-1">
+        <div className="flex flex-1 min-h-0 overflow-hidden">
           {/* Sidebar */}
           <aside
             data-testid="sidebar"
             className={cn(
-              "fixed md:sticky md:top-0 z-40 md:z-auto h-screen w-64 shrink-0 flex flex-col transition-all duration-300",
+              "fixed md:static inset-y-0 left-0 z-40 md:z-auto h-full w-64 shrink-0 flex flex-col transition-all duration-300",
               isDark ? "glass-sidebar text-slate-100" : "bg-white border-r border-indigo-100 text-slate-900",
               "transition-transform duration-200",
               open ? "translate-x-0 flex" : "-translate-x-full md:translate-x-0 md:flex hidden md:flex"
             )}
           >
-            <div className={cn("px-5 h-16 flex items-center gap-2 shrink-0 border-b transition-colors duration-300", isDark ? "border-white/10" : "border-indigo-100")}>
-              <img src="/images/logo-navbar.png" alt="ParshWebCraft Logo" className="h-7 object-contain mr-1" />
-              <div className="leading-tight">
-                <div className={cn("font-serif font-semibold text-lg", isDark ? "text-white" : "text-slate-900")}>ParshWebCraft</div>
-                <div className={cn("text-[11px] uppercase tracking-wider", isDark ? "text-indigo-400" : "text-indigo-700")}>Web Agency</div>
+            <div className={cn("px-4 h-16 flex items-center gap-3 shrink-0 border-b transition-colors duration-300", isDark ? "border-white/10" : "border-indigo-100")}>
+              <img src="/images/ParshAgent_icon_only.png" alt="ParshAgent Logo" className="h-8 w-8 object-contain shrink-0" />
+              <div className="leading-tight overflow-hidden">
+                <div className={cn("font-serif font-semibold text-sm truncate max-w-[155px]", isDark ? "text-white" : "text-slate-900")}>
+                  {user?.company_name || "ParshAgent"}
+                </div>
+                <div className={cn("text-[10px] uppercase tracking-wider font-medium truncate", isDark ? "text-indigo-400" : "text-indigo-700")}>
+                  {user?.role || "Admin"} • Workspace
+                </div>
               </div>
             </div>
             <nav className="flex-1 overflow-y-auto py-3">
@@ -185,7 +212,7 @@ export default function Layout({ children }) {
                   onClick={() => setOpen(false)}
                   className={({ isActive }) =>
                     cn(
-                      "flex items-center gap-3 px-5 py-2.5 text-sm font-medium transition-colors duration-200",
+                      "flex items-center justify-between px-5 py-2.5 text-sm font-medium transition-colors duration-200",
                       isActive
                         ? isDark
                           ? "bg-white/10 text-white border-r-2 border-indigo-500"
@@ -196,10 +223,55 @@ export default function Layout({ children }) {
                     )
                   }
                 >
-                  <n.icon className="h-4 w-4" /> {n.label}
+                  <div className="flex items-center gap-3">
+                    <n.icon className="h-4 w-4" /> {n.label}
+                  </div>
+                  {n.badge && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-500/10 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400 border border-emerald-300/40">
+                      {n.badge}
+                    </span>
+                  )}
                 </NavLink>
               ))}
-              
+
+              {/* AI & Growth Suite (Inspired by Alpha CRM) */}
+              <div className={cn("px-5 py-2 text-[10px] font-bold uppercase tracking-wider mt-4 flex items-center justify-between", isDark ? "text-emerald-400" : "text-emerald-700")}>
+                <span>AI & Growth</span>
+                <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500/10 text-emerald-500 font-bold">PRO</span>
+              </div>
+              {GROWTH_NAV.map((n) => (
+                <NavLink
+                  key={n.to}
+                  to={n.to}
+                  data-testid={`nav-${n.label.toLowerCase().replace(/\s+/g, "-")}`}
+                  onClick={() => setOpen(false)}
+                  className={({ isActive }) => {
+                    const currentSearch = window.location.search;
+                    const currentPath = window.location.pathname;
+                    const isMatch = currentPath === "/growth" && n.to.includes(currentSearch || "tab=agents");
+                    return cn(
+                      "flex items-center justify-between px-5 py-2 text-sm font-medium transition-colors duration-200",
+                      isMatch
+                        ? isDark
+                          ? "bg-white/10 text-white border-r-2 border-emerald-500"
+                          : "bg-emerald-50 text-emerald-900 border-r-2 border-emerald-700"
+                        : isDark
+                          ? "text-slate-400 hover:text-white hover:bg-white/5"
+                          : "text-slate-700 hover:bg-emerald-50/60"
+                    );
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <n.icon className="h-4 w-4" /> {n.label}
+                  </div>
+                  {n.badge && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                      {n.badge}
+                    </span>
+                  )}
+                </NavLink>
+              ))}
+
               {/* Automation Section */}
               <div className={cn("px-5 py-2 text-[10px] font-bold uppercase tracking-wider mt-4", isDark ? "text-indigo-400/80" : "text-indigo-700/80")}>
                 Automation
@@ -281,10 +353,10 @@ export default function Layout({ children }) {
           )}
 
           {/* Main */}
-          <main className="flex-1 min-w-0 flex flex-col">
+          <main className="flex-1 min-w-0 flex flex-col h-full overflow-hidden">
             <div className={cn(
-              "hidden md:flex items-center justify-end gap-4 h-14 px-6 transition-colors duration-300 shrink-0",
-              isDark ? "glass-header text-slate-200" : "bg-white border-b border-indigo-100 text-slate-700"
+              "hidden md:flex items-center justify-end gap-4 h-14 px-6 transition-colors duration-300 shrink-0 border-b",
+              isDark ? "glass-header text-slate-200" : "bg-white border-indigo-100 text-slate-700"
             )}>
               <button
                 onClick={() => setIsDark(!isDark)}
@@ -301,7 +373,12 @@ export default function Layout({ children }) {
                 Welcome, <span className={cn("font-semibold", isDark ? "text-white" : "text-slate-900")}>{user?.name?.split(" ")[0]}</span>
               </span>
             </div>
-            <div className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto flex-1 z-10">{children}</div>
+            <div className={cn(
+              "flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-4 lg:p-8 max-w-7xl w-full mx-auto z-10 min-w-0",
+              location.pathname === "/whatsapp" && "flex flex-col overflow-hidden p-1.5 sm:p-3 lg:p-4 h-full"
+            )}>
+              {children}
+            </div>
           </main>
         </div>
       </div>
