@@ -832,8 +832,63 @@ async def receive(request: Request, background_tasks: BackgroundTasks, db: Sessi
             footer_text = (getattr(agent_cfg, "footer_text", "") or "").strip()
             footer = footer_text[:60] if (show_footer and footer_text) else None
 
-            # Only attach buttons if customer has enabled them and at least 1 button is configured
-            should_attach_buttons = buttons_enabled and bool(custom_buttons) and len(reply) <= 950
+            # Smart Intent Filter for Interactive Buttons (Anti-Spam / Human-First Experience):
+            # Strict Rule: NEVER attach buttons to every message.
+            # Only attach buttons when customer has explicit commercial/service inquiry,
+            # and NEVER on festival wishes, casual pleasantries, greetings, or acknowledgments.
+            inbound_clean = (inbound_text or "").lower().strip()
+
+            is_festival_greeting = any(w in inbound_clean for w in [
+                "diwali", "deepawali", "deepavali", "happy diwali", "shubh deepawali",
+                "same to you", "wishing you", "happy new year", "mubarak", "badhaai", "festive",
+                "holi", "eid", "christmas", "congrats", "congratulations"
+            ])
+
+            is_casual_pleasantry = any(w in inbound_clean for w in [
+                "hi", "hello", "hey", "namaste", "kem cho", "start",
+                "kaise ho", "kaisa hai", "kese ho", "sab theek", "sab badhiya", "thanks", "thank you",
+                "dhanyawad", "shukriya", "bhaiya", "didi", "bhua", "uncle", "aunty", "bhai",
+                "mast", "thik", "theek", "ok", "okk", "okay", "haan", "ha", "achha", "accha",
+                "done", "got it", "sure", "alright", "great", "nice"
+            ]) and not any(w in inbound_clean for w in [
+                "website", "app", "software", "price", "rate", "cost", "quotation", "quote",
+                "proposal", "call", "meeting", "charges", "budget", "hire", "service"
+            ])
+
+            has_commercial_intent = any(w in inbound_clean for w in [
+                "website", "web app", "software", "ecommerce", "e-commerce", "shopify", "wordpress",
+                "seo", "digital marketing", "graphic", "logo", "ai bot", "automation", "crm",
+                "price", "pricing", "cost", "rate", "rates", "quotation", "quote",
+                "proposal", "package", "packages", "charges", "budget", "hire", "service", "services",
+                "requirement", "project", "banwana", "banwani", "karna hai", "features",
+                "schedule", "meeting", "discuss", "portfolio", "demo", "book call", "brochure", "call me"
+            ])
+
+            # Check if AI reply itself explicitly proposes booking a call or requesting a proposal
+            reply_lower = (reply or "").lower()
+            reply_offers_next_step = any(phrase in reply_lower for phrase in [
+                "discovery call", "schedule a call", "book a call", "10-minute call", "15-minute call",
+                "tailored proposal", "send you a proposal", "share the proposal", "custom proposal"
+            ])
+
+            # Anti-Spam: Do not attach buttons if buttons were already sent in recent turns for this lead
+            recent_had_buttons = False
+            recent_msgs = history[-4:] if history else []
+            for m in recent_msgs:
+                if m.direction == "out" and (getattr(m, "buttons_json", None) or getattr(m, "interactive_type", None) == "button"):
+                    recent_had_buttons = True
+                    break
+
+            # Strictly attach buttons ONLY when intent is commercial and not in a casual/festive exchange
+            should_attach_buttons = (
+                buttons_enabled
+                and bool(custom_buttons)
+                and len(reply) <= 950
+                and not is_festival_greeting
+                and not is_casual_pleasantry
+                and (has_commercial_intent or reply_offers_next_step)
+                and not recent_had_buttons
+            )
 
             try:
                 if whatsapp_cloud.is_configured():
